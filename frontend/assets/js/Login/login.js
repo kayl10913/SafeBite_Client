@@ -908,5 +908,174 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize reCAPTCHA v3 status
     initializeRecaptcha();
 
+    // Enhanced Password Validation Functions
+    function validatePasswordRequirements(password) {
+        const requirements = {
+            length: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            lower: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+        };
+        
+        return requirements;
+    }
+    
+    function updatePasswordStrength(password) {
+        const requirements = validatePasswordRequirements(password);
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthLabel = document.getElementById('passwordStrengthLabel');
+        const requirementsList = document.getElementById('passwordRequirements');
+        
+        // Calculate strength score
+        const score = Object.values(requirements).filter(Boolean).length;
+        const percentage = (score / 5) * 100;
+        
+        // Update strength bar
+        if (strengthBar) {
+            strengthBar.style.width = percentage + '%';
+            
+            // Update color based on strength
+            if (score <= 2) {
+                strengthBar.style.background = '#ef4444'; // Red
+            } else if (score <= 3) {
+                strengthBar.style.background = '#f59e0b'; // Orange
+            } else if (score <= 4) {
+                strengthBar.style.background = '#3b82f6'; // Blue
+            } else {
+                strengthBar.style.background = '#10b981'; // Green
+            }
+        }
+        
+        // Update strength label
+        if (strengthLabel) {
+            if (score <= 2) {
+                strengthLabel.textContent = 'Weak';
+                strengthLabel.style.color = '#ef4444';
+            } else if (score <= 3) {
+                strengthLabel.textContent = 'Fair';
+                strengthLabel.style.color = '#f59e0b';
+            } else if (score <= 4) {
+                strengthLabel.textContent = 'Good';
+                strengthLabel.style.color = '#3b82f6';
+            } else {
+                strengthLabel.textContent = 'Strong';
+                strengthLabel.style.color = '#10b981';
+            }
+        }
+        
+        // Update requirements checklist - remove met requirements
+        if (requirementsList) {
+            const items = requirementsList.querySelectorAll('li');
+            const requirementKeys = ['length', 'upper', 'lower', 'number', 'special'];
+            
+            items.forEach((item, index) => {
+                const key = requirementKeys[index];
+                
+                if (requirements[key]) {
+                    // Requirement is met - remove it with animation
+                    item.style.transform = 'translateX(-100%)';
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        if (item.parentNode) {
+                            item.parentNode.removeChild(item);
+                        }
+                    }, 300);
+                } else {
+                    // Requirement not met - ensure it's visible
+                    item.style.color = '#b0b0b0';
+                    item.style.transform = 'translateX(0)';
+                    item.style.opacity = '1';
+                    item.innerHTML = item.innerHTML.replace('✓', '•');
+                }
+            });
+        }
+    }
+    
+    function showPasswordRequirements() {
+        const requirementsDiv = document.getElementById('passwordRequirements');
+        const strengthDiv = document.querySelector('.password-strength');
+        
+        if (requirementsDiv) {
+            requirementsDiv.style.display = 'block';
+            requirementsDiv.style.opacity = '1';
+        }
+        
+        if (strengthDiv) {
+            strengthDiv.style.display = 'block';
+            strengthDiv.style.opacity = '1';
+        }
+    }
+    
+    function hidePasswordRequirements() {
+        const requirementsDiv = document.getElementById('passwordRequirements');
+        const strengthDiv = document.querySelector('.password-strength');
+        
+        if (requirementsDiv) {
+            requirementsDiv.style.display = 'none';
+            requirementsDiv.style.opacity = '0';
+        }
+        
+        if (strengthDiv) {
+            strengthDiv.style.display = 'none';
+            strengthDiv.style.opacity = '0';
+        }
+    }
+    
+    function restorePasswordRequirements() {
+        const requirementsDiv = document.getElementById('passwordRequirements');
+        if (requirementsDiv) {
+            // Restore the original requirements list
+            requirementsDiv.innerHTML = `
+                <ul style="list-style:none; padding-left:0; margin:0;">
+                    <li id="req-length">• At least 8 characters</li>
+                    <li id="req-upper">• One uppercase letter (A-Z)</li>
+                    <li id="req-lower">• One lowercase letter (a-z)</li>
+                    <li id="req-number">• One number (0-9)</li>
+                    <li id="req-special">• One special character (!@#$%^&* etc.)</li>
+                </ul>
+            `;
+        }
+    }
+
+    // Enhanced Password Validation Event Listeners
+    function initializePasswordValidation() {
+        const passwordInput = document.getElementById('signupPassword');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                if (password.length > 0) {
+                    showPasswordRequirements();
+                    updatePasswordStrength(password);
+                } else {
+                    // Password field is empty - restore requirements and hide
+                    restorePasswordRequirements();
+                    hidePasswordRequirements();
+                }
+            });
+            
+            passwordInput.addEventListener('focus', function() {
+                if (this.value.length > 0) {
+                    showPasswordRequirements();
+                    updatePasswordStrength(this.value);
+                } else {
+                    // Show requirements when focusing on empty field
+                    restorePasswordRequirements();
+                    showPasswordRequirements();
+                }
+            });
+            
+            passwordInput.addEventListener('blur', function() {
+                // Keep requirements visible if password has content
+                if (this.value.length === 0) {
+                    hidePasswordRequirements();
+                }
+            });
+        }
+    }
+
+    // Initialize password validation
+    initializePasswordValidation();
+
     console.log('User Authentication app initialized successfully');
 }); 

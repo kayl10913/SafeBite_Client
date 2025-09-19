@@ -172,21 +172,46 @@
                                     </div>
                                 </div>
 
+                                <!-- Terms and Privacy Policy -->
+                                <div class="input-group">
+                                    <div class="terms-privacy-container">
+                                        <div class="terms-text">
+                                            I agree to the 
+                                            <a href="#" onclick="openTermsModal()" class="terms-link">Terms and Conditions</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <div class="terms-privacy-container">
+                                        <div class="terms-text">
+                                            I agree to the 
+                                            <a href="#" onclick="openPrivacyModal()" class="terms-link">Privacy Policy</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Progress Indicator -->
+                                <div class="progress-container" style="margin: 10px 0;">
+                                    <div class="progress-indicator" style="width: 0%; height: 4px; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 2px; transition: width 0.5s ease; position: relative; overflow: hidden;"></div>
+                                    <div class="progress-text" style="font-size: 11px; color: #666; text-align: center; margin-top: 5px;">0/2 agreements accepted</div>
+                                </div>
+
                                 <!-- reCAPTCHA v3 Status Indicator -->
-                                <div class="recaptcha-status-container" style="margin: 15px 0; padding: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); border-radius: 8px; border: 1px solid #3b82f6;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div id="recaptcha-icon" style="width: 20px; height: 20px; border-radius: 50%; background: #6b7280; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                                <div class="recaptcha-status-container">
+                                    <div class="recaptcha-content">
+                                        <div id="recaptcha-icon" class="recaptcha-icon">
                                             <i class="fas fa-shield-alt"></i>
                                         </div>
-                                        <div style="flex: 1;">
-                                            <div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 2px;">
+                                        <div class="recaptcha-info">
+                                            <div class="recaptcha-title">
                                                 Security Protection
                                             </div>
-                                            <div id="recaptcha-status" style="color: #bfc9da; font-size: 12px;">
+                                            <div id="recaptcha-status" class="recaptcha-status">
                                                 Initializing reCAPTCHA v3...
                                             </div>
                                         </div>
-                                        <div id="recaptcha-score" style="color: #10b981; font-weight: bold; font-size: 12px; display: none;">
+                                        <div id="recaptcha-score" class="recaptcha-score">
                                             Score: --
                                         </div>
                                     </div>
@@ -244,9 +269,379 @@
     <!-- Toaster for notifications -->
     <div id="toaster" class="toaster"></div>
 
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Terms and Conditions</h2>
+                <span class="close" onclick="closeTermsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>1. Acceptance of Terms</h3>
+                <p>By accessing and using SafeBite, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                
+                <h3>2. Use License</h3>
+                <p>Permission is granted to temporarily download one copy of SafeBite for personal, non-commercial transitory viewing only.</p>
+                
+                <h3>3. Disclaimer</h3>
+                <p>The materials on SafeBite are provided on an 'as is' basis. SafeBite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+                
+                <h3>4. Limitations</h3>
+                <p>In no event shall SafeBite or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on SafeBite, even if SafeBite or an authorized representative has been notified orally or in writing of the possibility of such damage.</p>
+                
+                <h3>5. Accuracy of Materials</h3>
+                <p>The materials appearing on SafeBite could include technical, typographical, or photographic errors. SafeBite does not warrant that any of the materials on its website are accurate, complete, or current.</p>
+                
+                <h3>6. Links</h3>
+                <p>SafeBite has not reviewed all of the sites linked to our website and is not responsible for the contents of any such linked site.</p>
+                
+                <h3>7. Modifications</h3>
+                <p>SafeBite may revise these terms of service for its website at any time without notice. By using this website, you are agreeing to be bound by the then current version of these terms of service.</p>
+                
+                <h3>8. Governing Law</h3>
+                <p>These terms and conditions are governed by and construed in accordance with the laws and you irrevocably submit to the exclusive jurisdiction of the courts in that state or location.</p>
+            </div>
+            <div class="modal-footer">
+                <p class="modal-instruction">Please read the terms above before clicking "I Understand"</p>
+                <button type="button" class="understand-btn" onclick="acceptTerms()">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Privacy Policy</h2>
+                <span class="close" onclick="closePrivacyModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>1. Information We Collect</h3>
+                <p>We collect information you provide directly to us, such as when you create an account, use our services, or contact us for support.</p>
+                
+                <h3>2. How We Use Your Information</h3>
+                <p>We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.</p>
+                
+                <h3>3. Information Sharing</h3>
+                <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.</p>
+                
+                <h3>4. Data Security</h3>
+                <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+                
+                <h3>5. Cookies and Tracking</h3>
+                <p>We use cookies and similar tracking technologies to enhance your experience on our website and analyze usage patterns.</p>
+                
+                <h3>6. Third-Party Services</h3>
+                <p>Our service may contain links to third-party websites. We are not responsible for the privacy practices of these external sites.</p>
+                
+                <h3>7. Data Retention</h3>
+                <p>We retain your personal information for as long as necessary to provide our services and comply with legal obligations.</p>
+                
+                <h3>8. Your Rights</h3>
+                <p>You have the right to access, update, or delete your personal information. You may also opt out of certain communications from us.</p>
+                
+                <h3>9. Children's Privacy</h3>
+                <p>Our services are not intended for children under 13. We do not knowingly collect personal information from children under 13.</p>
+                
+                <h3>10. Changes to This Policy</h3>
+                <p>We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page.</p>
+                
+                <h3>11. Contact Us</h3>
+                <p>If you have any questions about this privacy policy, please contact us through our support channels.</p>
+            </div>
+            <div class="modal-footer">
+                <p class="modal-instruction">Please read the privacy policy above before clicking "I Understand"</p>
+                <button type="button" class="understand-btn" onclick="acceptPrivacy()">I Understand</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Load API configuration first -->
     <script src="../assets/js/config/api-config.js"></script>
     <!-- Load login script after API config -->
     <script src="../assets/js/Login/login.js"></script>
+    
+    <!-- Enhanced Modal JavaScript Functions -->
+    <script>
+        // Modal state management
+        let modalState = {
+            termsRead: false,
+            privacyRead: false,
+            currentStep: 1
+        };
+
+        // Enhanced modal opening with animations
+        function openTermsModal() {
+            const modal = document.getElementById('termsModal');
+            modal.style.display = 'block';
+            modal.classList.add('modal-opening');
+            
+            // Reset scroll position
+            modal.querySelector('.modal-content').scrollTop = 0;
+            
+            // Add body scroll lock
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            setTimeout(() => {
+                modal.querySelector('.understand-btn').focus();
+            }, 300);
+        }
+        
+        function closeTermsModal() {
+            const modal = document.getElementById('termsModal');
+            modal.classList.add('modal-closing');
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('modal-opening', 'modal-closing');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+        
+        function openPrivacyModal() {
+            const modal = document.getElementById('privacyModal');
+            modal.style.display = 'block';
+            modal.classList.add('modal-opening');
+            
+            // Reset scroll position
+            modal.querySelector('.modal-content').scrollTop = 0;
+            
+            // Add body scroll lock
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            setTimeout(() => {
+                modal.querySelector('.understand-btn').focus();
+            }, 300);
+        }
+        
+        function closePrivacyModal() {
+            const modal = document.getElementById('privacyModal');
+            modal.classList.add('modal-closing');
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('modal-opening', 'modal-closing');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+        
+        // Enhanced acceptance functions with validation
+        function acceptTerms() {
+            // Mark as read
+            modalState.termsRead = true;
+            
+            // Update the terms text to show accepted status
+            const termsText = document.querySelector('.terms-privacy-container:first-of-type .terms-text');
+            if (termsText) {
+                termsText.innerHTML = '✓ I have read and agree to the <a href="#" onclick="openTermsModal()" class="terms-link">Terms and Conditions</a>';
+                termsText.classList.add('terms-accepted');
+            }
+            
+            // Close the modal
+            closeTermsModal();
+            
+            // Show success notification
+            showToast('Terms and Conditions accepted ✓', 'success');
+            
+            // Update form validation
+            validateForm();
+            
+            // Track progress
+            updateProgress();
+        }
+        
+        function acceptPrivacy() {
+            // Mark as read
+            modalState.privacyRead = true;
+            
+            // Update the privacy text to show accepted status
+            const privacyText = document.querySelector('.terms-privacy-container:last-of-type .terms-text');
+            if (privacyText) {
+                privacyText.innerHTML = '✓ I have read and agree to the <a href="#" onclick="openPrivacyModal()" class="terms-link">Privacy Policy</a>';
+                privacyText.classList.add('terms-accepted');
+            }
+            
+            // Close the modal
+            closePrivacyModal();
+            
+            // Show success notification
+            showToast('Privacy Policy accepted ✓', 'success');
+            
+            // Update form validation
+            validateForm();
+            
+            // Track progress
+            updateProgress();
+        }
+        
+        // Enhanced form validation
+        function validateForm() {
+            const termsAccepted = modalState.termsRead;
+            const privacyAccepted = modalState.privacyRead;
+            const submitBtn = document.getElementById('signupSubmitBtn');
+            
+            if (termsAccepted && privacyAccepted) {
+                // Enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.add('btn-enabled');
+                    submitBtn.classList.remove('btn-disabled');
+                }
+                return true;
+            } else {
+                // Disable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('btn-disabled');
+                    submitBtn.classList.remove('btn-enabled');
+                }
+                return false;
+            }
+        }
+        
+        // Progress tracking
+        function updateProgress() {
+            const progress = document.querySelector('.progress-indicator');
+            const progressText = document.querySelector('.progress-text');
+            
+            if (progress && progressText) {
+                const total = 2;
+                const completed = (modalState.termsRead ? 1 : 0) + (modalState.privacyRead ? 1 : 0);
+                const percentage = (completed / total) * 100;
+                
+                progress.style.width = percentage + '%';
+                progressText.textContent = `${completed}/${total} agreements accepted`;
+                
+                // Add shimmer effect when progress changes
+                if (completed > 0) {
+                    progress.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                }
+            }
+        }
+        
+        // Enhanced click-outside-to-close with animation
+        window.onclick = function(event) {
+            const termsModal = document.getElementById('termsModal');
+            const privacyModal = document.getElementById('privacyModal');
+            
+            if (event.target === termsModal) {
+                closeTermsModal();
+            }
+            if (event.target === privacyModal) {
+                closePrivacyModal();
+            }
+        }
+        
+        // Keyboard navigation support
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const termsModal = document.getElementById('termsModal');
+                const privacyModal = document.getElementById('privacyModal');
+                
+                if (termsModal.style.display === 'block') {
+                    closeTermsModal();
+                }
+                if (privacyModal.style.display === 'block') {
+                    closePrivacyModal();
+                }
+            }
+        });
+        
+        // Enhanced toast notification system
+        function showToast(message, type = 'info', duration = 3000) {
+            const toaster = document.getElementById('toaster');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            // Add icon based on type
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+            toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-message">${message}</span>`;
+            
+            toaster.appendChild(toast);
+            
+            // Show toast with animation
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Hide and remove toast
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toaster.contains(toast)) {
+                        toaster.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+        
+        // Form submission validation
+        function validateSubmission() {
+            const termsAccepted = modalState.termsRead;
+            const privacyAccepted = modalState.privacyRead;
+            
+            if (!termsAccepted || !privacyAccepted) {
+                showToast('Please read and accept both Terms and Conditions and Privacy Policy to continue', 'error', 5000);
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Reset functionality when switching views
+        function resetAgreements() {
+            modalState.termsRead = false;
+            modalState.privacyRead = false;
+            
+            // Reset terms text
+            const termsText = document.querySelector('.terms-privacy-container:first-of-type .terms-text');
+            if (termsText) {
+                termsText.innerHTML = 'I agree to the <a href="#" onclick="openTermsModal()" class="terms-link">Terms and Conditions</a>';
+                termsText.classList.remove('terms-accepted');
+            }
+            
+            // Reset privacy text
+            const privacyText = document.querySelector('.terms-privacy-container:last-of-type .terms-text');
+            if (privacyText) {
+                privacyText.innerHTML = 'I agree to the <a href="#" onclick="openPrivacyModal()" class="terms-link">Privacy Policy</a>';
+                privacyText.classList.remove('terms-accepted');
+            }
+            
+            // Reset submit button
+            const submitBtn = document.getElementById('signupSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('btn-disabled');
+                submitBtn.classList.remove('btn-enabled');
+            }
+            
+            // Reset progress
+            updateProgress();
+        }
+        
+        
+        // Initialize form validation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            validateForm();
+            updateProgress();
+        });
+        
+        // Enhanced form submission handler
+        function handleFormSubmission(event) {
+            if (!validateSubmission()) {
+                event.preventDefault();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+            }
+            
+            return true;
+        }
+    </script>
 </body>
 </html>
