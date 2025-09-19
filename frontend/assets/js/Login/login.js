@@ -1077,5 +1077,289 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize password validation
     initializePasswordValidation();
 
+    // Enhanced Modal System for Terms and Privacy Policy
+    let modalState = {
+        termsRead: false,
+        privacyRead: false,
+        currentStep: 1
+    };
+
+    // Enhanced modal opening with animations
+    window.openTermsModal = function() {
+        const modal = document.getElementById('termsModal');
+        modal.style.display = 'block';
+        modal.classList.add('modal-opening');
+        
+        // Reset scroll position
+        modal.querySelector('.modal-content').scrollTop = 0;
+        
+        // Add body scroll lock
+        document.body.style.overflow = 'hidden';
+        
+        // Focus management
+        setTimeout(() => {
+            modal.querySelector('.understand-btn').focus();
+        }, 300);
+    };
+    
+    window.closeTermsModal = function() {
+        const modal = document.getElementById('termsModal');
+        modal.classList.add('modal-closing');
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('modal-opening', 'modal-closing');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    };
+    
+    window.openPrivacyModal = function() {
+        const modal = document.getElementById('privacyModal');
+        modal.style.display = 'block';
+        modal.classList.add('modal-opening');
+        
+        // Reset scroll position
+        modal.querySelector('.modal-content').scrollTop = 0;
+        
+        // Add body scroll lock
+        document.body.style.overflow = 'hidden';
+        
+        // Focus management
+        setTimeout(() => {
+            modal.querySelector('.understand-btn').focus();
+        }, 300);
+    };
+    
+    window.closePrivacyModal = function() {
+        const modal = document.getElementById('privacyModal');
+        modal.classList.add('modal-closing');
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('modal-opening', 'modal-closing');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    };
+    
+    // Enhanced acceptance functions with validation
+    window.acceptTerms = function() {
+        // Mark as read
+        modalState.termsRead = true;
+        
+        // Update the terms text to show accepted status
+        const termsText = document.querySelector('.terms-privacy-container:first-of-type .terms-text');
+        if (termsText) {
+            termsText.innerHTML = '✓ I have read and agree to the <a href="#" onclick="openTermsModal()" class="terms-link">Terms and Conditions</a>';
+            termsText.classList.add('terms-accepted');
+        }
+        
+        // Close the modal
+        closeTermsModal();
+        
+        // Show success notification
+        showEnhancedToast('Terms and Conditions accepted ✓', 'success');
+        
+        // Update form validation
+        validateModalForm();
+        
+        // Track progress
+        updateModalProgress();
+    };
+    
+    window.acceptPrivacy = function() {
+        // Mark as read
+        modalState.privacyRead = true;
+        
+        // Update the privacy text to show accepted status
+        const privacyText = document.querySelector('.terms-privacy-container:last-of-type .terms-text');
+        if (privacyText) {
+            privacyText.innerHTML = '✓ I have read and agree to the <a href="#" onclick="openPrivacyModal()" class="terms-link">Privacy Policy</a>';
+            privacyText.classList.add('terms-accepted');
+        }
+        
+        // Close the modal
+        closePrivacyModal();
+        
+        // Show success notification
+        showEnhancedToast('Privacy Policy accepted ✓', 'success');
+        
+        // Update form validation
+        validateModalForm();
+        
+        // Track progress
+        updateModalProgress();
+    };
+    
+    // Enhanced form validation for modals
+    function validateModalForm() {
+        const termsAccepted = modalState.termsRead;
+        const privacyAccepted = modalState.privacyRead;
+        const submitBtn = document.getElementById('signupSubmitBtn');
+        
+        if (termsAccepted && privacyAccepted) {
+            // Enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('btn-enabled');
+                submitBtn.classList.remove('btn-disabled');
+            }
+            return true;
+        } else {
+            // Disable submit button
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('btn-disabled');
+                submitBtn.classList.remove('btn-enabled');
+            }
+            return false;
+        }
+    }
+    
+    // Progress tracking for modals
+    function updateModalProgress() {
+        const progress = document.querySelector('.progress-indicator');
+        const progressText = document.querySelector('.progress-text');
+        
+        if (progress && progressText) {
+            const total = 2;
+            const completed = (modalState.termsRead ? 1 : 0) + (modalState.privacyRead ? 1 : 0);
+            const percentage = (completed / total) * 100;
+            
+            progress.style.width = percentage + '%';
+            progressText.textContent = `${completed}/${total} agreements accepted`;
+            
+            // Add shimmer effect when progress changes
+            if (completed > 0) {
+                progress.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+            }
+        }
+    }
+    
+    // Enhanced click-outside-to-close with animation
+    window.addEventListener('click', function(event) {
+        const termsModal = document.getElementById('termsModal');
+        const privacyModal = document.getElementById('privacyModal');
+        
+        if (event.target === termsModal) {
+            closeTermsModal();
+        }
+        if (event.target === privacyModal) {
+            closePrivacyModal();
+        }
+    });
+    
+    // Keyboard navigation support for modals
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const termsModal = document.getElementById('termsModal');
+            const privacyModal = document.getElementById('privacyModal');
+            
+            if (termsModal && termsModal.style.display === 'block') {
+                closeTermsModal();
+            }
+            if (privacyModal && privacyModal.style.display === 'block') {
+                closePrivacyModal();
+            }
+        }
+    });
+    
+    // Enhanced toast notification system for modals
+    function showEnhancedToast(message, type = 'info', duration = 3000) {
+        const toaster = document.getElementById('toaster');
+        if (!toaster) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        // Add icon based on type
+        const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-message">${message}</span>`;
+        
+        toaster.appendChild(toast);
+        
+        // Show toast with animation
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Hide and remove toast
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toaster.contains(toast)) {
+                    toaster.removeChild(toast);
+                }
+            }, 300);
+        }, duration);
+    }
+    
+    // Form submission validation for modals
+    window.validateModalSubmission = function() {
+        const termsAccepted = modalState.termsRead;
+        const privacyAccepted = modalState.privacyRead;
+        
+        if (!termsAccepted || !privacyAccepted) {
+            showEnhancedToast('Please read and accept both Terms and Conditions and Privacy Policy to continue', 'error', 5000);
+            return false;
+        }
+        
+        return true;
+    };
+    
+    // Reset functionality when switching views
+    window.resetAgreements = function() {
+        modalState.termsRead = false;
+        modalState.privacyRead = false;
+        
+        // Reset terms text
+        const termsText = document.querySelector('.terms-privacy-container:first-of-type .terms-text');
+        if (termsText) {
+            termsText.innerHTML = 'I agree to the <a href="#" onclick="openTermsModal()" class="terms-link">Terms and Conditions</a>';
+            termsText.classList.remove('terms-accepted');
+        }
+        
+        // Reset privacy text
+        const privacyText = document.querySelector('.terms-privacy-container:last-of-type .terms-text');
+        if (privacyText) {
+            privacyText.innerHTML = 'I agree to the <a href="#" onclick="openPrivacyModal()" class="terms-link">Privacy Policy</a>';
+            privacyText.classList.remove('terms-accepted');
+        }
+        
+        // Reset submit button
+        const submitBtn = document.getElementById('signupSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-disabled');
+            submitBtn.classList.remove('btn-enabled');
+        }
+        
+        // Reset progress
+        updateModalProgress();
+    };
+    
+    // Enhanced form submission handler for modals
+    window.handleModalFormSubmission = function(event) {
+        if (!validateModalSubmission()) {
+            event.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        }
+        
+        return true;
+    };
+
+    // Initialize modal system
+    function initializeModalSystem() {
+        validateModalForm();
+        updateModalProgress();
+    }
+
+    // Initialize modal system
+    initializeModalSystem();
+
     console.log('User Authentication app initialized successfully');
 }); 
