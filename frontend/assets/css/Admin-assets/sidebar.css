@@ -1,0 +1,159 @@
+/* css/sidebar.css */
+/* Styles for the collapsible sidebar navigation */
+
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 240px;
+  background: #0B1739;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s cubic-bezier(.4,0,.2,1), left 0.25s cubic-bezier(.4,0,.2,1);
+  z-index: 10;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px 16px 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.sidebar-logo {
+  font-size: 1.7em;
+}
+
+.sidebar-title {
+  transition: opacity 0.2s, width 0.2s;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-title {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 1em;
+  margin: 2px 8px;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.nav-item.active, .nav-item:hover {
+  background: #e4e9f2;
+  color: #2a5bd7;
+}
+
+.nav-icon {
+  font-size: 1.3em;
+  min-width: 24px;
+  text-align: center;
+}
+
+.nav-text {
+  transition: opacity 0.2s, width 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* Tooltip for truncated sidebar items */
+.nav-item.is-truncated {
+  position: relative;
+}
+
+.nav-item.is-truncated:hover .nav-text::after {
+  content: attr(data-fulltext);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 10px;
+  background-color: #34495e;
+  color: #ecf0f1;
+  padding: 6px 12px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 1000;
+  font-size: 14px;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid #e4e9f2;
+  margin: 12px 0;
+}
+
+.sidebar-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #142c6dbe;
+  border-radius: 0 0 8px 8px;
+  font-size: 1em;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.account-icon {
+  font-size: 1.3em;
+}
+
+.account-text {
+  transition: opacity 0.2s, width 0.2s;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .account-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Media query for responsive sidebar behavior */
+@media screen and (max-width:900px) {
+  .sidebar {
+    left: -240px;
+  }
+  .sidebar.expanded {
+    left: 0;
+  }
+  .sidebar.collapsed {
+    left: -64px;
+  }
+} 

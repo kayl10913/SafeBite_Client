@@ -1,0 +1,40 @@
+/* Smart Training UI – centralized styles for cleaner, user-friendly layout */
+
+/* History list spacing & alignment */
+.food-history-card{padding:20px}
+.food-history-header h3{margin:0 0 6px 0}
+.food-history-header p{margin:0 0 14px 0}
+.food-history-content{padding-top:8px}
+.food-history-list{display:block}
+.food-history-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin-bottom:10px;border-radius:10px;background:transparent}
+.food-history-details h4{margin:0 0 4px 0;font-weight:600}
+.food-history-details p{margin:0;color:#9fb8ff;font-size:0.9rem}
+.food-history-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.food-history-time{opacity:.9;font-size:.85rem}
+.food-history-status{padding:6px 12px;border-radius:16px;font-size:.8rem;font-weight:600}
+#foodHistoryList .food-history-status.failed{background:#ffe0e0;color:#8a1c1c}
+#showAllHistoryBtn{margin-top:10px}
+
+/* ML scanner modal waiting row spacing */
+#sensorWaitIndicator{display:flex;align-items:center;gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;width:100%}
+#sensorWaitIndicator .sensor-wait-text{margin-left:6px}
+.auto-training-status{margin-top:14px}
+.training-status-header{margin-bottom:8px}
+#okFoodSelected{margin-top:14px;min-width:210px;height:46px;border-radius:999px;background:#4a9eff;border:0;color:#fff;font-weight:700}
+#okFoodSelected:hover{background:#3a8eef}
+
+/* Inline cancel button injected by JS */
+#cancelScanBtn{background:#dc3545;color:#fff;border:1px solid #c82333;padding:8px 14px;border-radius:999px;font-weight:700;margin-left:auto}
+#cancelScanBtn:hover{background:#c82333;border-color:#bd2130}
+
+/* Smart Training confirmation card styling (new look, same palette) */
+.food-selected-confirmation{align-items:center;justify-content:center;padding:22px}
+#food-selected-card{background:linear-gradient(180deg,#212c4d 0%,#1b263f 100%);border:1px solid rgba(43,58,102,.9);border-radius:18px;padding:26px 28px;max-width:540px;width:100%;color:#e0e6f6;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.5);backdrop-filter:blur(2px)}
+#food-selected-card h2{margin:0 0 14px 0;letter-spacing:.2px;font-size:1.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+#food-selected-card .food-selected-info p{margin:6px 0 10px 0;font-size:1rem;opacity:.95}
+
+/* Cancel/Show all buttons keep theme colors (see inline color vars in HTML) */
+.sensor-wait .sensor-wait-text{color:#bcd0ff;font-weight:500}
+.sensor-wait{margin-top:6px}
+.food-history-status.cancelled{background:#f8d7da;color:#721c24}
+

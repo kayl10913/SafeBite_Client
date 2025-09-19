@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional, if you're using it)
+.vscode/
+
+# Dependency lock files (optional)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Coverage reports (if using testing tools like Jest)
+coverage/
+
+# Build artifacts (if you use any build tool later)
+dist/

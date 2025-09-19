@@ -1,0 +1,46 @@
+/* css/ad-chart.css - Styles for the Device Activity chart card */
+
+.activity-card {
+  background: linear-gradient(135deg, #16213a 0%, #22336a 100%);
+  border-radius: 16px;
+  padding: 24px 24px 0 24px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  position: relative;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#activityChart {
+  width: 100% !important;
+  height: 200px !important;
+  display: block;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 0 18px 0;
+  padding: 0 16px 0 16px;
+}
+
+.activity-title {
+  color: #fff;
+  font-size: 1.2em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding-left: 8px;
+}
+
+.activity-filter {
+  background: #14224a;
+  color: #fff;
+  border: 1px solid #2a3b6d;
+  border-radius: 6px;
+  padding: 4px 18px 4px 12px;
+  font-size: 1em;
+  outline: none;
+  margin-right: 8px;
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBite - Admin Login</title>
+    <link rel="stylesheet" href="../assets/css/Login-assets/login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="App">
+        <div class="login-container">
+            <div class="login-card">
+                <!-- Logo and Header -->
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <span>A</span>
+                    </div>
+                    <h1 class="brand-name">Admin Panel</h1>
+                    <p class="welcome-text">Admin Login: Sign in to manage the system.</p>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginView" class="auth-view active">
+                    <form class="login-form" id="loginForm">
+                        <div class="input-group">
+                            <label for="email">Email or Username</label>
+                            <div class="input-field">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="email" name="email" placeholder="Enter your email or username" required>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <div class="input-field">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                                <button type="button" class="toggle-password" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="forgot-password">
+                            <a href="#" class="forgot-link" onclick="alert('Please contact support to reset admin password.')">Forgot your password?</a>
+                        </div>
+
+                        <button type="submit" class="signin-btn">
+                            <span>Sign In as Admin</span>
+                        </button>
+                    </form>
+
+                    <!-- Link back to User Login -->
+                    <div class="signup-section">
+                        <p>Are you a regular user? <a href="Login.html" class="signup-link">Sign in here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toaster for notifications -->
+    <div id="toaster" class="toaster"></div>
+
+    <!-- API Configuration -->
+    <script src="../assets/js/config/api-config.js"></script>
+    <script src="../assets/js/Login/admin-login.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,105 @@
+/* Admin Account Modal Styles */
+.account-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24, 31, 54, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.account-modal-content {
+  background: #1a2340;
+  border-radius: 16px;
+  padding: 36px 32px 28px 32px;
+  min-width: 340px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  color: #fff;
+  position: relative;
+}
+.account-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 1.7em;
+  color: #bfc9da;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+.account-modal-close:hover {
+  color: #ff5e5e;
+}
+.account-modal-content h2 {
+  margin-top: 0;
+  color: #fff;
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.account-form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.account-form-group label {
+  color: #bfc9da;
+  font-size: 0.98em;
+  font-weight: 600;
+}
+.account-form-group input {
+  background: #181f36;
+  border: 1.5px solid #22336a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 1em;
+  transition: border 0.18s, background 0.18s;
+}
+.account-form-group input:focus {
+  border-color: #3b7bfa;
+  outline: none;
+  background: #212c4d;
+}
+.account-modal-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.account-modal-save {
+  background: #3b7bfa;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.account-modal-save:hover {
+  background: #2563eb;
+}
+.account-modal-cancel {
+  background: #22336a;
+  color: #bfc9da;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.account-modal-cancel:hover {
+  background: #2a3b6d;
+}
+@media (max-width: 600px) {
+  .account-modal-content {
+    min-width: 0;
+    width: 98vw;
+    padding: 18px 6vw 18px 6vw;
+  }
+} 

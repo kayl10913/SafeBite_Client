@@ -1,0 +1,64 @@
+@media (max-width: 1024px) {
+
+.floating-nav {
+  width: 90%;
+}
+
+
+#page1 .text-container{
+        left: 26%;
+}
+
+#prevSlide {
+    left: 300px;
+}
+
+#nextSlide{
+    right: 300px;
+}
+
+#page2 .text-container .text{
+        width: 50vh;
+}
+
+
+/*slide 2-page2*/
+    #slide .slide2-content .image2 img {
+        width: 32vh;
+    }
+
+ .image2 {
+    justify-content: flex-end;
+}
+.M3-image {
+        left: 37%;
+        z-index: 1;
+}
+.M1-image {
+        top: 30%;
+        left: 30%;
+        transform: rotate(281deg);
+    }
+
+.M1-image img {
+    width: 50vh;
+    height: 50vh
+    }
+
+
+.blob1-image {
+        left: -28%;
+    }
+#page3 .M4-image {
+        top: 55%;
+}
+#page3 .M3-image {
+        top: 61%;
+}
+.device-content .image-container {
+        flex-wrap: wrap;
+        justify-content: space-around;
+}
+
+
+}/*end*/

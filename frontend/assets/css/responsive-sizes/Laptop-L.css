@@ -1,0 +1,84 @@
+@media (min-width: 1440px) {
+
+    /*nav position*/
+.floating-nav {
+    right: 50px;
+    width: 160vh;
+
+}
+
+    /*Page1*/
+
+.lemon-image {
+    left: 43%;
+}
+
+.grass-image {
+    top: 55%;
+    left: 55%;
+}
+    .grass1-image {
+        top: 82%;
+        left: 64%
+    }
+
+#page1 .image {
+    position: relative;
+    left: -6%;
+    z-index: 2;
+}
+
+
+.img-fluid {
+  max-width: none !important;
+  height: 100% !important;
+}
+
+
+    /*Page2*/
+
+.blob1-image{
+    top: -45%;
+    left: -20%;
+    width: 702PX;
+}
+
+
+.image img {
+    width: 100vh;
+    height: 60vh;
+}
+
+
+.lemon1-image{
+    top: -22%;
+    left: 15%;
+    width: 530PX;
+    transform: rotate(161deg) SCALEY(-1);
+}
+#page2 .text-container {
+    width: 190px;
+}
+#page2 .text p{
+    font-size: 16px;
+}
+
+/*slide2*/
+.image2 img {
+    width: 56vh;
+}
+.M1-image {
+    top: 28%;
+    left: 22%;
+    transform: rotate(281deg);
+}
+
+/*DOT*/
+.center-dots {
+    top: 87%;
+    font-size: 0.5rem;
+    gap: 10px;
+    height: 3%;
+    width: 3%;
+}
+}

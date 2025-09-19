@@ -1,0 +1,500 @@
+/* Report Generator Styles - Match User Dashboard Design */
+.report-generator-main {
+  margin-left: 260px;
+  padding: 32px 32px 32px 32px;
+  min-height: 100vh;
+  background: #181f36;
+
+}
+
+.sidebar.collapsed ~ #main-content .report-generator-main {
+  margin-left: 84px;
+}
+
+.report-generator-container {
+  margin-left: -50px;
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  transition: margin-left 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+.report-generator-header {
+  margin-bottom: 30px;
+}
+
+.report-generator-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin-bottom: 10px;
+}
+
+.report-generator-subtitle {
+  font-size: 1.1rem;
+  color: #b0b0b0;
+  margin-bottom: 0;
+}
+
+.report-generator-card {
+  background-color: #212c4d;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 30px;
+}
+
+.report-control-group {
+  display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 160px;
+}
+
+.report-control-group label {
+  display: block;
+  margin-bottom: 0; /* spacing handled by gap */
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+
+
+.report-select {
+  background: #181f36;
+  color: #fff;
+  border: 1px solid #2a3b6d;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 1em;
+  outline: none;
+}
+
+.report-select:focus {
+  outline: none;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.report-select option {
+  background-color: #2a3658;
+  color: #ffffff;
+}
+
+.report-date-input {
+  width: 100%;
+  padding: 12px 6px;
+  background-color: #2a3658;
+  border: 1px solid #3a4a6b;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+  min-width: 180px;
+}
+
+.report-date-input:focus {
+  outline: none;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.report-date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.report-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Week / Month / Year pickers - match .report-date-input styling */
+#reportWeekPicker,
+#reportMonthPicker,
+#reportYearPicker {
+  background: #181f36;
+  color: #fff;
+  border: 1px solid #2a3b6d;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 1em;
+  outline: none;
+}
+
+#reportWeekPicker:focus,
+#reportMonthPicker:focus,
+#reportYearPicker:focus {
+  outline: none;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+/* Invert calendar icon for dark theme on week/month pickers */
+#reportWeekPicker::-webkit-calendar-picker-indicator,
+#reportMonthPicker::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+#reportWeekPicker::-webkit-calendar-picker-indicator:hover,
+#reportMonthPicker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Tidy year number input spinners and appearance */
+#reportYearPicker::-webkit-outer-spin-button,
+#reportYearPicker::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#reportYearPicker {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Ensure the picker groups align consistently with other controls */
+#reportWeekGroup,
+#reportMonthGroup,
+#reportYearGroup,
+#reportCustomDateGroup {
+  min-width: 200px;
+}
+
+/* Custom date range group styling */
+#customDateRangeGroup {
+    display: flex;
+  gap: 16px;
+  align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+#customDateRangeGroup .report-control-group {
+  flex: 1;
+  min-width: 200px;
+  max-width: 250px;
+}
+
+#customDateRangeGroup .report-control-group label {
+  margin-bottom: 8px;
+  color: #e0e0e0;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.report-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end; /* align actions to the right */
+  align-items: center;
+}
+
+.report-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-btn-primary {
+  background-color: #4a9eff;
+  color: #ffffff;
+}
+
+.report-btn-primary:hover {
+  background-color: #3a8eef;
+  transform: translateY(-1px);
+}
+
+.report-btn-secondary {
+  background-color: #3a4a6b;
+  color: #e0e0e0;
+}
+
+.report-btn-secondary:hover {
+  background-color: #4a5a7b;
+  transform: translateY(-1px);
+}
+
+.report-preview-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.report-preview {
+  background: #1a2342;
+  border-radius: 10px;
+  padding: 24px;
+  min-height: 200px;
+  margin-top: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.report-table-container {
+  background: none;
+  margin-bottom: 20px;
+}
+
+/* Table styles for generated reports - match User table colors exactly */
+.admin-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: none;
+}
+
+.admin-log-table thead {
+  background: none;
+}
+
+.admin-log-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: #bfc9da;
+  font-size: 0.95em;
+  font-weight: 600;
+  border-bottom: 1px solid #3a4a8b;
+  text-transform: uppercase;
+}
+
+.admin-log-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #22336a;
+  color: #e9ecef;
+  vertical-align: middle;
+}
+
+.admin-log-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status badges for report tables */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.status-inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.status-suspended {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.status-pending {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* Empty State Styles */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px !important;
+  border: none !important;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+.empty-state-desc {
+  font-size: 0.95rem;
+  color: #b0b0b0;
+  max-width: 400px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Pagination Styles - Match Admin Log design */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.pagination-info {
+  color: #bfc9da;
+  font-size: 0.9em;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Report pagination specific styles - match Admin Log pagination */
+#reportPagination {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  background: #22336a;
+  border-radius: 12px;
+  border: 1px solid #344e6e;
+  /* Ensure pagination is visible */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#reportPagination .pagination-info {
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+  color: #bfc9da;
+  font-size: 0.9em;
+}
+
+#reportPagination .pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  width: 100%;
+}
+
+/* Force button styles to match Admin Log pagination */
+#reportPagination .pagination-btn {
+  background: #22336a !important;
+  color: #fff !important;
+  border: 1px solid #3a4a8b !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  font-size: 0.9em !important;
+  transition: all 0.2s ease !important;
+}
+
+#reportPagination .pagination-btn:hover {
+  background: #3a4a8b !important;
+  border-color: #4a5a9b !important;
+}
+
+#reportPagination .pagination-btn.active {
+  background: #3b7bfa !important;
+  border-color: #3b7bfa !important;
+}
+
+#reportPagination .pagination-ellipsis {
+  color: #bfc9da !important;
+  padding: 0 8px !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .report-generator-main {
+    margin-left: 95px;
+  }
+  
+  .report-generator-title {
+    font-size: 2rem;
+  }
+  
+  .report-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .report-control-group {
+    min-width: 100%;
+  }
+  
+  #customDateRangeGroup {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  #customDateRangeGroup .report-control-group {
+    min-width: 100%;
+  }
+  
+  .report-actions {
+    justify-content: flex-end; /* keep right-aligned on mobile too */
+  }
+  
+  .report-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .admin-log-table {
+    font-size: 12px;
+  }
+  
+  .admin-log-table th,
+  .admin-log-table td {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-generator-card {
+    padding: 20px;
+  }
+  
+  .admin-log-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .admin-log-table th,
+  .admin-log-table td {
+    padding: 10px 12px;
+  }
+}

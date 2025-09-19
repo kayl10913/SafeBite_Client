@@ -1,0 +1,71 @@
+
+@media (max-width: 768px) {
+
+
+    .menu-container{
+        display: flex;
+                gap: 33px;
+    }
+  .floating-nav {
+        left: 4%;
+        transform: none;
+        z-index: 1000;
+        width: 92%;
+        background: rgb(255, 255, 255);
+        padding: 5px;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
+  }
+
+  .nav-pill {
+background: none;
+        padding: 0;
+        box-shadow: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        display: flex
+;
+  }
+.nav-links.active ul {
+    display: flex;
+    flex-direction: column;
+}
+  .burger-button {
+    order: -1;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+
+  .logo {
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    align-items: center;
+  }
+button:not(:disabled) {
+    cursor: pointer;
+    display: block;
+}
+  .nav-links ul {
+    transform: none;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin-bottom: 0;
+    list-style: none;
+
+    /* Keep their row direction */
+    flex-direction: row;
+    gap: 20px;
+
+    /* This lets you show or hide if you wish */
+    display: none;
+  }
+
+  .nav-links.active ul {
+    display: flex;
+  }
+}

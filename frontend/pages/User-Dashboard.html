@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeBite - User Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/User-assets/sidebar.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/analyticstat.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/ad-chart.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/spoilageReport.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/css/User-assets/responsive-overrides.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/report-generator.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/analysis.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/smart-training.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/user-log.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/config.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/feedback.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    /* Match site theme for dynamically injected buttons */
+    #cancelScanBtn{
+      background:#dc3545; /* danger */
+      color:#fff;
+      border:1px solid #c82333;
+      padding:8px 12px;
+      border-radius:6px;
+      font-weight:600;
+    }
+    #cancelScanBtn:hover{background:#c82333;border-color:#bd2130}
+
+    #showAllHistoryBtn{
+      background:#4a9eff; /* primary */
+      color:#fff;
+      border:0;
+      padding:8px 12px;
+      border-radius:6px;
+      font-weight:600;
+    }
+    #showAllHistoryBtn:hover{background:#3a8eef}
+
+    /* Ensure cancelled status is clearly styled in history */
+    .food-history-status.cancelled{background:#f8d7da;color:#721c24}
+
+    
+  </style>
+</head>
+<body>
+<!-- Hamburger Menu Button -->
+<button id="hamburger-menu" class="hamburger-menu" aria-label="Toggle navigation">
+  <i class="bi bi-list"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar expanded" id="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">&#128230;</span>
+    <span class="sidebar-title">User-name</span>
+  </div>
+  <nav class="sidebar-nav">
+    <ul>
+      <li class="nav-item active">
+        <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#8962;</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="spoilage-report" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#128200;</span>
+          <span class="nav-text">Spoilage Reports</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#128229;</span>
+          <span class="nav-text">Reports Generator</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="analysis" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">🔬</span>
+          <span class="nav-text">Analysis</span>
+        </a>
+      </li>
+    </ul>
+    <hr class="sidebar-divider">
+    <ul>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="user-logs" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#128273;</span>
+          <span class="nav-text">User Logs / History</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="config" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#9881;</span>
+          <span class="nav-text">Config</span>
+        </a>
+      </li>
+    </ul>
+    <hr class="sidebar-divider">
+
+    <ul>
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+          <span class="nav-icon">&#128172;</span>
+          <span class="nav-text">Feedbacks/ Support Tickets</span>
+        </a>
+      </li>
+  </ul>
+</nav>
+  <div class="sidebar-account" id="sidebarAccount">
+    <span class="account-icon">&#128100;</span>
+    <span class="account-text" id="accountText">Account</span>
+    <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
+  </div>
+</aside>
+<main id="main-content">
+  <!-- Content will be loaded here by spa.js -->
+</main>
+
+
+
+<!--Dashboard-->
+<template id="dashboard-template">
+    <div class="dashboard-container container-fluid">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Sensor Dashboard</h1>
+          <p class="dashboard-subtitle">Monitor your food sensors and manage scanning operations</p>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="dashboard-tabs">
+          <button class="dashboard-tab active" data-tab="dashboard">Dashboard</button>
+          <button class="dashboard-tab" data-tab="food-selection">Smart Training</button>
+          <button class="dashboard-tab" data-tab="devices">Devices</button>
+        </div>
+        
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="dashboard-content">
+          <!-- Top Row: Sensor Cards -->
+          <div class="dashboard-row row mb-4">
+            <div class="dashboard-card sensors-card col-12">
+              <div class="sensors-header">
+                <div class="sensors-header-left">
+                  <div class="sensors-header-icon">
+                    <i class="bi bi-activity"></i>
+                  </div>
+                  <div class="sensors-header-content">
+                    <h4>Real-time Sensor Readings</h4>
+                    <p class="sensors-header-subtitle">Live monitoring of your food safety sensors</p>
+                  </div>
+                </div>
+                <div class="sensors-header-right">
+                  <div class="sensors-status-indicator">
+                    <div class="status-dot online"></div>
+                    <span class="status-text">All Systems Active</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sensor-cards-container row gx-3 gy-3 mt-4">
+                <!-- JS will render sensor cards here -->
+              </div>
+              <!-- ML Food Scanner Button -->
+              <div class="ml-scanner-button-section mt-4">
+                <div class="scanner-button-card">
+                  <div class="scanner-button-content">
+                    <div class="scanner-icon">
+                      <i class="bi bi-cpu"></i>
+                    </div>
+                    <div class="scanner-text">
+                      <h5>SmartSense Scanner</h5>
+                      <p>Select food and scan with sensors for AI-powered prediction</p>
+                    </div>
+                    <button id="openMLScannerBtn" class="btn btn-primary scanner-open-btn">
+                      <i class="bi bi-scan"></i>
+                      Start Scan
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="sensors-footer">
+                <div class="sensors-summary">
+                  <div class="summary-item">
+                    <span class="summary-label">Total Sensors</span>
+                    <span class="summary-value" id="totalSensors">0</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Active</span>
+                    <span class="summary-value active" id="activeSensors">0</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Last Update</span>
+                    <span class="summary-value" id="lastUpdate">Just now</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bottom Row: Activity Chart and Alerts -->
+          <div class="dashboard-row row">
+            <div class="dashboard-card tall activity-card col-12 col-lg-8 mb-3">
+              <div class="activity-header d-flex justify-content-between align-items-center">
+                <span class="activity-title">Sensor Activity</span>
+                <select class="activity-filter form-select form-select-sm w-auto ms-2">
+                  <option>Real-time</option>
+                  <option>Last Hour</option>
+                  <option>Last 24 Hours</option>
+                  <option>Last Week</option>
+                </select>
+              </div>
+              <div class="activity-chart-container">
+                <canvas id="activityChart"></canvas>
+              </div>
+            </div>
+            <div class="dashboard-card tall alerts-card col-12 col-lg-4 mb-3">
+              <h4>Device Alerts</h4>
+              <div id="alerts-container" class="alerts-container">
+                <div class="no-alerts">No active alerts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smart Training Content -->
+        <div id="food-selection-content" class="dashboard-content hidden">
+          <div class="food-selection-layout">
+            <!-- Smart Training Card -->
+            <div class="food-selection-container">
+              <div class="food-selection-card">
+                <div class="food-selection-header">
+                  <h2>🧠 Smart Training Center</h2>
+                  <p>Create food items, scan with sensors, then teach our AI</p>
+                </div>
+                <div class="food-selection-body">
+                  <div class="food-selection-icon">
+                    <i class="bi bi-lightbulb"></i>
+                  </div>
+                  <h3>Start Smart Training</h3>
+                  <p>Create a food item, scan it with your sensors, then share the results to train our AI</p>
+                  <button class="food-selection-btn" id="selectFoodBtn">
+                    <i class="bi bi-plus-circle"></i>
+                    Create & Scan Food
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Smart Training History Section -->
+            <div class="food-history-container">
+              <div class="food-history-card">
+                <div class="food-history-header">
+                  <h3>📚 Your Smart Training History</h3>
+                  <p>Track your food scanning and AI training sessions</p>
+                </div>
+                <div class="food-history-content">
+                  <div class="food-history-filters">
+                    <select id="historyFilter" class="history-filter">
+                      <option value="all">All Foods</option>
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                    </select>
+                    <button id="clearFoodHistoryBtn" class="history-clear-btn" style="margin-left:8px;">
+                      <i class="bi bi-trash"></i>
+                      Clear history
+                    </button>
+                  </div>
+                  <div class="food-history-list" id="foodHistoryList">
+                    <!-- Food scanning history will be rendered here by JavaScript -->
+                    <div class="no-history">
+                      <i class="bi bi-lightbulb"></i>
+                      <p>No smart training sessions yet</p>
+                      <span>Start by creating and scanning a food item above</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Devices Content -->
+        <div id="devices-content" class="dashboard-content hidden">
+          <div class="devices-layout">
+            <!-- Connect New Device Section -->
+            <div class="connect-device-container">
+              <div class="connect-device-card">
+                <div class="connect-device-header">
+                  <i class="bi bi-plus-circle"></i>
+                  <h3>Connect New Device</h3>
+                </div>
+                <div class="connect-device-form">
+                  <div class="form-group">
+                    <label for="deviceId">Device ID</label>
+                    <input type="text" id="deviceId" placeholder="Enter device ID (e.g., TEMP001)" />
+                  </div>
+                  <div class="form-group">
+                    <label for="deviceType">Device Type</label>
+                    <select id="deviceType"></select>
+                  </div>
+                  <button class="connect-device-btn" id="connectDeviceBtn">
+                    <i class="bi bi-plus"></i>
+                    Connect Device
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sensor Status Section -->
+            <div class="device-status-container">
+              <div class="device-status-card">
+                <div class="device-status-header">
+                  <i class="bi bi-wifi"></i>
+                  <h3>Sensor Status</h3>
+                </div>
+                <div class="device-status-list" id="deviceSensorList">
+                  <!-- Sensor status items will be rendered here by JavaScript -->
+                  <div class="no-devices">
+                    <i class="bi bi-wifi-off"></i>
+                    <p>No devices connected</p>
+                    <span>Connect a device to get started</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</template>
+
+
+<!--spoilage-report-->
+<template id="spoilage-report-template">
+  <div class="spoilage-main">
+    <div class="spoilage-header-top">
+      <div>
+        <h1>Food Spoilage Report System</h1>
+        <div class="spoilage-subtitle">Monitor and track food spoilage in real-time</div>
+      </div>
+      <div class="spoilage-header-buttons">
+        <a href="#" class="spoilage-btn active" data-page="spoilage-report">Dashboard</a>
+        <a href="#" class="spoilage-btn" data-page="detailed-report">Detailed Report</a>
+      </div>
+    </div>
+    <div class="spoilage-stats-row">
+      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Items</div><div class="stat-value">8</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Safe</div><div class="stat-value">1</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-yellow">&#9888;</div><div class="stat-label">At Risk</div><div class="stat-value">5</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoiled</div><div class="stat-value">1</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Expired</div><div class="stat-value">1</div></div>
+    </div>
+    <div class="spoilage-main-cards">
+      <div class="spoilage-card spoilage-bar-card">
+        <div class="spoilage-card-title">Spoilage Rate by Food Type</div>
+        <div class="spoilage-bar-list">
+          <div class="spoilage-bar-row"><span class="bar-label">Sinigang</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:50%"></div></div><span class="bar-value">50%</span></div>
+          <div class="spoilage-bar-row"><span class="bar-label">Chicken</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:50%"></div></div><span class="bar-value">50%</span></div>
+          <div class="spoilage-bar-row"><span class="bar-label">Adobo</span><div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div><span class="bar-value">0%</span></div>
+          <div class="spoilage-bar-row"><span class="bar-label">Milk</span><div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div><span class="bar-value">0%</span></div>
+        </div>
+      </div>
+      <div class="spoilage-card spoilage-summary-card">
+        <div class="spoilage-card-title">Top Spoiled Foods Summary</div>
+        <div class="spoilage-summary-list">
+          <div class="summary-row"><span class="summary-label">Sinigang</span><span class="summary-desc">1 of 2 items spoiled</span><span class="summary-rate bar-red">50%</span></div>
+          <div class="summary-row"><span class="summary-label">Chicken</span><span class="summary-desc">1 of 2 items spoiled</span><span class="summary-rate bar-red">50%</span></div>
+          <div class="summary-row"><span class="summary-label">Adobo</span><span class="summary-desc">0 of 2 items spoiled</span><span class="summary-rate">0%</span></div>
+          <div class="summary-row"><span class="summary-label">Milk</span><span class="summary-desc">0 of 2 items spoiled</span><span class="summary-rate">0%</span></div>
+        </div>
+        <div class="summary-total">Total Overview: <span class="summary-total-right">2 spoiled out of 8 items</span></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Dashboard Add Food Modal -->
+<div class="config-modal" id="dashboardAddFoodModal" style="display:none;">
+  <div class="config-modal-backdrop"></div>
+  <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;">
+    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+      <span class="config-modal-title" style="color:#fff;">Add Food</span>
+      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+    </div>
+    <form class="config-modal-form" id="dashboardAddFoodForm">
+      <div class="config-modal-row">
+        <div class="config-modal-group">
+          <label style="color:#e0e6f6;">Food Name *</label>
+          <input type="text" id="dashboardFoodName" required placeholder="e.g., Mango, Chicken" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;" />
+        </div>
+        <div class="config-modal-group">
+          <label style="color:#e0e6f6;">Category</label>
+          <select id="dashboardFoodCategory" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;"></select>
+        </div>
+      </div>
+      <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
+        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
+        <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Add</button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<!-- Dashboard Add Device Modal -->
+<div class="config-modal" id="dashboardAddDeviceModal" style="display:none;">
+  <div class="config-modal-backdrop"></div>
+  <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:520px;">
+    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+      <span class="config-modal-title" style="color:#fff;">Connect Device</span>
+      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+    </div>
+    <form class="config-modal-form" id="dashboardAddDeviceForm">
+      <div class="config-modal-row">
+        <div class="config-modal-group">
+          <label style="color:#e0e6f6;">Sensor ID *</label>
+          <input type="text" id="dashboardDeviceId" required placeholder="e.g., SENSOR_001, TEMP_01" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;" />
+        </div>
+        <div class="config-modal-group">
+          <label style="color:#e0e6f6;">Sensor Type *</label>
+          <select id="dashboardDeviceType" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+            <option value="Temperature">Temperature</option>
+            <option value="Humidity">Humidity</option>
+            <option value="Gas">Gas</option>
+          </select>
+        </div>
+      </div>
+      <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
+        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
+        <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Connect</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ML Food Scanner Modal -->
+<div class="config-modal" id="mlFoodScannerModal" style="display:none;">
+  <div class="config-modal-backdrop"></div>
+  <div class="config-modal-content ml-scanner-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
+    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+      <span class="config-modal-title" style="color:#fff;">
+        <i class="bi bi-cpu"></i> SmartSense Scanner
+      </span>
+      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+    </div>
+    <div class="ml-scanner-body">
+      <div class="ml-scanner-description">
+        <p style="color:#9fb8ff;margin:0 0 20px 0;font-size:0.9rem;">
+          Select a food item and scan with sensors for AI-powered spoilage prediction
+        </p>
+      </div>
+      
+      <div class="ml-scanner-controls">
+        <div class="ml-scanner-row">
+          <div class="ml-scanner-group">
+            <div class="ml-scanner-group-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <label for="mlFoodSelect" style="color:#e0e6f6;font-size:0.9rem;font-weight:500;margin:0;">
+                Choose from existing foods
+              </label>
+              <button type="button" id="refreshFoodListBtn" class="btn btn-sm" style="background:#2a3658;color:#9fb8ff;border:1px solid #3a4a6b;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+            <select id="mlFoodSelect" class="form-select" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:8px 12px;border-radius:6px;width:100%;">
+              <option value="">Select from available foods</option>
+            </select>
+            <div class="sensor-info" style="margin-top:8px;color:#9fb8ff;font-size:0.8rem;">
+              <i class="bi bi-info-circle"></i> Will wait for new sensor data before running ML prediction
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sensor Data Waiting Indicator -->
+        <div id="sensorDataWaitIndicator" class="sensor-wait-indicator" style="display: none;">
+          <div class="waiting-content">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="waiting-text">Waiting for new sensor data...</span>
+          </div>
+          <div class="waiting-progress">
+            <div class="progress" style="height: 4px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ml-scanner-footer" style="border-top:1px solid #2b3a66;padding-top:16px;margin-top:20px;">
+        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;padding:8px 16px;border-radius:6px;margin-right:8px;">
+          Cancel
+        </button>
+        <button type="button" id="readyScanBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 16px;border-radius:6px;">
+          <i class="bi bi-scan"></i> Start Scanning
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ML Prediction Results Modal -->
+<div class="config-modal" id="mlPredictionResultsModal" style="display:none;">
+  <div class="config-modal-backdrop"></div>
+  <div class="config-modal-content ml-results-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:500px;">
+    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+      <span class="config-modal-title" style="color:#fff;">
+        <i class="bi bi-check-circle-fill" style="color:#4a9eff;"></i> ML Prediction Complete!
+      </span>
+      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+    </div>
+    <div class="ml-results-body" style="padding:20px;">
+      <div class="ml-results-content">
+        <div class="ml-results-item">
+          <span class="ml-results-label">Food:</span>
+          <span class="ml-results-value" id="mlResultFood">-</span>
+        </div>
+        <div class="ml-results-item">
+          <span class="ml-results-label">Status:</span>
+          <span class="ml-results-value" id="mlResultStatus">-</span>
+        </div>
+        <div class="ml-results-item">
+          <span class="ml-results-label">Confidence:</span>
+          <span class="ml-results-value" id="mlResultConfidence">-</span>
+        </div>
+        <div class="ml-results-recommendation">
+          <span class="ml-results-label">Recommendation:</span>
+          <p class="ml-results-recommendation-text" id="mlResultRecommendation">-</p>
+        </div>
+      </div>
+    </div>
+    <div class="ml-results-footer" style="border-top:1px solid #2b3a66;padding:16px 20px;display:flex;justify-content:flex-end;">
+      <button type="button" id="mlResultsOkBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 20px;border-radius:6px;">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Food Selection Modal -->
+<div class="food-selection-modal" id="foodSelectionModal" style="display:none;">
+  <div class="food-selection-modal-backdrop"></div>
+  <div class="food-selection-modal-content">
+    <div class="food-selection-modal-header">
+      <button class="food-selection-modal-close" aria-label="Close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #bfc9da; font-size: 24px; cursor: pointer; z-index: 10;">&times;</button>
+      <div class="food-selection-modal-icon">
+        <i class="bi bi-egg-fried"></i>
+      </div>
+      <h2>Smart Training - Teach the AI</h2>
+      <p>Scan your food and our sensors will automatically assess its condition</p>
+    </div>
+    
+    <div class="food-selection-modal-body">
+      <div class="food-selection-divider">
+        <span>Add your food for scanning</span>
+      </div>
+      
+      <div class="food-selection-section">
+        <h3>Add Custom Food</h3>
+        <div class="food-selection-form">
+          <div class="food-selection-form-group">
+            <label>Food Name</label>
+            <input type="text" id="customFoodName" placeholder="Enter food name" />
+          </div>
+          <div class="food-selection-form-group">
+            <label>Category</label>
+            <select id="customFoodCategory">
+              <option value="">Select category</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Vegetables">Vegetables</option>
+              <option value="Meat">Meat</option>
+              <option value="Seafood">Seafood</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Grains">Grains</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="food-selection-modal-footer">
+      <button class="food-selection-cancel-btn" id="cancelFoodSelection">Cancel</button>
+      <button class="food-selection-confirm-btn" id="confirmFoodSelection">
+        <i class="bi bi-robot"></i>
+        Teach the AI
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Food Selected Confirmation with Smart Training -->
+<div class="food-selected-confirmation" id="foodSelectedConfirmation" style="display:none;">
+  <div class="food-selected-card" id="food-selected-card">
+    <h2>🧠 Smart Training Ready</h2>
+    <div class="food-selected-info">
+      <p id="selectedFoodInfo">Salmon Fillet from Seafood category ready</p>
+      <p>Scan with your IoT device, then teach our AI!</p>
+      <div id="sensorWaitIndicator" class="sensor-wait" style="display:none;">
+        <span class="sensor-wait-spinner" aria-hidden="true"></span>
+        <span class="sensor-wait-text">Waiting for new sensor data...</span>
+      </div>
+      
+      <!-- Auto Training Status -->
+      <div id="autoTrainingStatus" class="auto-training-status" style="display:none;">
+        <div class="training-status-header">
+          <h3>🧠 AI Training Complete!</h3>
+          <p>Your sensor data has been automatically used to train our AI</p>
+        </div>
+        <div class="training-status-info">
+          <div class="status-item">
+            <i class="bi bi-check-circle"></i>
+            <span>Sensor data collected</span>
+          </div>
+          <div class="status-item">
+            <i class="bi bi-check-circle"></i>
+            <span>AI model updated</span>
+          </div>
+          <div class="status-item">
+            <i class="bi bi-check-circle"></i>
+            <span>Training data saved</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="food-selected-ok-btn" id="okFoodSelected">OK</button>
+  </div>
+</div>
+
+<template id="detailed-report-template">
+  <div class="spoilage-main">
+    <div class="spoilage-header-top">
+      <div>
+        <h1>Food Spoilage Report System</h1>
+        <div class="spoilage-subtitle">Monitor and track food spoilage in real-time</div>
+      </div>
+      <div class="spoilage-header-buttons">
+        <a href="#" class="spoilage-btn" data-page="spoilage-report">Dashboard</a>
+        <a href="#" class="spoilage-btn active" data-page="detailed-report">Detailed Report</a>
+      </div>
+    </div>
+    <div class="detailed-report-card">
+      <div class="detailed-report-filters">
+        <div class="report-controls">
+          <div class="report-control-group">
+            <label for="food-category">Food Category</label>
+            <select id="food-category" name="food-category" class="report-select">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
+          <div class="report-control-group">
+            <label for="date-range">Date Range</label>
+            <select id="date-range" name="date-range" class="report-select">
+              <option value="daily">Daily</option>
+              <option value="weekly" selected>Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="report-control-group">
+            <label for="records-per-page">Records per Page</label>
+            <select id="records-per-page" name="records-per-page" class="report-select">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div class="report-control-group" id="custom-date-range-group" style="display:none;">
+            <label for="start-date">Start Date</label>
+            <input type="date" id="start-date" name="start-date" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="custom-date-range-group-end" style="display:none;">
+            <label for="end-date">End Date</label>
+            <input type="date" id="end-date" name="end-date" class="report-date-input" />
+          </div>
+          <div class="report-actions">
+            <button class="report-btn report-btn-primary" id="apply-filters">
+              <span>⚙️</span>
+              Apply Filters
+            </button>
+            <button class="report-btn report-btn-secondary" id="export-csv">
+              <span>📥</span>
+              Export CSV
+            </button>
+            <button class="report-btn report-btn-secondary" id="export-pdf">
+              <span>📄</span>
+              Export PDF
+            </button>
+          </div>
+        </div>
+      </div>
+             <div class="detailed-report-table-card">
+         <div class="detailed-report-title">Detailed Spoilage Report (8 items)</div>
+         <table class="detailed-report-table">
+          <thead>
+            <tr>
+              <th>FOOD ITEM</th>
+              <th>CATEGORY</th>
+              <th>STATUS</th>
+              <th>RISK SCORE</th>
+              <th>EXPIRY</th>
+              <th>SENSORS</th>
+              <th>ALERTS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sinigang na Baboy<br><span class="created-date">Created: 6/25/2025</span></td>
+              <td><span class="cat-badge">Sinigang</span></td>
+              <td><span class="status-badge spoiled">Spoiled</span></td>
+              <td><span class="risk-score high">55%</span></td>
+              <td>6/26/2025<br><span class="expiry-today">Expires today</span></td>
+              <td>Gas: 95 ppm</td>
+              <td><span class="alert-badge">2 alerts</span></td>
+            </tr>
+            <tr>
+              <td>Fried Chicken<br><span class="created-date">Created: 6/25/2025</span></td>
+              <td><span class="cat-badge">Chicken</span></td>
+              <td><span class="status-badge expired">Expired</span></td>
+              <td><span class="risk-score">53.5%</span></td>
+              <td>6/25/2025<br><span class="expiry-expired">Expired 1 days ago</span></td>
+              <td>Temp: 3.1°C</td>
+              <td><span class="alert-badge">2 alerts</span></td>
+            </tr>
+            <tr>
+              <td>Grilled Chicken<br><span class="created-date">Created: 6/25/2025</span></td>
+              <td><span class="cat-badge">Chicken</span></td>
+              <td><span class="status-badge at-risk">At Risk</span></td>
+              <td><span class="risk-score">38.5%</span></td>
+              <td>6/26/2025<br><span class="expiry-today">Expires today</span></td>
+              <td>pH: 4.3</td>
+              <td><span class="alert-badge none">No alerts</span></td>
+            </tr>
+            <tr>
+              <td>Sinigang na Hipon<br><span class="created-date">Created: 6/25/2025</span></td>
+              <td><span class="cat-badge">Sinigang</span></td>
+              <td><span class="status-badge at-risk">At Risk</span></td>
+              <td><span class="risk-score">30%</span></td>
+              <td>6/30/2025<br><span class="expiry-days">4 days left</span></td>
+              <td>Temp: 17.8°C</td>
+              <td><span class="alert-badge">2 alerts</span></td>
+            </tr>
+                     </tbody>
+         </table>
+       </div>
+       
+       <!-- Pagination Container -->
+       <div id="detailedReportPagination" class="pagination-container" style="display:none;">
+         <!-- Pagination will be rendered here by JavaScript -->
+       </div>
+     </div>
+   </div>
+ </template>
+
+<template id="config-template">
+  <div class="config-main">
+    <div class="config-container">
+      <h1>Food & Sensor Configuration</h1>
+      <div class="config-subtitle">Monitor and manage your food storage with smart sensors</div>
+      <div class="config-cards-row">
+        <div class="config-card good">
+          <div class="config-card-label">Good Items</div>
+          <div class="config-card-value">0</div>
+          <div class="config-card-icon">&#129482;</div>
+        </div>
+        <div class="config-card risk">
+          <div class="config-card-label">At Risk</div>
+          <div class="config-card-value">0</div>
+          <div class="config-card-icon">&#9888;</div>
+        </div>
+        <div class="config-card critical">
+          <div class="config-card-label">Critical Items</div>
+          <div class="config-card-value">0</div>
+          <div class="config-card-icon">&#9888;</div>
+        </div>
+        <div class="config-card online">
+          <div class="config-card-label">Sensors Online</div>
+          <div class="config-card-value">0/0</div>
+          <div class="config-card-icon">&#128246;</div>
+        </div>
+      </div>
+      <div class="config-tabs">
+        <button class="config-tab active" data-tab="food">Food Items</button>
+        <button class="config-tab" data-tab="sensors">Sensors</button>
+      </div>
+      <div class="config-tab-content" id="config-food-tab">
+        <h2>Food Items Monitoring</h2>
+        <div class="config-empty">
+          <div class="config-empty-icon">&#129482;</div>
+          <div class="config-empty-title">No food items configured yet</div>
+          <div class="config-empty-desc">Add your first food item to start monitoring</div>
+          <button class="config-add-btn">+ Add Food Item</button>
+        </div>
+      </div>
+      <div class="config-tab-content d-none" id="config-sensors-tab">
+        <h2>Sensors</h2>
+        <div class="config-empty">
+          <div class="config-empty-icon">&#128246;</div>
+          <div class="config-empty-title">No sensors configured yet</div>
+          <div class="config-empty-desc">Add your first sensor to start monitoring</div>
+          <button class="config-add-btn">+ Add Sensor</button>
+        </div>
+      </div>
+      <!-- Add Food Item Modal -->
+      <div class="config-modal" id="addFoodItemModal">
+        <div class="config-modal-backdrop"></div>
+        <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;">
+          <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+            <span class="config-modal-title" style="color:#fff;">Add New Food Item</span>
+            <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+          </div>
+          <form class="config-modal-form">
+            <div class="config-modal-row">
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Food Name *</label>
+                <input type="text" required placeholder="e.g., Adobo, Chicken Curry" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Min Temperature (°C) *</label>
+                <input type="number" required style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Max Temperature (°C) *</label>
+                <input type="number" required style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+            </div>
+            <div class="config-modal-row">
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Min Humidity (%)</label>
+                <input type="number" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Max Humidity (%)</label>
+                <input type="number" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Min Methane Gas (ppm)</label>
+                <input type="number" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+              <div class="config-modal-group">
+                <label style="color:#e0e6f6;">Max Methane Gas (ppm)</label>
+                <input type="number" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+              </div>
+            </div>
+            <div class="config-modal-group">
+              <label style="color:#e0e6f6;">Expiration Date *</label>
+              <input type="date" required style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+            </div>
+            <div class="config-modal-group">
+              <label style="color:#e0e6f6;">Initial Status</label>
+              <select style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+                <option>Good</option>
+                <option>At Risk</option>
+                <option>Critical</option>
+              </select>
+            </div>
+            <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
+              <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
+              <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Add Food Item</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Report Generator Template -->
+<template id="report-generator-template">
+  <div class="report-generator-main">
+    <div class="report-generator-container">
+      <div class="report-generator-header">
+        <h1 class="report-generator-title">Report Generator</h1>
+        <p class="report-generator-subtitle">Select a report type and date range to generate and download data.</p>
+      </div>
+      
+      <div class="report-generator-card">
+        <div class="report-controls">
+          <div class="report-control-group">
+            <label for="reportType">Report Type</label>
+            <select id="reportType" class="report-select">
+              <option value="user-activity">User Activity</option>
+              <option value="food-spoilage">Food Spoilage</option>
+              <option value="sensor-data">Sensor Data</option>
+              <option value="alert-summary">Alert Summary</option>
+            </select>
+          </div>
+          
+          <div class="report-control-group">
+            <label for="dateRange">Date Range</label>
+            <select id="dateRange" class="report-select">
+              <option value="daily">Daily</option>
+              <option value="weekly" selected>Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          
+          <div class="report-control-group" id="recordsPerPageGroup" style="display:none;">
+            <label for="recordsPerPage">Records per Page</label>
+            <select id="recordsPerPage" class="report-select">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div id="customDateRangeGroup" style="display:none;">
+            <div class="report-control-group">
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" class="report-date-input" />
+            </div>
+            <div class="report-control-group">
+              <label for="endDate">End Date</label>
+              <input type="date" id="endDate" class="report-date-input" />
+            </div>
+          </div>
+          
+          <div class="report-actions">
+            <button id="generateReport" class="report-btn report-btn-primary">
+              <span>📊</span>
+              Generate Report
+            </button>
+            <button id="downloadExcel" class="report-btn report-btn-secondary">
+              <span>📥</span>
+              Download Excel
+            </button>
+            <button id="downloadPDF" class="report-btn report-btn-secondary">
+              <span>📄</span>
+              Download PDF
+            </button>
+          </div>
+        </div>
+        
+        <div class="report-preview">
+          <h2 id="reportTitle" class="report-preview-title">Report Generator</h2>
+          <div class="report-table-container">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>ACTIVITY TYPE</th>
+                  <th>TIMESTAMP</th>
+                  <th>DESCRIPTION</th>
+                  <th>SESSION DURATION</th>
+                  <th>IP ADDRESS</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody">
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    <div class="empty-state-content">
+                      <div class="empty-state-icon">📊</div>
+                      <div class="empty-state-title">No Report Generated</div>
+                      <div class="empty-state-desc">Select your report type and date range, then click "Generate Report" to view data.</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Pagination Container -->
+          <div id="reportPagination" class="pagination-container" style="display:none;">
+            <!-- Pagination will be rendered here by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Analysis Page Template -->
+<template id="analysis-template">
+  <div class="analysis-main">
+    <div class="analysis-header">
+      <div class="analysis-header-left">
+        <h1 class="analysis-title">Spoilage Monitoring System</h1>
+        <div class="analysis-subtitle">AI-Powered Food Safety Analysis</div>
+      </div>
+      <div class="analysis-header-right">
+        <div class="analysis-nav">
+          <button class="analysis-nav-btn active" data-tab="analyze">Analyze</button>
+          <button class="analysis-nav-btn" data-tab="ai-chat">AI Chat</button>
+        </div>
+      </div>
+    </div>
+    <div class="analysis-content-row">
+      <div id="analysisTabContent">
+        <div class="analysis-content-row">
+          <div class="analysis-card analysis-input-card">
+            <div class="analysis-card-title">Sensor Data Input</div>
+            <div class="analysis-form-row">
+              <div class="analysis-form-group">
+                <label>Food Type</label>
+                <select id="analysisProductType" class="analysis-input">
+                  <option>General</option>
+                  <option>Meat</option>
+                  <option>Dairy</option>
+                  <option>Vegetable</option>
+                  <option>Seafood</option>
+                </select>
+                <div id="analysisCategoryInfo" style="margin-top:6px;color:#9fb8ff;font-size:0.95rem;">Category: —</div>
+              </div>
+            </div>
+            <div class="analysis-form-row">
+              <div class="analysis-form-group">
+                <label><span class="label-icon">🌡️</span><span class="label-text">Temperature (°C)</span></label>
+                <input type="number" id="analysisTemp" class="analysis-input" placeholder="e.g. 25.5" />
+              </div>
+              <div class="analysis-form-group">
+                <label><span class="label-icon">💧</span><span class="label-text">Humidity (%)</span></label>
+                <input type="number" id="analysisHumidity" class="analysis-input" placeholder="e.g. 65.2" />
+              </div>
+              <div class="analysis-form-group">
+                <label><span class="label-icon">🧪</span><span class="label-text">Gas Level</span></label>
+                <input type="number" id="analysisGas" class="analysis-input" placeholder="e.g. 123.4" />
+              </div>
+            </div>
+            <button class="analysis-btn" id="analyzeBtn">🔎 Analyze Spoilage Risk</button>
+          </div>
+          <div class="analysis-card analysis-results-card">
+            <div class="analysis-card-title">Analysis Results</div>
+            <div class="analysis-results-empty" id="analysisResultsEmpty">
+              <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f52c.svg" alt="Microscope" style="width:48px;opacity:0.7;" />
+              <div>Enter sensor data and click "Analyze" to see results</div>
+            </div>
+            <div class="analysis-results-output" id="analysisResultsOutput" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+      <div id="aiChatTabContent" style="display:none;width:100%;">
+        <div class="analysis-content-row" style="justify-content:center;">
+          <div class="ai-chat-card">
+            <div class="ai-chat-title">AI Spoilage Expert Chat</div>
+            <div class="ai-chat-area">
+              <div class="ai-chat-empty">
+                <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f916.svg" alt="AI Bot" style="width:48px;opacity:0.7;" />
+                <div style="margin-top:8px;font-weight:500;">Start a conversation about spoilage analysis!</div>
+                <div style="font-size:0.98rem;color:#888;margin-top:2px;">Try asking: "What temperature is safe for dairy products?"</div>
+              </div>
+            </div>
+            <form class="ai-chat-input-row" autocomplete="off">
+              <input class="ai-chat-input" type="text" placeholder="Ask about spoilage analysis, food safety, or sensor data..." />
+              <button class="ai-chat-send-btn" type="submit">Send</button>
+            </form>
+            <div class="ai-chat-tip">⚡ The AI has context of your current sensor data when you chat</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="user-log-template">
+  <div class="user-log-main">
+    <div class="user-log-header">
+      <h1>User Logs</h1>
+      <div class="user-log-subtitle">View all actions performed by users in the system</div>
+    </div>
+    <div class="user-log-card">
+      <div class="user-log-filters">
+        <div class="report-controls">
+          <div class="report-control-group">
+            <label for="userLogActivityType">Activity Type</label>
+            <select id="userLogActivityType" class="report-select">
+              <option value="all">All Activities</option>
+              <option value="add">Add</option>
+              <option value="update">Update</option>
+              <option value="delete">Delete</option>
+              <option value="login">Login</option>
+              <option value="logout">Logout</option>
+            </select>
+          </div>
+          <div class="report-control-group">
+            <label for="userLogStartDate">Start Date</label>
+            <input type="date" id="userLogStartDate" class="report-date-input" />
+          </div>
+          <div class="report-control-group">
+            <label for="userLogEndDate">End Date</label>
+            <input type="date" id="userLogEndDate" class="report-date-input" />
+          </div>
+          <div class="report-control-group">
+            <label for="userLogRecordsPerPage">Records per Page</label>
+            <select id="userLogRecordsPerPage" class="report-select" onchange="changeRecordsPerPage(this.value)">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div class="report-actions">
+            <button id="userLogFilterBtn" class="report-btn report-btn-primary">
+              <span>🔄</span>
+              Refresh Filters
+            </button>
+            <button id="userLogDownloadExcel" class="report-btn report-btn-secondary">
+              <span>📥</span>
+              Download Excel
+            </button>
+            <button id="userLogDownloadPDF" class="report-btn report-btn-secondary">
+              <span>📄</span>
+              Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="user-log-table-card">
+        <div class="user-log-table-title">
+          <span class="table-icon">📋</span>
+          User Activity Log
+        </div>
+        <table class="user-log-table">
+          <thead>
+            <tr>
+              <th>USER</th>
+              <th>ACTIVITY</th>
+              <th>DATE/TIME</th>
+              <th>DETAILS</th>
+            </tr>
+          </thead>
+          <tbody id="userLogTableBody">
+            <!-- JS will render rows here -->
+          </tbody>
+        </table>
+        <div id="userLogPagination" class="user-log-pagination">
+          <!-- JS will render pagination here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Feedback Center Template -->
+<template id="feedback-template">
+  <div class="feedback-main">
+    <div class="feedback-header">
+      <h1 class="feedback-title">Feedback Center</h1>
+      <div class="feedback-subtitle">Submit feedback and track your history</div>
+    </div>
+    
+    <div class="feedback-stats-row">
+      <div class="feedback-stat-card">
+        <div class="stat-icon stat-blue">💬</div>
+        <div class="stat-label">Total Feedback</div>
+        <div class="stat-value" id="totalFeedback">5</div>
+      </div>
+      <div class="feedback-stat-card">
+        <div class="stat-icon stat-orange">🕐</div>
+        <div class="stat-label">Active Issues</div>
+        <div class="stat-value" id="activeIssues">4</div>
+      </div>
+      <div class="feedback-stat-card">
+        <div class="stat-icon stat-green">✅</div>
+        <div class="stat-label">Resolved</div>
+        <div class="stat-value" id="resolvedIssues">1</div>
+      </div>
+      <div class="feedback-stat-card">
+        <div class="stat-icon stat-yellow">⭐</div>
+        <div class="stat-label">Average Rating</div>
+        <div class="stat-value" id="averageRating">3.8</div>
+      </div>
+    </div>
+    
+    <div class="feedback-content-row">
+      <div class="feedback-main-panel">
+        <div class="feedback-tabs">
+          <button class="feedback-tab active" data-tab="submit">
+            <span class="tab-icon">+</span>
+            Submit Feedback
+          </button>
+          <button class="feedback-tab" data-tab="history">
+            <span class="tab-icon">💬</span>
+            Feedback History
+          </button>
+        </div>
+        
+        <!-- Submit Feedback Tab Content -->
+        <div id="submitTabContent" class="feedback-tab-content active">
+          <form class="feedback-form" id="feedbackForm">
+            <div class="feedback-form-row">
+              <div class="feedback-form-group">
+                <label for="feedbackName">Name *</label>
+                <input type="text" id="feedbackName" name="name" required placeholder="Your full name">
+              </div>
+              <div class="feedback-form-group">
+                <label for="feedbackEmail">Email</label>
+                <input type="email" id="feedbackEmail" name="email" placeholder="your.email@example.com">
+              </div>
+            </div>
+            
+            <div class="feedback-form-row">
+              <div class="feedback-form-group">
+                <label for="feedbackType">Feedback Type</label>
+                <select id="feedbackType" name="type" required>
+                  <option value="">Select type...</option>
+                  <option value="App Crash">App Crash</option>
+                  <option value="General Feedback">General Feedback</option>
+                  <option value="System Bug">System Bug</option>
+                  <option value="Performance Issue">Performance Issue</option>
+                  <option value="Feature Request">Feature Request</option>
+                </select>
+              </div>
+              <div class="feedback-form-group">
+                <label for="feedbackPriority">Priority</label>
+                <select id="feedbackPriority" name="priority" required>
+                  <option value="">Select priority...</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="feedback-form-group">
+              <label>Star Rating</label>
+              <div class="rating-input">
+                <input type="radio" name="rating" value="1" id="rating1">
+                <label for="rating1">⭐</label>
+                <input type="radio" name="rating" value="2" id="rating2">
+                <label for="rating2">⭐</label>
+                <input type="radio" name="rating" value="3" id="rating3">
+                <label for="rating3">⭐</label>
+                <input type="radio" name="rating" value="4" id="rating4">
+                <label for="rating4">⭐</label>
+                <input type="radio" name="rating" value="5" id="rating5" checked>
+                <label for="rating5">⭐</label>
+              </div>
+            </div>
+            
+            <div class="feedback-form-group">
+              <label for="feedbackDescription">Feedback *</label>
+              <textarea id="feedbackDescription" name="description" rows="6" required placeholder="Please describe your feedback in detail..."></textarea>
+            </div>
+            
+            <button type="submit" class="feedback-submit-btn">
+              Submit Feedback
+            </button>
+          </form>
+        </div>
+        
+        <!-- Feedback History Tab Content -->
+        <div id="historyTabContent" class="feedback-tab-content">
+          <div class="feedback-controls">
+          <div class="feedback-search">
+            <input type="text" id="feedbackSearch" placeholder="Search feedback..." class="feedback-search-input">
+            <span class="search-icon">🔍</span>
+          </div>
+          
+          <div class="feedback-filters">
+            <select id="feedbackTypeFilter" class="feedback-filter">
+              <option value="">Type</option>
+              <option value="general">General Feedback</option>
+              <option value="bug">System Bug</option>
+              <option value="performance">Performance Issue</option>
+              <option value="feature">Feature Request</option>
+            </select>
+            
+            <select id="feedbackPriorityFilter" class="feedback-filter">
+              <option value="">Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            
+            <select id="feedbackStatusFilter" class="feedback-filter">
+              <option value="">Status</option>
+              <option value="active">Active</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          
+          <div class="feedback-view-toggle">
+            <button class="view-toggle-btn" data-view="cards">Cards</button>
+            <button class="view-toggle-btn active" data-view="table">Table</button>
+          </div>
+        </div>
+        
+        <!-- Cards View Container -->
+        <div id="feedbackCardsContainer" class="feedback-cards-container" style="display: none;">
+          <div class="feedback-cards-grid" id="feedbackCardsGrid">
+            <!-- Cards will be rendered here by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Table View Container -->
+        <div id="feedbackTableContainer" class="feedback-table-container">
+          <table class="feedback-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Rating</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackTableBody">
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-name">sda</div>
+                    <div class="customer-desc">sad</div>
+                  </div>
+                </td>
+                <td><span class="type-badge">General Feedback</span></td>
+                <td><span class="priority-badge priority-low">Low</span></td>
+                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td>
+                  <div class="rating-stars">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star">⭐</span>
+                  </div>
+                </td>
+                <td>9/5/2025</td>
+                <td><button class="action-btn">View</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-name">Test User UI</div>
+                    <div class="customer-desc">This is a test feedback submission from the UI...</div>
+                  </div>
+                </td>
+                <td><span class="type-badge">General Feedback</span></td>
+                <td><span class="priority-badge priority-low">Low</span></td>
+                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td>
+                  <div class="rating-stars">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                  </div>
+                </td>
+                <td>9/5/2025</td>
+                <td><button class="action-btn">View</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-name">Bob Johnson</div>
+                    <div class="customer-desc">The page loads slowly, especially during peak...</div>
+                  </div>
+                </td>
+                <td><span class="type-badge">Performance Issue</span></td>
+                <td><span class="priority-badge priority-medium">Medium</span></td>
+                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td>
+                  <div class="rating-stars">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                  </div>
+                </td>
+                <td>9/5/2025</td>
+                <td><button class="action-btn">View</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-name">Jane Smith</div>
+                    <div class="customer-desc">The application crashes when I try to submit a...</div>
+                  </div>
+                </td>
+                <td><span class="type-badge">System Bug</span></td>
+                <td><span class="priority-badge priority-high">High</span></td>
+                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td>
+                  <div class="rating-stars">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                  </div>
+                </td>
+                <td>9/5/2025</td>
+                <td><button class="action-btn">View</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="customer-info">
+                    <div class="customer-name">John Doe</div>
+                    <div class="customer-desc">Great service overall, very satisfied with the e...</div>
+                  </div>
+                </td>
+                <td><span class="type-badge">General Feedback</span></td>
+                <td><span class="priority-badge priority-low">Low</span></td>
+                <td><span class="status-badge status-resolved">✅ Resolved</span></td>
+                <td>
+                  <div class="rating-stars">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                  </div>
+                </td>
+                <td>9/5/2025</td>
+                <td><button class="action-btn">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="../assets/js/User/sidebarexpand.js"></script>
+<script src="../assets/js/User/spa.js"></script>
+<script src="../assets/js/User/analyticstat.js"></script>
+<script src="../assets/js/User/ad-chart.js"></script>
+<script src="../assets/js/User/ad-gauge.js"></script>
+<script src="../assets/js/User/sensor-dashboard.js"></script>
+<script src="../assets/js/User/food-selection.js"></script>
+<script src="../assets/js/User/ml-data-upload.js"></script>
+<script src="../assets/js/User/device-management.js"></script>
+<script src="../assets/js/User/report-generator.js"></script>
+<script src="../assets/js/User/spoilageReport.js"></script>
+<script src="../assets/js/User/analysis.js"></script>
+<script src="../assets/js/User/user-log.js"></script>
+<script src="/js/User/config.js"></script>
+<script src="../assets/js/User/feedback.js"></script>
+<script src="../assets/js/User/user-auth.js"></script>
+<script>
+  // Navigation for dashboard/detailed report is handled globally by spa.js (switchPage).
+  // This placeholder avoids duplicate handlers.
+</script>
+</body>
+</html>
+

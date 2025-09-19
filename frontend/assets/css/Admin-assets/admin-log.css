@@ -1,0 +1,246 @@
+/* --- Admin Log Styles --- */
+.admin-log-filters {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.admin-log-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+}
+.admin-log-filters label {
+  color: #bfc9da;
+  font-size: 1em;
+  font-weight: 600;
+}
+.admin-log-table, .user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: none;
+}
+.admin-log-table th, .user-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: #bfc9da;
+  font-size: 0.95em;
+  font-weight: 600;
+  border-bottom: 1px solid #3a4a8b;
+  text-transform: uppercase;
+}
+.admin-log-table td, .user-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #22336a;
+  color: #e9ecef;
+  vertical-align: middle;
+}
+.admin-log-table tr:last-child td, .user-table tr:last-child td {
+  border-bottom: none;
+}
+.report-preview-area {
+  background: #1a2342;
+  border-radius: 10px;
+  padding: 24px;
+  min-height: 200px;
+  margin-top: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+.report-preview-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+/* Pagination Styles */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.pagination-info {
+  color: #bfc9da;
+  font-size: 0.9em;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Activity Log pagination specific styles - match Users pagination */
+#activityLogPagination {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  background: #22336a;
+  border-radius: 12px;
+  border: 1px solid #344e6e;
+}
+
+#activityLogPagination .pagination-info {
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+}
+
+#activityLogPagination .pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  width: 100%;
+}
+
+/* Admin Log pagination specific styles - match other paginations */
+#adminLogPagination {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  background: #22336a;
+  border-radius: 12px;
+  border: 1px solid #344e6e;
+}
+
+#adminLogPagination .pagination-info {
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+}
+
+#adminLogPagination .pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  width: 100%;
+}
+
+.pagination-btn {
+  background: #22336a;
+  color: #fff;
+  border: 1px solid #3a4a8b;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover {
+  background: #3a4a8b;
+  border-color: #4a5a9b;
+}
+
+.pagination-btn.active {
+  background: #3b7bfa;
+  border-color: #3b7bfa;
+}
+
+.pagination-ellipsis {
+  color: #bfc9da;
+  padding: 0 8px;
+}
+
+/* Activity Badge Styles */
+.activity-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-login {
+  background: #d4edda;
+  color: #155724;
+}
+
+.activity-logout {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.activity-create {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.activity-update {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.activity-delete {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.activity-edit {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.activity-add {
+  background: #d4edda;
+  color: #155724;
+}
+
+/* Empty State Styles */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-state-icon {
+  font-size: 3em;
+  opacity: 0.7;
+}
+
+.empty-state-title {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #bfc9da;
+}
+
+.empty-state-desc {
+  color: #8a9bb8;
+  font-size: 0.95em;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+/* Status badges for users */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-active { background: #d4edda; color: #155724; }
+.status-badge.status-inactive { background: #f8d7da; color: #721c24; }
+.status-badge.status-pending { background: #fff3cd; color: #856404; }
+.status-badge.status-suspended { background: #e2e3e5; color: #383d41; } 

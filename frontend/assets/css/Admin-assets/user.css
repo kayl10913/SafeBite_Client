@@ -1,0 +1,391 @@
+/* --- User Management Page --- */
+.user-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  padding: 8px 0 8px 0;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 32px;
+  align-items: flex-end;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+}
+.filter-group label {
+  color: #bfc9da;
+  font-size: 1em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.user-filters > * {
+  margin-right: 0 !important;
+}
+
+.user-card {
+  background: #212c4d;
+  border-radius: 14px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  margin-bottom: 32px;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: none;
+}
+.user-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: #bfc9da;
+  font-size: 0.95em;
+  font-weight: 600;
+  border-bottom: 1px solid #3a4a8b;
+  text-transform: uppercase;
+}
+.user-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #22336a;
+  color: #e9ecef;
+  vertical-align: middle;
+}
+.user-table tr:last-child td {
+  border-bottom: none;
+}
+.user-table td .action-btn {
+  background: #3b7bfa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 0.98em;
+  font-weight: 600;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.user-table td .action-btn.edit {
+  background: #2c3a6b;
+}
+.user-table td .action-btn.delete {
+  background: #ff5e5e;
+}
+.user-table td .action-btn:hover {
+  opacity: 0.9;
+}
+
+/* Role Badge Styles */
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.role-user {
+  background: #2c3a6b;
+  color: #bfc9da;
+}
+
+.role-badge.role-admin {
+  background: #8b5cf6;
+  color: #e9ecef;
+}
+
+/* Modal Styles */
+.user-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24, 31, 54, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.user-modal-content {
+  background: #212c4d;
+  border-radius: 14px;
+  padding: 32px 32px 24px 32px;
+  min-width: 340px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  color: #e9ecef;
+}
+.user-modal-content h2 {
+  margin-top: 0;
+  color: #fff;
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  color: #bfc9da;
+  font-size: 0.98em;
+  font-weight: 600;
+}
+.form-group input,
+.form-group select {
+  background: #181f36;
+  border: 1px solid #3a4a8b;
+  color: #fff;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 1em;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.filter-btn {
+  background: #3b7bfa;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.filter-btn.export {
+  background: #22336a;
+  color: #bfc9da;
+}
+.filter-btn:hover {
+  opacity: 0.9;
+}
+
+.user-search-input, .user-filter-date {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+}
+
+.user-search-input {
+  background: #181f36;
+  border: 1px solid #3a4a8b;
+  color: #fff;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 1em;
+  transition: border 0.18s;
+  min-width: 180px;
+}
+.user-search-input:focus {
+  outline: none;
+  border-color: #3b7bfa;
+}
+
+.user-filter-select {
+  background: #181f36;
+  border: 1px solid #3a4a8b;
+  color: #fff;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 1em;
+  transition: border 0.18s;
+}
+.user-filter-select:focus {
+  outline: none;
+  border-color: #3b7bfa;
+}
+
+/* --- Password Fields in Modal --- */
+.password-group {
+  margin-bottom: 0 !important;
+}
+.password-group + .password-group {
+  margin-top: 8px;
+}
+.password-group label {
+  margin-bottom: 4px;
+}
+.password-group .form-password-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.password-group input[type="password"],
+.password-group input[type="text"] {
+  flex: 1;
+  padding-right: 38px;
+}
+.password-group button[type="button"] {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bfc9da;
+  padding: 0 6px;
+  font-size: 1.1em;
+  z-index: 2;
+}
+
+/* --- Report Preview Area (for users and activity log) --- */
+.report-preview-area {
+  background: #1a2342;
+  border-radius: 10px;
+  padding: 24px;
+  min-height: 200px;
+  margin-top: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+.report-preview-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+/* --- Users table pagination (match Activity Log design) --- */
+#userPagination {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  background: #22336a;
+  border-radius: 12px;
+  border: 1px solid #344e6e;
+}
+
+#userPagination .pagination-info {
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+}
+
+#userPagination .pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  width: 100%;
+}
+
+/* Force button styles to match User Dashboard user log */
+#userPagination .pagination-btn {
+  padding: 8px 12px !important;
+  border: 1px solid #344e6e !important;
+  background: #181f36 !important;
+  color: #bfc9da !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  min-width: 40px !important;
+}
+
+#userPagination .pagination-btn:hover:not([disabled]) {
+  background: #22336a !important;
+  border-color: #4a9eff !important;
+  color: #fff !important;
+  transform: translateY(-1px) !important;
+}
+
+#userPagination .pagination-current {
+  padding: 8px 12px !important;
+  background: #3b7bfa !important;
+  color: white !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  min-width: 40px !important;
+  display: inline-block !important;
+  border: 1px solid #3b7bfa !important;
+}
+
+#userPagination .pagination-btn.active {
+  background: #3b7bfa !important;
+  color: white !important;
+  border-color: #3b7bfa !important;
+  font-weight: 600 !important;
+}
+
+#userPagination .pagination-ellipsis {
+  padding: 8px 12px !important;
+  color: #bfc9da !important;
+  font-size: 14px !important;
+  min-width: 40px !important;
+  display: inline-block !important;
+  text-align: center !important;
+}
+
+/* Remove dropdown arrow from date inputs and make the calendar icon white */
+input[type="date"],
+input[type="date"].user-filter-date,
+input[type="date"]#activityDateStart,
+input[type="date"]#activityDateEnd,
+input[type="date"]#reportStartDate,
+input[type="date"]#reportEndDate,
+input[type="date"]#adminLogDateStart,
+input[type="date"]#adminLogDateEnd {
+  background: #181f36;
+  border: 1px solid #3a4a8b;
+  color: #fff;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 1em;
+  min-width: 140px;
+  height: 36px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+  cursor: pointer;
+}
+input[type="date"]::-moz-calendar-picker-indicator {
+  filter: invert(1) brightness(2);
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="date"]::-webkit-calendar-picker-indicator:focus {
+  background: none;
+}
+
+/* Consistent input and select sizing for all filters and forms */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+select,
+.user-search-input,
+.user-filter-date,
+.user-filter-select {
+  height: 36px !important;
+  font-size: 1em !important;
+  border-radius: 6px !important;
+  padding: 9px 12px !important;
+  box-sizing: border-box;
+} 
