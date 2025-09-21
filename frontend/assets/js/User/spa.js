@@ -141,26 +141,13 @@ function showUserLog() {
   const template = document.getElementById('user-log-template');
   if (mainContent && template) {
     mainContent.innerHTML = template.innerHTML;
-    // Dynamically load user-log.css if not already loaded
-    if (!document.getElementById('user-log-css')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'CSS/user-log.css';
-      link.id = 'user-log-css';
-      document.head.appendChild(link);
+    
+    // Initialize user log functionality
+    if (window.initUserLogPage) {
+      window.initUserLogPage();
+    } else {
+      console.warn('initUserLogPage function not found');
     }
-    // Always remove and re-add user-log.js to re-initialize logic
-    const oldScript = document.getElementById('user-log-js');
-    if (oldScript) oldScript.remove();
-    const script = document.createElement('script');
-    script.src = 'JS/user-log.js';
-    script.id = 'user-log-js';
-    script.onload = function() {
-      if (window.initUserLogPage) window.initUserLogPage();
-    };
-    document.body.appendChild(script);
-    // If script is already loaded (from cache), call initUserLogPage immediately
-    if (window.initUserLogPage) window.initUserLogPage();
   }
 }
 
@@ -205,7 +192,13 @@ function switchPage(page) {
     // Update sidebar active state
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     // Treat detailed-report as part of spoilage-report for sidebar highlighting
-    const sidebarPage = (page === 'detailed-report') ? 'spoilage-report' : page;
+    let sidebarPage = (page === 'detailed-report') ? 'spoilage-report' : page;
+    // Handle plural/singular versions for user logs and feedback
+    if (page === 'user-logs') sidebarPage = 'user-logs';
+    if (page === 'feedbacks') sidebarPage = 'feedbacks';
+    if (page === 'user-log') sidebarPage = 'user-logs';
+    if (page === 'feedback') sidebarPage = 'feedbacks';
+    
     const activeLink = document.querySelector(`.nav-link[data-page="${sidebarPage}"]`);
     if (activeLink) {
         activeLink.closest('.nav-item').classList.add('active');
@@ -229,9 +222,9 @@ function switchPage(page) {
         showReportGenerator();
     } else if (page === 'analysis') {
         showAnalysis();
-    } else if (page === 'user-log') {
+    } else if (page === 'user-log' || page === 'user-logs') {
       showUserLog();
-    } else if (page === 'feedback') {
+    } else if (page === 'feedback' || page === 'feedbacks') {
       showFeedback();
     }
 

@@ -43,6 +43,24 @@
     /* Ensure cancelled status is clearly styled in history */
     .food-history-status.cancelled{background:#f8d7da;color:#721c24}
 
+    /* Loading states for spoilage analytics */
+    .loading-bars, .loading-summary {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #9fb8ff;
+      font-style: italic;
+    }
+
+    .loading-text {
+      font-size: 0.9rem;
+    }
+
+    /* Bar color classes */
+    .bar-green { background: linear-gradient(90deg, #4ade80, #22c55e); }
+    .bar-yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    .bar-red { background: linear-gradient(90deg, #f87171, #ef4444); }
     
   </style>
 </head>
@@ -58,7 +76,7 @@
 <aside class="sidebar expanded" id="sidebar">
   <div class="sidebar-header">
     <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">&#128230;</span>
-    <span class="sidebar-title">User-name</span>
+    <span class="sidebar-title user-name">User-name</span>
   </div>
   <nav class="sidebar-nav">
     <ul>
@@ -353,31 +371,31 @@
       </div>
     </div>
     <div class="spoilage-stats-row">
-      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Items</div><div class="stat-value">8</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Safe</div><div class="stat-value">1</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-yellow">&#9888;</div><div class="stat-label">At Risk</div><div class="stat-value">5</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoiled</div><div class="stat-value">1</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Expired</div><div class="stat-value">1</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Items</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Safe</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-yellow">&#9888;</div><div class="stat-label">At Risk</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoiled</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Expired</div><div class="stat-value">0</div></div>
     </div>
     <div class="spoilage-main-cards">
       <div class="spoilage-card spoilage-bar-card">
         <div class="spoilage-card-title">Spoilage Rate by Food Type</div>
         <div class="spoilage-bar-list">
-          <div class="spoilage-bar-row"><span class="bar-label">Sinigang</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:50%"></div></div><span class="bar-value">50%</span></div>
-          <div class="spoilage-bar-row"><span class="bar-label">Chicken</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:50%"></div></div><span class="bar-value">50%</span></div>
-          <div class="spoilage-bar-row"><span class="bar-label">Adobo</span><div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div><span class="bar-value">0%</span></div>
-          <div class="spoilage-bar-row"><span class="bar-label">Milk</span><div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div><span class="bar-value">0%</span></div>
+          <!-- Dynamic spoilage bars will be loaded here by JavaScript -->
+          <div class="loading-bars">
+            <div class="loading-text">Loading spoilage data...</div>
+          </div>
         </div>
       </div>
       <div class="spoilage-card spoilage-summary-card">
         <div class="spoilage-card-title">Top Spoiled Foods Summary</div>
         <div class="spoilage-summary-list">
-          <div class="summary-row"><span class="summary-label">Sinigang</span><span class="summary-desc">1 of 2 items spoiled</span><span class="summary-rate bar-red">50%</span></div>
-          <div class="summary-row"><span class="summary-label">Chicken</span><span class="summary-desc">1 of 2 items spoiled</span><span class="summary-rate bar-red">50%</span></div>
-          <div class="summary-row"><span class="summary-label">Adobo</span><span class="summary-desc">0 of 2 items spoiled</span><span class="summary-rate">0%</span></div>
-          <div class="summary-row"><span class="summary-label">Milk</span><span class="summary-desc">0 of 2 items spoiled</span><span class="summary-rate">0%</span></div>
+          <!-- Dynamic summary rows will be loaded here by JavaScript -->
+          <div class="loading-summary">
+            <div class="loading-text">Loading summary data...</div>
+          </div>
         </div>
-        <div class="summary-total">Total Overview: <span class="summary-total-right">2 spoiled out of 8 items</span></div>
+        <div class="summary-total">Total Overview: <span class="summary-total-right">Loading...</span></div>
       </div>
     </div>
   </div>
@@ -658,12 +676,24 @@
           <div class="report-control-group">
             <label for="date-range">Date Range</label>
             <select id="date-range" name="date-range" class="report-select">
-              <option value="daily">Daily</option>
-              <option value="weekly" selected>Weekly</option>
+              <option value="daily" selected>Daily</option>
+              <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
               <option value="custom">Custom</option>
             </select>
+          </div>
+          <div class="report-control-group" id="week-picker-group" style="display:none;min-width:200px;">
+            <label for="week-picker">Select Week</label>
+            <input type="week" id="week-picker" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="month-picker-group" style="display:none;min-width:200px;">
+            <label for="month-picker">Select Month</label>
+            <input type="month" id="month-picker" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="year-picker-group" style="display:none;min-width:160px;">
+            <label for="year-picker">Select Year</label>
+            <input type="number" id="year-picker" min="1970" max="2100" step="1" placeholder="2025" class="report-date-input" />
           </div>
           <div class="report-control-group">
             <label for="records-per-page">Records per Page</label>
@@ -887,7 +917,7 @@
         <div class="report-controls">
           <div class="report-control-group">
             <label for="reportType">Report Type</label>
-            <select id="reportType" class="report-select">
+            <select id="userReportType" class="report-select">
               <option value="user-activity">User Activity</option>
               <option value="food-spoilage">Food Spoilage</option>
               <option value="sensor-data">Sensor Data</option>
@@ -897,13 +927,28 @@
           
           <div class="report-control-group">
             <label for="dateRange">Date Range</label>
-            <select id="dateRange" class="report-select">
-              <option value="daily">Daily</option>
-              <option value="weekly" selected>Weekly</option>
+            <select id="userDateRange" class="report-select">
+              <option value="daily" selected>Daily</option>
+              <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
               <option value="custom">Custom</option>
             </select>
+          </div>
+          
+          <div class="report-control-group" id="weekPickerGroup" style="display:none;">
+            <label for="weekPicker">Select Week</label>
+            <input type="week" id="weekPicker" class="report-date-input" />
+          </div>
+          
+          <div class="report-control-group" id="monthPickerGroup" style="display:none;">
+            <label for="monthPicker">Select Month</label>
+            <input type="month" id="monthPicker" class="report-date-input" />
+          </div>
+          
+          <div class="report-control-group" id="yearPickerGroup" style="display:none;">
+            <label for="yearPicker">Select Year</label>
+            <input type="number" id="yearPicker" class="report-date-input" min="1970" max="2100" step="1" placeholder="2025" />
           </div>
           
           <div class="report-control-group" id="recordsPerPageGroup" style="display:none;">
@@ -915,6 +960,7 @@
               <option value="100">100</option>
             </select>
           </div>
+          
           <div id="customDateRangeGroup" style="display:none;">
             <div class="report-control-group">
               <label for="startDate">Start Date</label>
@@ -927,7 +973,7 @@
           </div>
           
           <div class="report-actions">
-            <button id="generateReport" class="report-btn report-btn-primary">
+            <button id="userGenerateReport" class="report-btn report-btn-primary">
               <span>📊</span>
               Generate Report
             </button>
@@ -955,7 +1001,7 @@
                   <th>IP ADDRESS</th>
                 </tr>
               </thead>
-              <tbody id="reportTableBody">
+              <tbody id="userReportTableBody">
                 <tr>
                   <td colspan="5" class="empty-state">
                     <div class="empty-state-content">
@@ -1427,6 +1473,15 @@
   </div>
 </template>
 
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/jspdf-autotable@latest/dist/jspdf.plugin.autotable.js"></script>
+<script>
+  // Fallback for jsPDF if CDN fails
+  if (typeof window.jspdf === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>');
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"><\/script>');
+  }
+</script>
 <script src="../assets/js/User/sidebarexpand.js"></script>
 <script src="../assets/js/User/spa.js"></script>
 <script src="../assets/js/User/analyticstat.js"></script>

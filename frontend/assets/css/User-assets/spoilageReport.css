@@ -6,6 +6,62 @@ body {
   padding: 0;
 }
 
+/* No Data State Styles */
+.no-data-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  margin: 20px 0;
+}
+
+.no-data-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+  animation: float 3s ease-in-out infinite;
+}
+
+.no-data-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.no-data-description {
+  font-size: 14px;
+  color: #bfc9da;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  max-width: 300px;
+}
+
+.no-data-action {
+  font-size: 12px;
+  color: #3b7bfa;
+  background: rgba(59, 123, 250, 0.1);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(59, 123, 250, 0.2);
+  font-weight: 500;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .spoilage-main {
   padding: 32px 32px 32px 32px;
   min-height: 100vh;
@@ -324,6 +380,62 @@ body {
 #custom-date-range-group.show,
 #custom-date-range-group-end.show {
   display: block;
+}
+
+/* Week / Month / Year pickers - match .report-date-input styling */
+#week-picker,
+#month-picker,
+#year-picker {
+  background: #2a3658;
+  color: #fff;
+  border: 1px solid #3a4a6b;
+  border-radius: 8px;
+  padding: 12px 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+  min-width: 180px;
+}
+
+#week-picker:focus,
+#month-picker:focus,
+#year-picker:focus {
+  outline: none;
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+/* Invert calendar icon for dark theme on week/month pickers */
+#week-picker::-webkit-calendar-picker-indicator,
+#month-picker::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+#week-picker::-webkit-calendar-picker-indicator:hover,
+#month-picker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Tidy year number input spinners and appearance */
+#year-picker::-webkit-outer-spin-button,
+#year-picker::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#year-picker {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Ensure the picker groups align consistently with other controls */
+#week-picker-group,
+#month-picker-group,
+#year-picker-group {
+  min-width: 200px;
 }
 
 .report-actions {

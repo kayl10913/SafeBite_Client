@@ -237,8 +237,9 @@ window.initUserLogPage = function() {
     const paginationContainer = document.getElementById('userLogPagination');
     if (!paginationContainer) return;
     
-    if (totalPages <= 1) {
+    if (totalPages <= 1 || totalRecords === 0) {
       paginationContainer.innerHTML = '';
+      paginationContainer.style.display = 'none';
       return;
     }
     
@@ -283,6 +284,7 @@ window.initUserLogPage = function() {
     paginationHTML += '</div>';
     
     paginationContainer.innerHTML = paginationHTML;
+    paginationContainer.style.display = 'block';
   }
 
   function updateFilterDisplay() {

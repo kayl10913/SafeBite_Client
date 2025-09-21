@@ -473,7 +473,7 @@ class FeedbackCenter {
     const totalPages = Math.ceil(totalRecords / this.recordsPerPage);
     const paginationContainer = document.getElementById('feedbackPagination');
     
-    if (!paginationContainer || totalPages <= 1) {
+    if (!paginationContainer || totalPages <= 1 || totalRecords === 0) {
       if (paginationContainer) paginationContainer.style.display = 'none';
       return;
     }

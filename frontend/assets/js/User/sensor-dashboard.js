@@ -25,6 +25,11 @@ const adminSensorTypes = ['temperature', 'humidity', 'gas'];
 // Global toggle for realtime auto-reloads
 const REALTIME_ENABLED = true;
 
+// Real-time scanning variables
+let realTimeScanningActive = false;
+let realTimeScanningInterval = null;
+let scanningStartTime = null;
+
 class SensorDashboard {
   constructor() {
     this.selectedFoodId = null;
@@ -164,9 +169,16 @@ class SensorDashboard {
       console.log('Testing API connection with your database readings...');
       
       // Test the latest sensor endpoint first
+      const token = localStorage.getItem('jwt_token') || 
+                   localStorage.getItem('sessionToken') || 
+                   localStorage.getItem('session_token');
+      
       const latestResponse = await fetch('/api/sensor/latest', {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       console.log('Latest sensor API Status:', latestResponse.status);
@@ -346,10 +358,21 @@ class SensorDashboard {
     try {
       console.log('Fetching latest Arduino sensor data...');
       
+      // Get authentication token
+      const token = localStorage.getItem('jwt_token') || 
+                   localStorage.getItem('sessionToken') || 
+                   localStorage.getItem('session_token');
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
       const response = await fetch('/api/sensor/latest', {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -611,29 +634,108 @@ class SensorDashboard {
               if (mlSelect) mlSelect.innerHTML += option;
               if (mlUploadSelect) mlUploadSelect.innerHTML += option;
             });
-          } else {
-            // Add default food options if no food items from database
-            const defaultFoods = [
-              { id: 'apple', name: 'Apple', category: 'Fruits' },
-              { id: 'banana', name: 'Banana', category: 'Fruits' },
-              { id: 'chicken', name: 'Chicken', category: 'Meat' },
-              { id: 'milk', name: 'Milk', category: 'Dairy' },
-              { id: 'bread', name: 'Bread', category: 'Grains' }
-            ];
             
-            defaultFoods.forEach(food => {
-              const option = `<option value="${food.id}">${food.name} (${food.category})</option>`;
-              if (mlSelect) mlSelect.innerHTML += option;
-              if (mlUploadSelect) mlUploadSelect.innerHTML += option;
-            });
+            // Hide no food notification if it exists
+            this.hideNoFoodNotification();
+          } else {
+            // Show notification when no food items are available
+            this.showNoFoodNotification();
+            
+            // Add disabled option to indicate no food available
+            if (mlSelect) {
+              mlSelect.innerHTML = '<option value="" disabled>No food items available - Add food first</option>';
+            }
+            if (mlUploadSelect) {
+              mlUploadSelect.innerHTML = '<option value="" disabled>No food items available - Add food first</option>';
+            }
           }
+        } else {
+          // Show notification for API error
+          this.showNoFoodNotification('Failed to load food items. Please try again.');
+          
+          if (mlSelect) {
+            mlSelect.innerHTML = '<option value="" disabled>Error loading food items</option>';
+          }
+          if (mlUploadSelect) {
+            mlUploadSelect.innerHTML = '<option value="" disabled>Error loading food items</option>';
+          }
+        }
+      } else {
+        // Show notification for no authentication
+        this.showNoFoodNotification('Please log in to access food items.');
+        
+        if (mlSelect) {
+          mlSelect.innerHTML = '<option value="" disabled>Please log in first</option>';
+        }
+        if (mlUploadSelect) {
+          mlUploadSelect.innerHTML = '<option value="" disabled>Please log in first</option>';
         }
       }
     } catch (error) {
       console.error('Error loading existing foods for ML:', error);
-      // Fallback to default options
-      if (mlSelect) mlSelect.innerHTML = '<option value="">Select from available foods</option>';
-      if (mlUploadSelect) mlUploadSelect.innerHTML = '<option value="">Select from available foods</option>';
+      // Show notification for error
+      this.showNoFoodNotification('Error loading food items. Please try again.');
+      
+      if (mlSelect) {
+        mlSelect.innerHTML = '<option value="" disabled>Error loading food items</option>';
+      }
+      if (mlUploadSelect) {
+        mlUploadSelect.innerHTML = '<option value="" disabled>Error loading food items</option>';
+      }
+    }
+  }
+
+  // Show notification when no food items are available
+  showNoFoodNotification(message = 'No food items available for scanning. Please add food items first.') {
+    // Remove existing notification if any
+    this.hideNoFoodNotification();
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'noFoodNotification';
+    notification.className = 'alert alert-warning alert-dismissible fade show';
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 400px;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    notification.innerHTML = `
+      <div style="display: flex; align-items: center; padding: 12px 16px;">
+        <i class="bi bi-exclamation-triangle-fill" style="margin-right: 8px; font-size: 18px;"></i>
+        <div style="flex: 1;">
+          <strong>No Food Available</strong>
+          <div style="font-size: 14px; margin-top: 4px;">${message}</div>
+        </div>
+        <button type="button" class="btn-close" style="margin-left: 12px; background: none; border: none; font-size: 18px; color: #856404; cursor: pointer;" onclick="this.parentElement.parentElement.remove()">
+          &times;
+        </button>
+      </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-hide after 8 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 8000);
+  }
+
+  // Hide notification when food items are available
+  hideNoFoodNotification() {
+    const existingNotification = document.getElementById('noFoodNotification');
+    if (existingNotification) {
+      existingNotification.remove();
     }
   }
 
@@ -1067,7 +1169,7 @@ class SensorDashboard {
       refreshFoodListBtn.removeEventListener('click', this.refreshFoodList);
       refreshFoodListBtn.addEventListener('click', async () => {
         console.log('Refreshing food list...');
-        await this.populateFoodDropdown();
+        await this.populateMLFoodDropdown();
       });
     }
   }
@@ -1087,6 +1189,9 @@ class SensorDashboard {
     };
     
     modal.style.display = 'flex';
+    
+    // Populate the food dropdown when modal opens
+    this.populateMLFoodDropdown();
     
     // Bind close buttons
     const closeBtn = modal.querySelector('.config-modal-close');
@@ -2104,3 +2209,346 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+// Real-time scanning functionality for Arduino integration
+class RealTimeScanner {
+  constructor() {
+    this.isScanning = false;
+    this.scanningInterval = null;
+    this.scanningStartTime = null;
+  }
+
+  // Start real-time scanning mode (called when Arduino scanning begins)
+  startScanning() {
+    if (this.isScanning) {
+      console.log('Real-time scanning already active');
+      return;
+    }
+
+    console.log('Starting real-time scanning mode...');
+    this.isScanning = true;
+    this.scanningStartTime = Date.now();
+    
+    // Poll every 500ms during scanning for smooth gauge movement
+    this.scanningInterval = setInterval(() => {
+      this.fetchAndUpdateRealTimeData();
+    }, 500);
+
+    // Auto-stop after 6 seconds (slightly longer than Arduino's 5-second scan)
+    setTimeout(() => {
+      this.stopScanning();
+    }, 6000);
+  }
+
+  // Stop real-time scanning mode
+  stopScanning() {
+    if (!this.isScanning) {
+      return;
+    }
+
+    console.log('Stopping real-time scanning mode...');
+    this.isScanning = false;
+    
+    if (this.scanningInterval) {
+      clearInterval(this.scanningInterval);
+      this.scanningInterval = null;
+    }
+
+    // Remove scanning visual effects
+    this.removeScanningEffects();
+
+    // Final update to ensure we have the latest data
+    this.fetchAndUpdateRealTimeData();
+  }
+
+  // Remove scanning visual effects
+  removeScanningEffects() {
+    const gauges = document.querySelectorAll('.gauge');
+    gauges.forEach(gauge => {
+      gauge.classList.remove('animating', 'realtime-active');
+      gauge.style.transform = '';
+      gauge.style.filter = '';
+      
+      // Reset SVG paths
+      const paths = gauge.querySelectorAll('svg path');
+      paths.forEach(path => {
+        path.classList.remove('active', 'bouncing', 'filling');
+        path.style.strokeWidth = '';
+        path.style.opacity = '';
+        path.style.filter = '';
+        path.style.transform = '';
+        path.style.stroke = '';
+        path.style.strokeDasharray = '';
+      });
+      
+      // Reset gauge elements
+      const valueElement = gauge.querySelector('.gauge-value');
+      if (valueElement) {
+        valueElement.classList.remove('updating');
+        valueElement.style.color = '';
+        valueElement.style.textShadow = '';
+        valueElement.style.transform = '';
+      }
+      
+      const labelElement = gauge.querySelector('.gauge-label');
+      if (labelElement) {
+        labelElement.classList.remove('updating');
+        labelElement.style.color = '';
+        labelElement.style.transform = '';
+      }
+    });
+  }
+
+  // Fetch and update real-time data with smooth gauge animations
+  async fetchAndUpdateRealTimeData() {
+    try {
+      const token = localStorage.getItem('jwt_token') || 
+                    localStorage.getItem('sessionToken') || 
+                    localStorage.getItem('session_token');
+
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      // Fetch latest sensor data
+      const response = await fetch('/api/sensor/gauges', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch sensor data:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.gauge_data) {
+        this.updateGaugesWithAnimation(data.gauge_data);
+      }
+    } catch (error) {
+      console.error('Error fetching real-time data:', error);
+    }
+  }
+
+  // Update gauges with smooth animation
+  updateGaugesWithAnimation(gaugeData) {
+    // Update each sensor gauge with smooth animation
+    Object.keys(gaugeData).forEach(sensorType => {
+      const sensorData = gaugeData[sensorType];
+      const card = document.querySelector(`.sensor-card[data-sensor-type="${sensorType}"]`);
+      
+      if (card && sensorData && sensorData.value !== null) {
+        const gauge = card.querySelector('.gauge');
+        
+        if (gauge && window.setGaugeValue) {
+          // Get current value for smooth transition
+          const currentValue = parseFloat(gauge.getAttribute('data-value') || '0');
+          const newValue = parseFloat(sensorData.value);
+          
+          // Add real-time active class to gauge
+          gauge.classList.add('realtime-active');
+          
+          // Animate the gauge value change
+          this.animateGaugeValue(gauge, currentValue, newValue, sensorData.unit);
+          
+          // Update card status
+          if (sensorData.status === 'online') {
+            card.classList.remove('offline');
+            card.classList.add('online');
+          } else {
+            card.classList.remove('online');
+            card.classList.add('offline');
+          }
+        }
+      }
+    });
+  }
+
+  // Animate gauge value change for smooth movement with enhanced effects
+  animateGaugeValue(gauge, fromValue, toValue, unit) {
+    const duration = 800; // Longer duration for smoother animation
+    const startTime = Date.now();
+    
+    // Add visual feedback during animation
+    gauge.classList.add('animating');
+    gauge.style.transition = 'all 0.3s ease';
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Use multiple easing functions for more natural movement
+      let easeProgress;
+      if (progress < 0.5) {
+        // Ease-in for first half
+        easeProgress = 2 * progress * progress;
+      } else {
+        // Ease-out for second half
+        easeProgress = 1 - 2 * (1 - progress) * (1 - progress);
+      }
+      
+      const currentValue = fromValue + (toValue - fromValue) * easeProgress;
+      
+      // Update gauge with enhanced visual effects
+      this.updateGaugeWithEffects(gauge, currentValue, unit, progress);
+      
+      // Continue animation if not complete
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete - remove visual effects
+        gauge.classList.remove('animating');
+        setTimeout(() => {
+          gauge.style.transition = '';
+          // Remove real-time active class after animation
+          gauge.classList.remove('realtime-active');
+        }, 300);
+      }
+    };
+    
+    animate();
+  }
+
+  // Enhanced gauge update with filling animation
+  updateGaugeWithEffects(gauge, value, unit, progress) {
+    // Update the gauge value
+    window.setGaugeValue(gauge, value.toFixed(2), unit);
+    
+    // Get the gauge arc element (the progress arc)
+    const gaugeArc = gauge.querySelector('svg path[stroke-dasharray]');
+    if (gaugeArc) {
+      // Add filling class for CSS animation
+      gaugeArc.classList.add('filling');
+      // Animate the arc filling from 0 to current value
+      this.animateGaugeArcFilling(gaugeArc, value, progress);
+    }
+    
+    // Background arc remains static (no glow effects)
+    
+    // Number animation - smooth counting up effect
+    const valueElement = gauge.querySelector('.gauge-value');
+    if (valueElement) {
+      this.animateGaugeValueCounting(valueElement, value, progress);
+    }
+    
+    // Gauge label subtle animation
+    const labelElement = gauge.querySelector('.gauge-label');
+    if (labelElement) {
+      const labelOpacity = 0.7 + progress * 0.3;
+      labelElement.style.opacity = labelOpacity;
+      labelElement.style.color = `hsl(${200 + progress * 60}, 70%, 70%)`;
+    }
+  }
+
+  // Animate gauge arc filling from empty to full
+  animateGaugeArcFilling(gaugeArc, targetValue, progress) {
+    // Get gauge range from the gauge element
+    const gauge = gaugeArc.closest('.gauge');
+    const min = parseFloat(gauge.getAttribute('data-min')) || 0;
+    const max = parseFloat(gauge.getAttribute('data-max')) || 100;
+    
+    // Calculate the target percentage
+    const targetPercentage = Math.min((targetValue - min) / (max - min), 1);
+    
+    // Animate from 0 to target percentage
+    const currentPercentage = targetPercentage * progress;
+    
+    // Get the arc's circumference
+    const radius = 45; // Assuming radius of 45
+    const circumference = 2 * Math.PI * radius;
+    
+    // Calculate stroke-dasharray for the filling effect
+    const strokeDasharray = `${circumference * currentPercentage} ${circumference}`;
+    
+    // Apply the filling animation
+    gaugeArc.style.strokeDasharray = strokeDasharray;
+    
+    // Add color transition during filling
+    const hue = 120 + (currentPercentage * 240); // Green to purple as it fills
+    gaugeArc.style.stroke = `hsl(${hue}, 70%, 60%)`;
+    
+    // No glow effects - clean animation
+    
+    // Add stroke width animation for emphasis
+    const strokeWidth = 4 + Math.sin(progress * Math.PI * 2) * 1;
+    gaugeArc.style.strokeWidth = strokeWidth;
+  }
+
+  // Animate gauge value counting up
+  animateGaugeValueCounting(valueElement, targetValue, progress) {
+    // Get current displayed value
+    const currentDisplayValue = parseFloat(valueElement.textContent) || 0;
+    const targetValueNum = parseFloat(targetValue);
+    
+    // Calculate intermediate value for smooth counting
+    const intermediateValue = currentDisplayValue + (targetValueNum - currentDisplayValue) * progress;
+    
+    // Update the display with smooth counting
+    valueElement.textContent = intermediateValue.toFixed(2);
+    
+    // Color transition from green to purple
+    const hue = 120 + (progress * 240);
+    valueElement.style.color = `hsl(${hue}, 80%, 60%)`;
+    
+    // Scale effect during counting
+    const scale = 1 + Math.sin(progress * Math.PI * 3) * 0.05;
+    valueElement.style.transform = `scale(${scale})`;
+  }
+}
+
+// Initialize real-time scanner
+const realTimeScanner = new RealTimeScanner();
+
+// Global functions for external control
+window.startRealTimeScanning = function() {
+  realTimeScanner.startScanning();
+};
+
+window.stopRealTimeScanning = function() {
+  realTimeScanner.stopScanning();
+};
+
+// Auto-detect Arduino scanning by monitoring for rapid data changes
+let lastSensorValues = { temperature: 0, humidity: 0, gas: 0 };
+let rapidChangeDetected = false;
+let rapidChangeTimeout = null;
+
+// Enhanced gauge update function that detects rapid changes
+const originalSetGaugeValue = window.setGaugeValue;
+window.setGaugeValue = function(gauge, value, unit) {
+  // Call original function
+  originalSetGaugeValue(gauge, value, unit);
+  
+  // Detect rapid changes that indicate Arduino scanning
+  const sensorType = gauge.closest('.sensor-card')?.getAttribute('data-sensor-type');
+  if (sensorType && sensorType in lastSensorValues) {
+    const currentValue = parseFloat(value);
+    const lastValue = lastSensorValues[sensorType];
+    const change = Math.abs(currentValue - lastValue);
+    
+    // If change is significant (> 5% of range), consider it rapid
+    const ranges = { temperature: 60, humidity: 100, gas: 1000 };
+    const threshold = ranges[sensorType] * 0.05;
+    
+    if (change > threshold) {
+      rapidChangeDetected = true;
+      
+      // Clear existing timeout
+      if (rapidChangeTimeout) {
+        clearTimeout(rapidChangeTimeout);
+      }
+      
+      // Set timeout to detect end of scanning
+      rapidChangeTimeout = setTimeout(() => {
+        if (rapidChangeDetected) {
+          console.log('Rapid changes detected - Arduino scanning detected');
+          realTimeScanner.startScanning();
+          rapidChangeDetected = false;
+        }
+      }, 1000); // Wait 1 second to confirm scanning
+    }
+    
+    lastSensorValues[sensorType] = currentValue;
+  }
+};

@@ -388,9 +388,6 @@
   background: #22336a;
   border-radius: 12px;
   border: 1px solid #344e6e;
-  /* Ensure pagination is visible */
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
 #reportPagination .pagination-info {

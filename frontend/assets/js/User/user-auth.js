@@ -2,35 +2,88 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is logged in
     function checkUserAuth() {
-        const currentUser = localStorage.getItem('currentUser');
+        const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
         
-        if (!currentUser) {
-            // Redirect to login if no user is logged in
+        if (!sessionToken) {
+            // Redirect to login if no token is found
             window.location.href = '/login';
             return;
         }
         
+        // Load user info from API instead of localStorage
+        loadUserInfoFromAPI();
+    }
+    
+    // Load user info from API
+    async function loadUserInfoFromAPI() {
         try {
-            const user = JSON.parse(currentUser);
-            displayUserInfo(user);
+            console.log('user-auth.js: Loading user info from API...');
+            
+            const sessionToken = localStorage.getItem('jwt_token') || 
+                               localStorage.getItem('sessionToken') || 
+                               localStorage.getItem('session_token');
+            
+            if (!sessionToken) {
+                console.error('user-auth.js: No session token found');
+                return;
+            }
+            
+            const response = await fetch('/api/users/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('user-auth.js: API response:', result);
+            
+            if (result.success && result.user) {
+                displayUserInfo(result.user);
+            } else {
+                console.error('user-auth.js: Failed to load user info:', result.error);
+                // Fallback to showing generic user info
+                displayUserInfo({ username: 'User' });
+            }
         } catch (error) {
-            console.error('Error parsing user data:', error);
-            localStorage.removeItem('currentUser');
-            window.location.href = '/login';
+            console.error('user-auth.js: Error loading user info:', error);
+            // Fallback to showing generic user info
+            displayUserInfo({ username: 'User' });
         }
     }
 
     // Display user information in sidebar
     function displayUserInfo(user) {
+        console.log('user-auth.js: Displaying user info:', user);
+        
         const accountText = document.getElementById('accountText');
         const sidebarTitle = document.querySelector('.sidebar-title');
         
+        console.log('user-auth.js: Account text element:', accountText);
+        console.log('user-auth.js: Sidebar title element:', sidebarTitle);
+        
+        // Create full name from first_name and last_name
+        const fullName = user.first_name && user.last_name 
+            ? `${user.first_name} ${user.last_name}`.trim()
+            : user.first_name || user.username || user.name || user.email || 'User';
+        
+        console.log('user-auth.js: Full name created:', fullName);
+        
         if (accountText) {
-            accountText.textContent = user.username || user.name || user.email || 'User';
+            accountText.textContent = fullName;
+            console.log('user-auth.js: Updated account text to:', fullName);
         }
         
         if (sidebarTitle) {
-            sidebarTitle.textContent = user.username || user.name || user.email || 'User';
+            sidebarTitle.textContent = fullName;
+            console.log('user-auth.js: Updated sidebar title to:', fullName);
         }
     }
 
@@ -157,6 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check session timeout every minute
     setInterval(checkSessionTimeout, 60000);
+
+    // Initialize user authentication
+    checkUserAuth();
 
     console.log('User authentication initialized');
     console.log('✅ User Dashboard connected successfully!');

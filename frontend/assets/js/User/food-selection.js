@@ -42,7 +42,26 @@ class FoodSelection {
     const customFoodName = document.getElementById('customFoodName');
     if (customFoodName) {
       let debounceTimer;
+      
+      // Auto-capitalization function
+      const autoCapitalize = (text) => {
+        return text.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+      };
+      
       customFoodName.addEventListener('input', (e) => {
+        const cursorPosition = e.target.selectionStart;
+        const originalValue = e.target.value;
+        
+        // Apply auto-capitalization
+        const capitalizedValue = autoCapitalize(originalValue);
+        
+        // Only update if the value actually changed
+        if (capitalizedValue !== originalValue) {
+          e.target.value = capitalizedValue;
+          // Restore cursor position
+          e.target.setSelectionRange(cursorPosition, cursorPosition);
+        }
+        
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           const foodName = e.target.value.trim();
@@ -56,6 +75,14 @@ class FoodSelection {
         }, 500); // 500ms debounce
       });
 
+      // Apply capitalization on blur (when user finishes typing)
+      customFoodName.addEventListener('blur', (e) => {
+        const capitalizedValue = autoCapitalize(e.target.value);
+        if (capitalizedValue !== e.target.value) {
+          e.target.value = capitalizedValue;
+        }
+      });
+      
       // Hide suggestions when clicking outside
       document.addEventListener('click', (e) => {
         if (!e.target.closest('.food-name-suggestions') && !e.target.closest('#customFoodName')) {
@@ -1152,8 +1179,8 @@ class FoodSelection {
     const historyList = document.getElementById('foodHistoryList');
     if (!historyList) return;
 
-    // Limit to 5 most recent items
-    const recentHistory = this.foodHistory.slice(0, 5);
+    // Limit to 6 most recent items
+    const recentHistory = this.foodHistory.slice(0, 6);
 
     if (recentHistory.length === 0) {
       historyList.innerHTML = `
@@ -1183,8 +1210,8 @@ class FoodSelection {
 
     historyList.innerHTML = historyHTML;
     
-    // Add scrolling if more than 5 items
-    if (this.foodHistory.length > 5) {
+    // Add scrolling if more than 6 items
+    if (this.foodHistory.length > 6) {
       historyList.style.maxHeight = '300px';
       historyList.style.overflowY = 'auto';
       historyList.style.paddingRight = '10px';

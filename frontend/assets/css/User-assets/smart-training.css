@@ -1,19 +1,150 @@
 /* Smart Training UI – centralized styles for cleaner, user-friendly layout */
 
 /* History list spacing & alignment */
-.food-history-card{padding:20px}
-.food-history-header h3{margin:0 0 6px 0}
-.food-history-header p{margin:0 0 14px 0}
-.food-history-content{padding-top:8px}
-.food-history-list{display:block}
-.food-history-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin-bottom:10px;border-radius:10px;background:transparent}
-.food-history-details h4{margin:0 0 4px 0;font-weight:600}
-.food-history-details p{margin:0;color:#9fb8ff;font-size:0.9rem}
-.food-history-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.food-history-time{opacity:.9;font-size:.85rem}
-.food-history-status{padding:6px 12px;border-radius:16px;font-size:.8rem;font-weight:600}
-#foodHistoryList .food-history-status.failed{background:#ffe0e0;color:#8a1c1c}
-#showAllHistoryBtn{margin-top:10px}
+.food-history-card {
+  padding: 32px;
+  transition: all 0.3s ease;
+}
+
+.food-history-header h3 {
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.food-history-header p {
+  margin: 0 0 14px 0;
+}
+
+.food-history-content {
+  padding-top: 8px;
+}
+
+.food-history-list {
+  display: block;
+}
+
+.food-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.food-history-details h4 {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+
+.food-history-details p {
+  margin: 0;
+  color: #9fb8ff;
+  font-size: 0.9rem;
+}
+
+.food-history-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.food-history-time {
+  opacity: 0.9;
+  font-size: 0.85rem;
+}
+
+.food-history-status {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+#foodHistoryList .food-history-status.failed {
+  background: #ffe0e0;
+  color: #8a1c1c;
+}
+
+#showAllHistoryBtn {
+  margin-top: 10px;
+}
+
+/* Responsive Design for Food History Card */
+@media screen and (max-width: 1024px) and (min-width: 769px) {
+  .food-history-card {
+    padding: 28px;
+  }
+  
+  .food-history-header h3 {
+    font-size: 1.5em;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .food-history-card {
+    padding: 20px;
+  }
+  
+  .food-history-header h3 {
+    font-size: 1.3em;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .food-history-item {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .food-history-meta {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .food-history-time,
+  .food-history-status {
+    align-self: flex-end;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .food-history-card {
+    padding: 16px;
+  }
+  
+  .food-history-header h3 {
+    font-size: 1.1em;
+  }
+  
+  .food-history-item {
+    padding: 10px;
+  }
+  
+  .food-history-details h4 {
+    font-size: 1em;
+  }
+  
+  .food-history-details p {
+    font-size: 0.8em;
+  }
+  
+  .food-history-time {
+    font-size: 0.8em;
+  }
+  
+  .food-history-status {
+    font-size: 0.7em;
+    padding: 4px 8px;
+  }
+}
 
 /* ML scanner modal waiting row spacing */
 #sensorWaitIndicator{display:flex;align-items:center;gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;width:100%}

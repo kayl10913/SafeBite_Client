@@ -1,92 +1,67 @@
 // spoilageReport.js - Render spoilage rate by food type (bar chart)
 
-// Initialize spoilage report functionality
-async function initSpoilageReport() {
-  // Load spoilage statistics from API
-  await loadSpoilageStats();
-  
-  // Load chart and summary data from API
-  await loadSpoilageChartData();
-  await loadSpoiledFoodsSummary();
-  
-  const canvas = document.getElementById('spoilageChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 320;
+// Load and display logged user information
+async function loadUserInfo() {
+  try {
+    console.log('Loading user info...');
+    
+    const sessionToken = localStorage.getItem('jwt_token') || 
+                         localStorage.getItem('sessionToken') || 
+                         localStorage.getItem('session_token');
+    
+    if (!sessionToken) {
+      console.error('No session token found');
+      return;
+    }
 
-  // Use real data from API
-  const chartData = window.spoilageChartData || [];
-  const foods = chartData.map(item => item.foodName) || ['Adobo', 'Sinigang', 'Milk', 'Chicken'];
-  const rates = chartData.map(item => item.spoilageRate) || [32, 24, 18, 12];
+    console.log('Session token found, fetching user profile...');
 
-  // Chart area
-  const padding = 50;
-  const w = canvas.width;
-  const h = canvas.height;
-  const chartW = w - padding * 2;
-  const chartH = h - padding * 1.5;
-  const maxVal = Math.max(...rates) + 5;
+    const response = await fetch('/api/users/profile', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-  // Draw Y axis grid/labels
-  ctx.font = '14px Open Sans, Arial, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  for (let i = 0; i <= 5; i++) {
-    const val = Math.round(maxVal * (5 - i) / 5);
-    const y = padding + chartH * i / 5;
-    ctx.fillText(val, padding - 10, y);
-    ctx.beginPath();
-    ctx.moveTo(padding, y);
-    ctx.lineTo(w - padding, y);
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('API response:', result);
+    
+    if (result.success && result.user) {
+      // Update user name in sidebar header
+      const userNameElement = document.querySelector('.user-name');
+      console.log('User name element found:', userNameElement);
+      
+      if (userNameElement && result.user.first_name) {
+        const fullName = `${result.user.first_name} ${result.user.last_name || ''}`.trim();
+        userNameElement.textContent = fullName || 'User';
+        console.log('Updated user name to:', fullName);
+      }
+      
+      // Update account text in sidebar footer
+      const accountTextElement = document.getElementById('accountText');
+      console.log('Account text element found:', accountTextElement);
+      
+      if (accountTextElement && result.user.first_name) {
+        const fullName = `${result.user.first_name} ${result.user.last_name || ''}`.trim();
+        accountTextElement.textContent = fullName || 'Account';
+        console.log('Updated account text to:', fullName);
+      }
+      
+      console.log('User info loaded successfully:', result.user);
+    } else {
+      console.error('Failed to load user info:', result.error);
+    }
+  } catch (error) {
+    console.error('Error loading user info:', error);
   }
-
-  // Draw bars
-  const barWidth = chartW / foods.length * 0.6;
-  foods.forEach((food, i) => {
-    const x = padding + (i + 0.2) * (chartW / foods.length);
-    const y = padding + chartH - (rates[i] / maxVal) * chartH;
-    const barH = (rates[i] / maxVal) * chartH;
-    // Bar gradient
-    const grad = ctx.createLinearGradient(x, y, x, y + barH);
-    grad.addColorStop(0, '#3b7bfa');
-    grad.addColorStop(1, '#22336a');
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y, barWidth, barH);
-    // Bar border
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, barWidth, barH);
-    // Value label
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px Open Sans, Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(rates[i], x + barWidth/2, y - 14);
-  });
-
-  // Draw X axis labels
-  ctx.font = '15px Open Sans, Arial, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.textAlign = 'center';
-  foods.forEach((food, i) => {
-    const x = padding + (i + 0.2) * (chartW / foods.length) + barWidth/2;
-    ctx.fillText(food, x, h - padding/2 + 18);
-  });
-
-  // Filter and export stubs
-  document.getElementById('export-csv').onclick = () => alert('Export CSV not implemented');
-  document.getElementById('export-pdf').onclick = () => alert('Export PDF not implemented');
-  document.getElementById('filter-date').onchange = () => alert('Filtering not implemented');
-  document.getElementById('filter-user').onchange = () => alert('Filtering not implemented');
-  document.getElementById('filter-food').onchange = () => alert('Filtering not implemented');
-  
-  // Set up navigation buttons
-  setupSpoilageNavigation();
 }
+
+// This function is now handled by the SpoilageAnalytics class
 
 // Load spoilage statistics from API
 async function loadSpoilageStats() {
@@ -101,7 +76,7 @@ async function loadSpoilageStats() {
       return;
     }
 
-    const response = await fetch('/api/users/spoilage-stats', {
+    const response = await fetch('/api/spoilage-analytics/stats', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -165,7 +140,7 @@ async function loadSpoilageChartData() {
       return;
     }
 
-    const response = await fetch('/api/users/spoilage-chart-data', {
+    const response = await fetch('/api/spoilage-analytics/summary', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -180,9 +155,10 @@ async function loadSpoilageChartData() {
     const result = await response.json();
     
     if (result.success && result.data) {
-      window.spoilageChartData = result.data;
-      updateSpoilageChart(result.data);
-      console.log('Spoilage chart data loaded:', result.data);
+      // Use the topSpoiledFoods from the new API structure
+      window.spoilageChartData = result.data.topSpoiledFoods || [];
+      updateSpoilageChart(result.data.topSpoiledFoods || []);
+      console.log('Spoilage chart data loaded:', result.data.topSpoiledFoods || []);
     } else {
       console.error('Failed to load spoilage chart data:', result.error);
     }
@@ -191,43 +167,7 @@ async function loadSpoilageChartData() {
   }
 }
 
-// Load spoiled foods summary from API
-async function loadSpoiledFoodsSummary() {
-  try {
-    // Get session token for authentication
-    const sessionToken = localStorage.getItem('jwt_token') || 
-                         localStorage.getItem('sessionToken') || 
-                         localStorage.getItem('session_token');
-    
-    if (!sessionToken) {
-      console.error('No session token found');
-      return;
-    }
-
-    const response = await fetch('/api/users/spoiled-foods-summary', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${sessionToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-      updateSpoiledFoodsSummary(result.data);
-      console.log('Spoiled foods summary loaded:', result.data);
-    } else {
-      console.error('Failed to load spoiled foods summary:', result.error);
-    }
-  } catch (error) {
-    console.error('Error loading spoiled foods summary:', error);
-  }
-}
+// This function is now handled by the SpoilageAnalytics class
 
 // Update spoilage chart with real data
 function updateSpoilageChart(chartData) {
@@ -237,56 +177,38 @@ function updateSpoilageChart(chartData) {
 
   barList.innerHTML = '';
   
+  // Check if we have data
+  if (!chartData || chartData.length === 0) {
+    barList.innerHTML = `
+      <div class="no-data-state">
+        <div class="no-data-icon">📊</div>
+        <div class="no-data-title">No Food Data Available</div>
+        <div class="no-data-description">Start scanning food items to see spoilage rates by food type</div>
+        <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+      </div>
+    `;
+    return;
+  }
+  
   chartData.forEach(item => {
     const barRow = document.createElement('div');
     barRow.className = 'spoilage-bar-row';
     
-    const barClass = item.spoilageRate > 0 ? 'bar-red' : '';
+    const barClass = item.spoilage_rate > 0 ? 'bar-red' : '';
     
     barRow.innerHTML = `
-      <span class="bar-label">${item.foodName}</span>
+      <span class="bar-label">${item.food_name}</span>
       <div class="bar-bg">
-        <div class="bar-fill ${barClass}" style="width:${item.spoilageRate}%"></div>
+        <div class="bar-fill ${barClass}" style="width:${item.spoilage_rate}%"></div>
       </div>
-      <span class="bar-value">${item.spoilageRate}%</span>
+      <span class="bar-value">${item.spoilage_rate}%</span>
     `;
     
     barList.appendChild(barRow);
   });
 }
 
-// Update spoiled foods summary with real data
-function updateSpoiledFoodsSummary(summaryData) {
-  // Update the summary list
-  const summaryList = document.querySelector('.spoilage-summary-list');
-  if (!summaryList) return;
-
-  summaryList.innerHTML = '';
-  
-  summaryData.forEach(item => {
-    const summaryRow = document.createElement('div');
-    summaryRow.className = 'summary-row';
-    
-    const rateClass = item.spoilageRate > 0 ? 'bar-red' : '';
-    
-    summaryRow.innerHTML = `
-      <span class="summary-label">${item.foodName}</span>
-      <span class="summary-desc">${item.spoiledItems} of ${item.totalItems} items spoiled</span>
-      <span class="summary-rate ${rateClass}">${item.spoilageRate}%</span>
-    `;
-    
-    summaryList.appendChild(summaryRow);
-  });
-
-  // Update total overview
-  const totalSpoiled = summaryData.reduce((sum, item) => sum + item.spoiledItems, 0);
-  const totalItems = summaryData.reduce((sum, item) => sum + item.totalItems, 0);
-  
-  const summaryTotal = document.querySelector('.summary-total');
-  if (summaryTotal) {
-    summaryTotal.innerHTML = `Total Overview: <span class="summary-total-right">${totalSpoiled} spoiled out of ${totalItems} items</span>`;
-  }
-}
+// This function is now handled by the SpoilageAnalytics class
 
 // Initialize detailed report functionality
 async function initDetailedReport() {
@@ -300,20 +222,61 @@ async function initDetailedReport() {
 
   if (applyFiltersBtn) {
     applyFiltersBtn.addEventListener('click', async function() {
-      // Just apply current controls and load data
+      // Process current date picker values before applying filters
+      const dateRangeSelect = document.getElementById('date-range');
+      const weekPicker = document.getElementById('week-picker');
+      const monthPicker = document.getElementById('month-picker');
+      const yearPicker = document.getElementById('year-picker');
+      
+      if (dateRangeSelect) {
+        const rangeType = dateRangeSelect.value;
+        
+        // If a specific picker is visible, use its value to update the date range
+        if (rangeType === 'weekly' && weekPicker && weekPicker.value) {
+          const [year, week] = weekPicker.value.split('-W');
+          const weekStart = getWeekStartFromWeekNumber(parseInt(year), parseInt(week));
+          const weekEnd = getWeekEndFromWeekNumber(parseInt(year), parseInt(week));
+          
+          const startDateInput = document.getElementById('start-date');
+          const endDateInput = document.getElementById('end-date');
+          if (startDateInput && endDateInput) {
+            startDateInput.value = weekStart.toISOString().split('T')[0];
+            endDateInput.value = weekEnd.toISOString().split('T')[0];
+          }
+        } else if (rangeType === 'monthly' && monthPicker && monthPicker.value) {
+          const [year, month] = monthPicker.value.split('-');
+          const monthStart = new Date(parseInt(year), parseInt(month) - 1, 1);
+          const monthEnd = new Date(parseInt(year), parseInt(month), 0);
+          
+          const startDateInput = document.getElementById('start-date');
+          const endDateInput = document.getElementById('end-date');
+          if (startDateInput && endDateInput) {
+            startDateInput.value = monthStart.toISOString().split('T')[0];
+            endDateInput.value = monthEnd.toISOString().split('T')[0];
+          }
+        } else if (rangeType === 'yearly' && yearPicker && yearPicker.value) {
+          const yearStart = new Date(parseInt(yearPicker.value), 0, 1);
+          const yearEnd = new Date(parseInt(yearPicker.value), 11, 31);
+          
+          const startDateInput = document.getElementById('start-date');
+          const endDateInput = document.getElementById('end-date');
+          if (startDateInput && endDateInput) {
+            startDateInput.value = yearStart.toISOString().split('T')[0];
+            endDateInput.value = yearEnd.toISOString().split('T')[0];
+          }
+        }
+      }
+      
+      // Apply current controls and load data
       const recordsPerPage = getCurrentRecordsPerPage();
       await loadDetailedReportData(1, recordsPerPage, { preserveOnEmpty: false });
     });
   }
 
-  // Export PDF similar to report generator (print dialog fallback)
+  // Export PDF with proper PDF generation
   if (exportPdfBtn) {
     exportPdfBtn.addEventListener('click', function() {
-      // For real PDF export, integrate jsPDF; for now, show a note and open print dialog
-      showNotification('PDF export uses the browser print dialog. For best results, set layout to Landscape.', 'info');
-      setTimeout(() => {
-        window.print();
-      }, 600);
+      exportDetailedReportPDF();
     });
   }
   
@@ -330,21 +293,86 @@ async function initDetailedReport() {
   const customDateRangeGroup = document.getElementById('custom-date-range-group');
   const customDateRangeGroupEnd = document.getElementById('custom-date-range-group-end');
   
-  // Set default date range based on weekly selection
+  // Set default date range based on daily selection
   if (dateRangeSelect) {
     updateDateRange(dateRangeSelect.value);
     
     // Add event listener for date range changes
     dateRangeSelect.addEventListener('change', (e) => {
       updateDateRange(e.target.value);
-      loadDetailedReportData(1, getCurrentRecordsPerPage());
+      // Removed automatic refresh - will only refresh when Apply Filters is clicked
     });
   }
   
   if (startDateInput && endDateInput) {
     // Add event listeners for custom date changes
-    startDateInput.addEventListener('change', () => loadDetailedReportData(1, getCurrentRecordsPerPage()));
-    endDateInput.addEventListener('change', () => loadDetailedReportData(1, getCurrentRecordsPerPage()));
+    startDateInput.addEventListener('change', () => {
+      // Removed automatic refresh - will only refresh when Apply Filters is clicked
+    });
+    endDateInput.addEventListener('change', () => {
+      // Removed automatic refresh - will only refresh when Apply Filters is clicked
+    });
+  }
+  
+  // Add event listeners for week/month/year pickers
+  const weekPicker = document.getElementById('week-picker');
+  const monthPicker = document.getElementById('month-picker');
+  const yearPicker = document.getElementById('year-picker');
+  
+  if (weekPicker) {
+    weekPicker.addEventListener('change', (e) => {
+      const weekValue = e.target.value;
+      if (weekValue) {
+        const [year, week] = weekValue.split('-W');
+        const weekStart = getWeekStartFromWeekNumber(parseInt(year), parseInt(week));
+        const weekEnd = getWeekEndFromWeekNumber(parseInt(year), parseInt(week));
+        
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        if (startDateInput && endDateInput) {
+          startDateInput.value = weekStart.toISOString().split('T')[0];
+          endDateInput.value = weekEnd.toISOString().split('T')[0];
+          // Removed automatic refresh - will only refresh when Apply Filters is clicked
+        }
+      }
+    });
+  }
+  
+  if (monthPicker) {
+    monthPicker.addEventListener('change', (e) => {
+      const monthValue = e.target.value;
+      if (monthValue) {
+        const [year, month] = monthValue.split('-');
+        const monthStart = new Date(parseInt(year), parseInt(month) - 1, 1);
+        const monthEnd = new Date(parseInt(year), parseInt(month), 0);
+        
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        if (startDateInput && endDateInput) {
+          startDateInput.value = monthStart.toISOString().split('T')[0];
+          endDateInput.value = monthEnd.toISOString().split('T')[0];
+          // Removed automatic refresh - will only refresh when Apply Filters is clicked
+        }
+      }
+    });
+  }
+  
+  if (yearPicker) {
+    yearPicker.addEventListener('change', (e) => {
+      const yearValue = e.target.value;
+      if (yearValue) {
+        const yearStart = new Date(parseInt(yearValue), 0, 1);
+        const yearEnd = new Date(parseInt(yearValue), 11, 31);
+        
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        if (startDateInput && endDateInput) {
+          startDateInput.value = yearStart.toISOString().split('T')[0];
+          endDateInput.value = yearEnd.toISOString().split('T')[0];
+          // Removed automatic refresh - will only refresh when Apply Filters is clicked
+        }
+      }
+    });
   }
   
   // Set up filter change listeners
@@ -356,13 +384,13 @@ async function initDetailedReport() {
     loadFoodCategories();
     foodCategorySelect.addEventListener('change', () => {
       console.log('Food category changed to:', foodCategorySelect.value);
-      loadDetailedReportData(1, getCurrentRecordsPerPage());
+      // Removed automatic refresh - will only refresh when Apply Filters is clicked
     });
   }
   
   if (recordsPerPageSelect) {
     recordsPerPageSelect.addEventListener('change', () => {
-      loadDetailedReportData(1, getCurrentRecordsPerPage());
+      // Removed automatic refresh - will only refresh when Apply Filters is clicked
     });
   }
   
@@ -452,8 +480,21 @@ function updateDateRange(rangeType) {
   const endDateInput = document.getElementById('end-date');
   const customDateRangeGroup = document.getElementById('custom-date-range-group');
   const customDateRangeGroupEnd = document.getElementById('custom-date-range-group-end');
+  const weekPickerGroup = document.getElementById('week-picker-group');
+  const monthPickerGroup = document.getElementById('month-picker-group');
+  const yearPickerGroup = document.getElementById('year-picker-group');
+  const weekPicker = document.getElementById('week-picker');
+  const monthPicker = document.getElementById('month-picker');
+  const yearPicker = document.getElementById('year-picker');
   
   if (!startDateInput || !endDateInput) return;
+  
+  // Hide all picker groups first
+  customDateRangeGroup.style.display = 'none';
+  customDateRangeGroupEnd.style.display = 'none';
+  weekPickerGroup.style.display = 'none';
+  monthPickerGroup.style.display = 'none';
+  yearPickerGroup.style.display = 'none';
   
   const today = new Date();
   let startDate = new Date();
@@ -463,26 +504,38 @@ function updateDateRange(rangeType) {
     case 'daily':
       startDate = today;
       endDate = today;
-      customDateRangeGroup.style.display = 'none';
-      customDateRangeGroupEnd.style.display = 'none';
       break;
     case 'weekly':
-      startDate = new Date(today.getTime() - (7 * 24 * 60 * 60 * 1000));
-      endDate = today;
-      customDateRangeGroup.style.display = 'none';
-      customDateRangeGroupEnd.style.display = 'none';
+      weekPickerGroup.style.display = 'block';
+      // Set default to current week
+      const currentWeek = getWeekString(today);
+      if (weekPicker) weekPicker.value = currentWeek;
+      // Calculate start and end of current week
+      const weekStart = getWeekStart(today);
+      const weekEnd = getWeekEnd(today);
+      startDate = weekStart;
+      endDate = weekEnd;
       break;
     case 'monthly':
-      startDate = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-      endDate = today;
-      customDateRangeGroup.style.display = 'none';
-      customDateRangeGroupEnd.style.display = 'none';
+      monthPickerGroup.style.display = 'block';
+      // Set default to current month
+      const currentMonth = getMonthString(today);
+      if (monthPicker) monthPicker.value = currentMonth;
+      // Calculate start and end of current month
+      const monthStart = getMonthStart(today);
+      const monthEnd = getMonthEnd(today);
+      startDate = monthStart;
+      endDate = monthEnd;
       break;
     case 'yearly':
-      startDate = new Date(today.getTime() - (365 * 24 * 60 * 60 * 1000));
-      endDate = today;
-      customDateRangeGroup.style.display = 'none';
-      customDateRangeGroupEnd.style.display = 'none';
+      yearPickerGroup.style.display = 'block';
+      // Set default to current year
+      if (yearPicker) yearPicker.value = today.getFullYear();
+      // Calculate start and end of current year
+      const yearStart = getYearStart(today);
+      const yearEnd = getYearEnd(today);
+      startDate = yearStart;
+      endDate = yearEnd;
       break;
     case 'custom':
       customDateRangeGroup.style.display = 'block';
@@ -495,6 +548,91 @@ function updateDateRange(rangeType) {
   
   startDateInput.value = startDate.toISOString().split('T')[0];
   endDateInput.value = endDate.toISOString().split('T')[0];
+}
+
+// Helper functions for date calculations
+function getWeekString(date) {
+  const year = date.getFullYear();
+  const week = getWeekNumber(date);
+  return `${year}-W${week.toString().padStart(2, '0')}`;
+}
+
+function getWeekNumber(date) {
+  // ISO week calculation
+  const jan4 = new Date(date.getFullYear(), 0, 4);
+  const jan4Day = jan4.getDay();
+  const daysToMonday = jan4Day === 0 ? 6 : jan4Day - 1;
+  
+  const week1Start = new Date(jan4);
+  week1Start.setDate(jan4.getDate() - daysToMonday);
+  
+  const diffInTime = date.getTime() - week1Start.getTime();
+  const diffInDays = Math.floor(diffInTime / (1000 * 60 * 60 * 24));
+  const weekNumber = Math.floor(diffInDays / 7) + 1;
+  
+  return Math.max(1, weekNumber);
+}
+
+function getWeekStart(date) {
+  // ISO week starts on Monday
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+  const weekStart = new Date(date);
+  weekStart.setDate(diff);
+  return weekStart;
+}
+
+function getWeekEnd(date) {
+  const weekStart = getWeekStart(new Date(date));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  return weekEnd;
+}
+
+function getMonthString(date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function getMonthStart(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function getMonthEnd(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function getYearStart(date) {
+  return new Date(date.getFullYear(), 0, 1);
+}
+
+function getYearEnd(date) {
+  return new Date(date.getFullYear(), 11, 31);
+}
+
+// Helper functions for week number calculations
+function getWeekStartFromWeekNumber(year, week) {
+  // ISO week calculation - week starts on Monday
+  // January 4th is always in week 1 of the year
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = jan4.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const daysToMonday = jan4Day === 0 ? 6 : jan4Day - 1; // Days to get to Monday
+  
+  // Calculate the start of week 1
+  const week1Start = new Date(jan4);
+  week1Start.setDate(jan4.getDate() - daysToMonday);
+  
+  // Calculate the start of the requested week
+  const weekStart = new Date(week1Start);
+  weekStart.setDate(week1Start.getDate() + (week - 1) * 7);
+  
+  return weekStart;
+}
+
+function getWeekEndFromWeekNumber(year, week) {
+  const weekStart = getWeekStartFromWeekNumber(year, week);
+  return new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 }
 
 // Load detailed report data from API
@@ -634,6 +772,13 @@ function updateDetailedReportTable(data, pagination) {
       </tr>
     `;
     console.log('No data found, showing empty state');
+    
+    // Hide pagination when no data
+    const paginationContainer = document.getElementById('detailedReportPagination');
+    if (paginationContainer) {
+      paginationContainer.style.display = 'none';
+    }
+    
     return;
   }
 
@@ -650,7 +795,7 @@ function updateDetailedReportTable(data, pagination) {
     
     row.innerHTML = `
       <td>
-        ${item['FOOD ITEM'] || ''}<br><span class="created-date">Created: ${formatDate(item['EXPIRY DATE'])}</span>
+        ${item['FOOD ITEM'] || ''}<br><span class="created-date">Created: ${formatDate(item['CREATED AT'] || item.createdAt || item['EXPIRY DATE'])}</span>
       </td>
       <td><span class="cat-badge">${item['CATEGORY'] || ''}</span></td>
       <td><span class="status-badge ${statusClass}">${item['STATUS'] || ''}</span></td>
@@ -800,7 +945,13 @@ function updateDetailedReportPagination(pagination) {
 
   paginationHTML += '</div>';
   paginationContainer.innerHTML = paginationHTML;
+  
+  // Only show pagination if there are records and multiple pages
+  if (totalRecords > 0 && totalPages > 1) {
   paginationContainer.style.display = 'block';
+  } else {
+    paginationContainer.style.display = 'none';
+  }
 }
 
 
@@ -924,15 +1075,30 @@ function setupSpoilageNavigation() {
 }
 
 // Make functions globally available
-window.initSpoilageReport = initSpoilageReport;
+// Create initSpoilageReport function for SPA compatibility
+window.initSpoilageReport = function() {
+    // Initialize spoilage analytics if not already done
+    if (window.spoilageAnalytics) {
+        window.spoilageAnalytics.refresh();
+    } else {
+        // Create new instance if it doesn't exist
+        window.spoilageAnalytics = new SpoilageAnalytics();
+    }
+    
+    // Setup navigation buttons
+    setupSpoilageNavigation();
+    
+    // Load user info
+    loadUserInfo();
+};
+
 window.initDetailedReport = initDetailedReport;
 window.setupSpoilageNavigation = setupSpoilageNavigation;
 window.loadSpoilageStats = loadSpoilageStats;
 window.updateSpoilageStats = updateSpoilageStats;
 window.loadSpoilageChartData = loadSpoilageChartData;
-window.loadSpoiledFoodsSummary = loadSpoiledFoodsSummary;
+// These functions are now handled by the SpoilageAnalytics class
 window.updateSpoilageChart = updateSpoilageChart;
-window.updateSpoiledFoodsSummary = updateSpoiledFoodsSummary;
 window.loadDetailedReportData = loadDetailedReportData;
 window.updateDetailedReportTable = updateDetailedReportTable;
 window.goToDetailedReportPage = goToDetailedReportPage;
@@ -942,6 +1108,10 @@ window.formatSensorReadings = formatSensorReadings;
 window.getCurrentRecordsPerPage = getCurrentRecordsPerPage;
 window.updateDateRange = updateDateRange;
 window.loadFoodCategories = loadFoodCategories;
+window.exportSpoilageReportCSV = exportSpoilageReportCSV;
+window.exportSpoilageReportPDF = exportSpoilageReportPDF;
+window.applySpoilageFilters = applySpoilageFilters;
+window.loadUserInfo = loadUserInfo;
 
 // Refresh function to reload categories and data
 window.refreshDetailedReport = async function() {
@@ -950,9 +1120,815 @@ window.refreshDetailedReport = async function() {
 };
 
 
+// ============================================================================
+// SPOILAGE REPORT EXPORT AND FILTER FUNCTIONS
+// ============================================================================
+
+// Export spoilage report to CSV
+function exportSpoilageReportCSV() {
+  try {
+    // Get current chart data
+    const chartData = window.spoilageChartData || [];
+    
+    if (chartData.length === 0) {
+      showNotification('No data available to export', 'warning');
+      return;
+    }
+
+    // Create CSV content
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    
+    // Add headers
+    csvContent += 'Food Name,Spoilage Rate,Total Items,Spoiled Items\n';
+    
+    // Add data rows
+    chartData.forEach(item => {
+      const row = [
+        `"${item.foodName || ''}"`,
+        item.spoilageRate || 0,
+        item.totalItems || 0,
+        item.spoiledItems || 0
+      ].join(',');
+      csvContent += row + '\n';
+    });
+
+    // Create download link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `spoilage-report-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification('Spoilage report exported to CSV successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    showNotification('Failed to export CSV. Please try again.', 'error');
+  }
+}
+
+// Export detailed report to PDF
+function exportDetailedReportPDF() {
+  try {
+    // Check if jsPDF is available
+    if (typeof window.jspdf === 'undefined') {
+      showNotification('PDF export requires jsPDF library. Please refresh the page and try again.', 'error');
+      return;
+    }
+
+    // Get current report data
+    let reportData = lastDetailedReportData;
+    console.log('PDF Export - Report Data:', reportData);
+    console.log('PDF Export - Data Type:', typeof reportData);
+    console.log('PDF Export - Is Array:', Array.isArray(reportData));
+    console.log('PDF Export - Data Length:', reportData?.length);
+    
+    // Fallback: try to get data from the table if cached data is not available
+    if (!reportData || !Array.isArray(reportData) || reportData.length === 0) {
+      console.log('PDF Export - No cached data, trying to get from table...');
+      reportData = getDataFromTable();
+      console.log('PDF Export - Table Data:', reportData);
+    }
+    
+    if (!reportData || !Array.isArray(reportData) || reportData.length === 0) {
+      showNotification('No data available to export. Please apply filters first.', 'warning');
+      return;
+    }
+
+    // Create PDF document with professional settings
+    const doc = new window.jspdf.jsPDF({ 
+      orientation: 'landscape', 
+      unit: 'pt', 
+      format: 'A4',
+      compress: true
+    });
+    
+    // Add professional header with logo area
+    doc.setFillColor(74, 158, 255); // SafeBite blue
+    doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+    
+    // Company name and title
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SafeBite', 40, 35);
+    
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Detailed Spoilage Report', 40, 55);
+    
+    // Reset text color for content
+    doc.setTextColor(0, 0, 0);
+    
+    // Add report metadata in a professional box
+    doc.setFillColor(248, 249, 250);
+    doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+    
+    // Report info with better formatting
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    const currentDate = new Date().toLocaleDateString();
+    const currentTime = new Date().toLocaleTimeString();
+    doc.text(`Report Generated: ${currentDate} at ${currentTime}`, 50, 120);
+    doc.text(`Total Records: ${reportData.length}`, 50, 135);
+    
+    // Get filter values for report info
+    const dateRange = document.getElementById('date-range')?.value || 'All';
+    const foodCategory = document.getElementById('food-category')?.value || 'All';
+    doc.text(`Date Range: ${dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}`, 50, 150);
+    doc.text(`Food Category: ${foodCategory.charAt(0).toUpperCase() + foodCategory.slice(1)}`, 300, 150);
+    
+    // Prepare table data
+    const tableData = reportData.map(item => {
+      // Format alert count properly
+      const alertCount = item['ALERT COUNT'] || 0;
+      const alertText = alertCount === 0 ? 'No alerts' : `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
+      
+      // Format expiry date properly
+      const expiryDate = item['EXPIRY DATE'] || '';
+      const formattedExpiry = expiryDate ? new Date(expiryDate).toLocaleDateString() : '';
+      
+      // Format risk score with percentage
+      const riskScore = item['RISK SCORE'] || 0;
+      const formattedRiskScore = `${parseFloat(riskScore).toFixed(1)}%`;
+      
+      return [
+        item['FOOD ITEM'] || '',
+        item['CATEGORY'] || '',
+        item['STATUS'] || '',
+        formattedRiskScore,
+        formattedExpiry,
+        item['SENSOR READINGS'] || '',
+        alertText
+      ];
+    });
+    
+    // Add professional table
+    doc.autoTable({
+      head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts']],
+      body: tableData,
+      startY: 180,
+      margin: { left: 40, right: 40 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 4,
+        overflow: 'linebreak',
+        halign: 'left',
+        valign: 'middle',
+        lineColor: [200, 200, 200],
+        lineWidth: 0.5
+      },
+      headStyles: {
+        fillColor: [74, 158, 255],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10,
+        halign: 'center'
+      },
+      alternateRowStyles: {
+        fillColor: [248, 249, 250]
+      },
+      columnStyles: {
+        0: { cellWidth: 120, halign: 'left' },  // Food Item
+        1: { cellWidth: 90, halign: 'center' },  // Category
+        2: { cellWidth: 90, halign: 'center' },  // Status
+        3: { cellWidth: 90, halign: 'center' },  // Risk Score
+        4: { cellWidth: 100, halign: 'center' }, // Expiry Date
+        5: { cellWidth: 200, halign: 'left' },   // Sensor Readings
+        6: { cellWidth: 80, halign: 'center' }   // Alerts
+      },
+      didDrawPage: function (data) {
+        // Add page number
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, 
+                 doc.internal.pageSize.width - 100, 
+                 doc.internal.pageSize.height - 20);
+      }
+    });
+    
+    // Save the PDF
+    const fileName = `SafeBite_Detailed_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('PDF exported successfully!', 'success');
+    
+  } catch (error) {
+    console.error('Error exporting PDF:', error);
+    showNotification('Failed to export PDF. Please try again.', 'error');
+  }
+}
+
+// Get data from the current table display as fallback
+function getDataFromTable() {
+  try {
+    const table = document.querySelector('#detailedReportTable tbody');
+    if (!table) return [];
+    
+    const rows = table.querySelectorAll('tr');
+    const data = [];
+    
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 7) {
+        const rowData = {
+          'FOOD ITEM': cells[0]?.textContent?.trim() || '',
+          'CATEGORY': cells[1]?.textContent?.trim() || '',
+          'STATUS': cells[2]?.textContent?.trim() || '',
+          'RISK SCORE': cells[3]?.textContent?.trim() || '',
+          'EXPIRY DATE': cells[4]?.textContent?.trim() || '',
+          'SENSOR READINGS': cells[5]?.textContent?.trim() || '',
+          'ALERT COUNT': cells[6]?.textContent?.trim() || '0'
+        };
+        data.push(rowData);
+      }
+    });
+    
+    return data;
+  } catch (error) {
+    console.error('Error extracting data from table:', error);
+    return [];
+  }
+}
+
+// Export spoilage report to PDF (legacy function)
+function exportSpoilageReportPDF() {
+  exportDetailedReportPDF();
+}
+
+// Apply spoilage filters
+function applySpoilageFilters() {
+  try {
+    // Get filter values
+    const dateFilter = document.getElementById('filter-date')?.value;
+    const userFilter = document.getElementById('filter-user')?.value;
+    const foodFilter = document.getElementById('filter-food')?.value;
+    
+    console.log('Applying filters:', { dateFilter, userFilter, foodFilter });
+    
+    // Reload data with filters
+    if (window.spoilageAnalytics) {
+      window.spoilageAnalytics.refresh();
+    }
+    
+    // Also reload the chart data
+    loadSpoilageChartData();
+    
+    showNotification('Filters applied successfully', 'success');
+  } catch (error) {
+    console.error('Error applying filters:', error);
+    showNotification('Failed to apply filters. Please try again.', 'error');
+  }
+}
+
+// ============================================================================
+// SPOILAGE ANALYTICS CLASS - Added to integrate with existing spoilage report
+// ============================================================================
+
+class SpoilageAnalytics {
+    constructor() {
+        this.spoilageData = null;
+        this.isLoading = false;
+        this.init();
+    }
+
+    async init() {
+        // Only load data if we're on the spoilage report page
+        if (this.isOnSpoilageReportPage()) {
+            await this.loadSpoilageData();
+        }
+        
+        // Listen for SPA navigation events
+        document.addEventListener('spa:navigate:after', (event) => {
+            const { to } = event.detail;
+            if (to === 'spoilage-report' || to === 'detailed-report') {
+                setTimeout(() => this.loadSpoilageData(), 100);
+            }
+        });
+        
+        // Also listen for direct clicks on sidebar navigation
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('.sidebar-nav') || event.target.closest('.nav-item')) {
+                setTimeout(() => {
+                    if (this.isOnSpoilageReportPage()) {
+                        this.loadSpoilageData();
+                    }
+                }, 100);
+            }
+        });
+    }
+    
+    isOnSpoilageReportPage() {
+        const mainContent = document.getElementById('main-content');
+        return mainContent && (
+            mainContent.querySelector('#spoilage-report-template') ||
+            mainContent.querySelector('.spoilage-analytics-container') ||
+            mainContent.querySelector('#spoilageChart')
+        );
+    }
+
+    async loadSpoilageData() {
+        if (this.isLoading) return;
+        
+        console.log('Loading spoilage data...');
+        this.isLoading = true;
+        
+        // Clear existing content immediately to prevent blink effect
+        this.clearContent();
+        
+        try {
+            const token = localStorage.getItem('jwt_token') || 
+                         localStorage.getItem('sessionToken') || 
+                         localStorage.getItem('session_token');
+
+            if (!token) {
+                console.error('No authentication token found - user not logged in');
+                this.showLoginMessage();
+                return;
+            }
+
+            // Fetch both summary and stats data with cache busting
+            const timestamp = Date.now();
+            const [summaryResponse, statsResponse] = await Promise.all([
+                fetch(`/api/spoilage-analytics/summary?t=${timestamp}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`/api/spoilage-analytics/stats?t=${timestamp}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
+
+            if (!summaryResponse.ok || !statsResponse.ok) {
+                if (summaryResponse.status === 401 || statsResponse.status === 401) {
+                    console.error('User not authenticated');
+                    this.showLoginMessage();
+                    return;
+                }
+                throw new Error('Failed to fetch spoilage data');
+            }
+
+            const summaryData = await summaryResponse.json();
+            const statsData = await statsResponse.json();
+
+            if (summaryData.success && statsData.success) {
+                console.log('Spoilage data received:', summaryData.data);
+                this.spoilageData = {
+                    summary: summaryData.data,
+                    stats: statsData.data
+                };
+                
+                this.updateSpoilageDashboard();
+            } else {
+                console.error('API returned unsuccessful response:', summaryData, statsData);
+                throw new Error('API returned unsuccessful response');
+            }
+
+        } catch (error) {
+            console.error('Error loading spoilage data:', error);
+            // Show error message instead of hardcoded data
+            this.showErrorMessage();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    clearContent() {
+        const barList = document.querySelector('.spoilage-bar-list');
+        const summaryList = document.querySelector('.spoilage-summary-list');
+        
+        if (barList) {
+            barList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">⏳</div>
+                    <div class="no-data-title">Loading Spoilage Data...</div>
+                    <div class="no-data-description">Please wait while we fetch your food spoilage analytics</div>
+                </div>
+            `;
+        }
+        
+        if (summaryList) {
+            summaryList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">⏳</div>
+                    <div class="no-data-title">Loading Summary Data...</div>
+                    <div class="no-data-description">Please wait while we fetch your category summary</div>
+                </div>
+            `;
+        }
+        
+        // Reset stat cards to show loading state
+        document.querySelectorAll('.spoilage-stat-card .stat-value').forEach(el => {
+            el.textContent = '...';
+        });
+        
+        // Reset total overview
+        const totalOverview = document.querySelector('.summary-total-right');
+        if (totalOverview) {
+            totalOverview.textContent = 'Loading...';
+        }
+    }
+
+    showErrorMessage() {
+        const barList = document.querySelector('.spoilage-bar-list');
+        const summaryList = document.querySelector('.spoilage-summary-list');
+        
+        if (barList) {
+            barList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">⚠️</div>
+                    <div class="no-data-title">Failed to Load Data</div>
+                    <div class="no-data-description">Unable to fetch spoilage data. Please check your connection and try again.</div>
+                    <div class="no-data-action">Click refresh to retry</div>
+                </div>
+            `;
+        }
+        
+        if (summaryList) {
+            summaryList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">⚠️</div>
+                    <div class="no-data-title">Failed to Load Summary</div>
+                    <div class="no-data-description">Unable to fetch category summary. Please check your connection and try again.</div>
+                    <div class="no-data-action">Click refresh to retry</div>
+                </div>
+            `;
+        }
+        
+        // Reset stat cards to show loading state
+        document.querySelectorAll('.spoilage-stat-card .stat-value').forEach(el => {
+            el.textContent = '--';
+        });
+        
+        // Reset total overview
+        const totalOverview = document.querySelector('.summary-total-right');
+        if (totalOverview) {
+            totalOverview.textContent = 'Unable to load data';
+        }
+    }
+
+    updateSpoilageDashboard() {
+        if (!this.spoilageData) return;
+
+        // Update spoilage stats cards
+        this.updateSpoilageStats();
+        
+        // Update spoilage rate bars
+        this.updateSpoilageRateBars();
+        
+        // Update top spoiled foods summary
+        this.updateTopSpoiledFoodsSummary();
+        
+        // Update chart
+        this.updateChart();
+    }
+
+    updateSpoilageStats() {
+        const stats = this.spoilageData.stats;
+        
+        // Update stat cards
+        const statCards = document.querySelectorAll('.spoilage-stat-card');
+        statCards.forEach(card => {
+            const label = card.querySelector('.stat-label').textContent.toLowerCase();
+            const valueElement = card.querySelector('.stat-value');
+            
+            switch (label) {
+                case 'total items':
+                    valueElement.textContent = stats.total_items || 0;
+                    break;
+                case 'safe':
+                    valueElement.textContent = stats.safe_count || 0;
+                    break;
+                case 'at risk':
+                    valueElement.textContent = stats.caution_count || 0;
+                    break;
+                case 'spoiled':
+                    valueElement.textContent = stats.unsafe_count || 0;
+                    break;
+                case 'expired':
+                    valueElement.textContent = stats.expired_count || 0;
+                    break;
+            }
+        });
+    }
+
+    updateSpoilageRateBars() {
+        const topSpoiledFoods = this.spoilageData.summary.topSpoiledFoods;
+        const barList = document.querySelector('.spoilage-bar-list');
+        
+        if (!barList) return;
+
+        // Clear existing bars
+        barList.innerHTML = '';
+
+        // Check if we have data
+        if (!topSpoiledFoods || topSpoiledFoods.length === 0) {
+            barList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">📊</div>
+                    <div class="no-data-title">No Food Data Available</div>
+                    <div class="no-data-description">Start scanning food items to see spoilage rates by food type</div>
+                    <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Create bars for top 5 spoiled foods
+        topSpoiledFoods.forEach(food => {
+            const barRow = document.createElement('div');
+            barRow.className = 'spoilage-bar-row';
+            
+            const spoilageRate = food.spoilage_rate || 0;
+            const barClass = spoilageRate >= 50 ? 'bar-red' : spoilageRate >= 25 ? 'bar-yellow' : 'bar-green';
+            
+            barRow.innerHTML = `
+                <span class="bar-label">${food.food_name}</span>
+                <div class="bar-bg">
+                    <div class="bar-fill ${barClass}" style="width:${spoilageRate}%"></div>
+                </div>
+                <span class="bar-value">${spoilageRate}%</span>
+            `;
+            
+            barList.appendChild(barRow);
+        });
+    }
+
+    updateTopSpoiledFoodsSummary() {
+        const categorySummary = this.spoilageData.summary.categorySummary;
+        const summaryList = document.querySelector('.spoilage-summary-list');
+        
+        if (!summaryList) return;
+
+        // Clear existing summary items
+        summaryList.innerHTML = '';
+
+        // Check if we have data
+        if (!categorySummary || categorySummary.length === 0) {
+            summaryList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">📈</div>
+                    <div class="no-data-title">No Category Data Available</div>
+                    <div class="no-data-description">Start scanning food items to see spoilage summary by category</div>
+                    <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+                </div>
+            `;
+            
+            // Update total overview for no data
+            const totalOverview = document.querySelector('.summary-total-right');
+            if (totalOverview) {
+                totalOverview.textContent = '0 spoiled out of 0 items';
+            }
+            return;
+        }
+
+        // Create summary items for each category
+        categorySummary.forEach(category => {
+            const summaryRow = document.createElement('div');
+            summaryRow.className = 'summary-row';
+            
+            const spoilageRate = category.spoilage_rate || 0;
+            const rateClass = spoilageRate >= 50 ? 'bar-red' : spoilageRate >= 25 ? 'bar-yellow' : '';
+            
+            summaryRow.innerHTML = `
+                <span class="summary-label">${category.food_category}</span>
+                <span class="summary-desc">${category.spoiled_count || 0} of ${category.total_items || 0} items spoiled</span>
+                <span class="summary-rate ${rateClass}">${spoilageRate}%</span>
+            `;
+            
+            summaryList.appendChild(summaryRow);
+        });
+
+        // Update total overview
+        const totals = this.spoilageData.summary.totals;
+        const totalOverview = document.querySelector('.summary-total-right');
+        if (totalOverview) {
+            totalOverview.textContent = `${totals.unsafe_count || 0} spoiled out of ${totals.total_items || 0} items`;
+        }
+    }
+
+    updateChart() {
+        const canvas = document.getElementById('spoilageChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        
+        // Get chart data
+        const topSpoiledFoods = this.spoilageData.summary.topSpoiledFoods;
+        
+        // Check if we have data
+        if (!topSpoiledFoods || topSpoiledFoods.length === 0) {
+            drawNoDataChart(ctx, w, h);
+            return;
+        }
+        
+        // Draw chart with data
+        const foods = topSpoiledFoods.map(item => item.food_name) || [];
+        const rates = topSpoiledFoods.map(item => item.spoilage_rate) || [];
+        drawSpoilageChart(ctx, foods, rates, w, h);
+    }
+
+    // Public method to refresh data
+    async refresh() {
+        await this.loadSpoilageData();
+    }
+
+    // Get current spoilage data
+    getSpoilageData() {
+        return this.spoilageData;
+    }
+
+    // Show login message when user is not authenticated
+    showLoginMessage() {
+        const barList = document.querySelector('.spoilage-bar-list');
+        const summaryList = document.querySelector('.spoilage-summary-list');
+        
+        if (barList) {
+            barList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">🔒</div>
+                    <div class="no-data-title">Authentication Required</div>
+                    <div class="no-data-description">Please log in to view your spoilage analytics and food data.</div>
+                    <div class="no-data-action">Redirecting to login page...</div>
+                </div>
+            `;
+        }
+        
+        if (summaryList) {
+            summaryList.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">🔒</div>
+                    <div class="no-data-title">Authentication Required</div>
+                    <div class="no-data-description">Please log in to view your spoilage summary and category data.</div>
+                    <div class="no-data-action">Redirecting to login page...</div>
+                </div>
+            `;
+        }
+        
+        // Reset stat cards to 0
+        document.querySelectorAll('.spoilage-stat-card .stat-value').forEach(el => {
+            el.textContent = '0';
+        });
+        
+        // Reset total overview
+        const totalOverview = document.querySelector('.summary-total-right');
+        if (totalOverview) {
+            totalOverview.textContent = '0 spoiled out of 0 items';
+        }
+    }
+}
+
+// ============================================================================
+// CHART DRAWING FUNCTIONS
+// ============================================================================
+
+// Draw no-data state on chart
+function drawNoDataChart(ctx, w, h) {
+    // Clear canvas
+    ctx.clearRect(0, 0, w, h);
+    
+    // Set background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Draw no-data message
+    ctx.font = 'bold 20px Open Sans, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Main message
+    ctx.fillText('No Spoilage Data Available', w / 2, h / 2 - 20);
+    
+    // Subtitle
+    ctx.font = '14px Open Sans, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('Start scanning food items to see spoilage analytics', w / 2, h / 2 + 10);
+    
+    // Icon (simple chart representation)
+    ctx.font = '48px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('📊', w / 2, h / 2 - 60);
+}
+
+// Draw spoilage chart with data
+function drawSpoilageChart(ctx, foods, rates, w, h) {
+    // Clear canvas
+    ctx.clearRect(0, 0, w, h);
+    
+    const padding = 40;
+    const chartW = w - padding * 2;
+    const chartH = h - padding * 1.5;
+    const maxVal = rates.length > 0 ? Math.max(...rates) + 5 : 100;
+    
+    // Draw Y axis grid/labels
+    ctx.font = '14px Open Sans, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.textAlign = 'right';
+    
+    for (let i = 0; i <= 5; i++) {
+        const val = (maxVal / 5) * i;
+        const y = padding + (chartH / 5) * (5 - i);
+        ctx.fillText(Math.round(val) + '%', padding - 10, y + 5);
+        
+        // Grid line
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(padding + chartW, y);
+        ctx.stroke();
+    }
+    
+    // Draw bars
+    const barWidth = chartW / foods.length * 0.6;
+    const barSpacing = chartW / foods.length;
+    
+    foods.forEach((food, index) => {
+        const rate = rates[index] || 0;
+        const barHeight = (rate / maxVal) * chartH;
+        const x = padding + (barSpacing * index) + (barSpacing - barWidth) / 2;
+        const y = padding + chartH - barHeight;
+        
+        // Bar color based on spoilage rate
+        let barColor;
+        if (rate >= 50) barColor = '#ff4757';
+        else if (rate >= 25) barColor = '#ffa502';
+        else barColor = '#2ed573';
+        
+        // Draw bar
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // Draw food name
+        ctx.font = '12px Open Sans, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.textAlign = 'center';
+        ctx.fillText(food, x + barWidth / 2, padding + chartH + 20);
+        
+        // Draw percentage
+        ctx.font = '11px Open Sans, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillText(rate + '%', x + barWidth / 2, y - 5);
+    });
+}
+
+// ============================================================================
+// GLOBAL SPOILAGE ANALYTICS INITIALIZATION
+// ============================================================================
+
+// Initialize spoilage analytics when DOM is ready
+let spoilageAnalytics;
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize if DOM is already loaded
-  if (document.getElementById('spoilageChart')) {
-    initSpoilageReport();
+    // Load user info first
+    loadUserInfo();
+    
+    // Initialize spoilage analytics (this will handle all data loading)
+    spoilageAnalytics = new SpoilageAnalytics();
+    // Export for global access
+    window.spoilageAnalytics = spoilageAnalytics;
+    
+    // Manual refresh method - call when needed
+    window.refreshSpoilageData = () => {
+        spoilageAnalytics.refresh();
+    };
+    
+    // Initialize chart if it exists (but don't load data - let SpoilageAnalytics handle it)
+    const canvas = document.getElementById('spoilageChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = 320;
+        // Just draw the no-data state initially
+        drawNoDataChart(ctx, canvas.width, canvas.height);
+    }
+    
+    // Also initialize the bar list and summary list with no-data states
+    const barList = document.querySelector('.spoilage-bar-list');
+    if (barList) {
+        barList.innerHTML = `
+            <div class="no-data-state">
+                <div class="no-data-icon">📊</div>
+                <div class="no-data-title">No Food Data Available</div>
+                <div class="no-data-description">Start scanning food items to see spoilage rates by food type</div>
+                <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+            </div>
+        `;
+    }
+    
+    const summaryList = document.querySelector('.spoilage-summary-list');
+    if (summaryList) {
+        summaryList.innerHTML = `
+            <div class="no-data-state">
+                <div class="no-data-icon">📈</div>
+                <div class="no-data-title">No Category Data Available</div>
+                <div class="no-data-description">Start scanning food items to see spoilage summary by category</div>
+                <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+            </div>
+        `;
   }
 }); 
