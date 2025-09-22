@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="../assets/css/User-assets/user-log.css">
   <link rel="stylesheet" href="../assets/css/User-assets/config.css">
   <link rel="stylesheet" href="../assets/css/User-assets/feedback.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/alerts.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     /* Match site theme for dynamically injected buttons */
@@ -79,6 +80,7 @@
     <span class="sidebar-title user-name">User-name</span>
   </div>
   <nav class="sidebar-nav">
+    <!-- Main Navigation -->
     <ul>
       <li class="nav-item active">
         <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
@@ -86,7 +88,12 @@
           <span class="nav-text">Dashboard</span>
         </a>
       </li>
+    </ul>
       
+    <!-- Reports & Analysis Section -->
+    <div class="nav-section">
+      <div class="nav-section-title">Reports & Analysis</div>
+      <ul>
       <li class="nav-item">
         <a href="#" class="nav-link" data-page="spoilage-report" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128200;</span>
@@ -106,9 +113,12 @@
         </a>
       </li>
     </ul>
-    <hr class="sidebar-divider">
-    <ul>
+    </div>
 
+    <!-- Account & Support Section -->
+    <div class="nav-section">
+      <div class="nav-section-title">Account & Support</div>
+      <ul>
       <li class="nav-item">
         <a href="#" class="nav-link" data-page="user-logs" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128273;</span>
@@ -116,22 +126,13 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link" data-page="config" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#9881;</span>
-          <span class="nav-text">Config</span>
-        </a>
-      </li>
-    </ul>
-    <hr class="sidebar-divider">
-
-    <ul>
-      <li class="nav-item">
         <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128172;</span>
-          <span class="nav-text">Feedbacks/ Support Tickets</span>
+            <span class="nav-text">Feedbacks / Support</span>
         </a>
       </li>
   </ul>
+    </div>
 </nav>
   <div class="sidebar-account" id="sidebarAccount">
     <span class="account-icon">&#128100;</span>
@@ -226,15 +227,15 @@
           <!-- Bottom Row: Activity Chart and Alerts -->
           <div class="dashboard-row row">
             <div class="dashboard-card tall activity-card col-12 col-lg-8 mb-3">
-              <div class="activity-header d-flex justify-content-between align-items-center">
-                <span class="activity-title">Sensor Activity</span>
-                <select class="activity-filter form-select form-select-sm w-auto ms-2">
-                  <option>Real-time</option>
-                  <option>Last Hour</option>
-                  <option>Last 24 Hours</option>
-                  <option>Last Week</option>
+            <div class="activity-header d-flex justify-content-between align-items-center">
+              <span class="activity-title">Device Activity</span>
+              <div class="d-flex gap-2">
+                <select class="activity-filter form-select form-select-sm w-auto">
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="yearly">Yearly</option>
                 </select>
               </div>
+            </div>
               <div class="activity-chart-container">
                 <canvas id="activityChart"></canvas>
               </div>
@@ -740,6 +741,7 @@
               <th>EXPIRY</th>
               <th>SENSORS</th>
               <th>ALERTS</th>
+              <th>RECOMMENDATIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -818,26 +820,13 @@
           <div class="config-card-icon">&#128246;</div>
         </div>
       </div>
-      <div class="config-tabs">
-        <button class="config-tab active" data-tab="food">Food Items</button>
-        <button class="config-tab" data-tab="sensors">Sensors</button>
-      </div>
-      <div class="config-tab-content" id="config-food-tab">
+      <div class="config-content">
         <h2>Food Items Monitoring</h2>
         <div class="config-empty">
           <div class="config-empty-icon">&#129482;</div>
           <div class="config-empty-title">No food items configured yet</div>
           <div class="config-empty-desc">Add your first food item to start monitoring</div>
           <button class="config-add-btn">+ Add Food Item</button>
-        </div>
-      </div>
-      <div class="config-tab-content d-none" id="config-sensors-tab">
-        <h2>Sensors</h2>
-        <div class="config-empty">
-          <div class="config-empty-icon">&#128246;</div>
-          <div class="config-empty-title">No sensors configured yet</div>
-          <div class="config-empty-desc">Add your first sensor to start monitoring</div>
-          <button class="config-add-btn">+ Add Sensor</button>
         </div>
       </div>
       <!-- Add Food Item Modal -->
@@ -920,7 +909,6 @@
             <select id="userReportType" class="report-select">
               <option value="user-activity">User Activity</option>
               <option value="food-spoilage">Food Spoilage</option>
-              <option value="sensor-data">Sensor Data</option>
               <option value="alert-summary">Alert Summary</option>
             </select>
           </div>
@@ -1110,8 +1098,8 @@
 <template id="user-log-template">
   <div class="user-log-main">
     <div class="user-log-header">
-      <h1>User Logs</h1>
-      <div class="user-log-subtitle">View all actions performed by users in the system</div>
+      <h1>User Logs/History</h1>
+      <div class="user-log-subtitle">View all actions performed by users in the system with date range filtering</div>
     </div>
     <div class="user-log-card">
       <div class="user-log-filters">
@@ -1128,10 +1116,32 @@
             </select>
           </div>
           <div class="report-control-group">
+            <label for="userLogDateRange">Date Range</label>
+            <select id="userLogDateRange" class="report-select">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="report-control-group" id="userLogWeekPickerGroup" style="display:none;min-width:200px;">
+            <label for="userLogWeekPicker">Select Week</label>
+            <input type="week" id="userLogWeekPicker" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="userLogMonthPickerGroup" style="display:none;min-width:200px;">
+            <label for="userLogMonthPicker">Select Month</label>
+            <input type="month" id="userLogMonthPicker" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="userLogYearPickerGroup" style="display:none;min-width:160px;">
+            <label for="userLogYearPicker">Select Year</label>
+            <input type="number" id="userLogYearPicker" min="1970" max="2100" step="1" placeholder="2025" class="report-date-input" />
+          </div>
+          <div class="report-control-group" id="userLogCustomDateGroup" style="display: none;">
             <label for="userLogStartDate">Start Date</label>
             <input type="date" id="userLogStartDate" class="report-date-input" />
           </div>
-          <div class="report-control-group">
+          <div class="report-control-group" id="userLogCustomEndDateGroup" style="display: none;">
             <label for="userLogEndDate">End Date</label>
             <input type="date" id="userLogEndDate" class="report-date-input" />
           </div>
@@ -1147,7 +1157,7 @@
           <div class="report-actions">
             <button id="userLogFilterBtn" class="report-btn report-btn-primary">
               <span>🔄</span>
-              Refresh Filters
+              Apply Filters
             </button>
             <button id="userLogDownloadExcel" class="report-btn report-btn-secondary">
               <span>📥</span>
@@ -1249,11 +1259,13 @@
                 <label for="feedbackType">Feedback Type</label>
                 <select id="feedbackType" name="type" required>
                   <option value="">Select type...</option>
-                  <option value="App Crash">App Crash</option>
                   <option value="General Feedback">General Feedback</option>
+                  <option value="Device Issue">Device Issue</option>
                   <option value="System Bug">System Bug</option>
+                  <option value="Sensor Problem">Sensor Problem</option>
+                  <option value="App Crash">App Crash</option>
                   <option value="Performance Issue">Performance Issue</option>
-                  <option value="Feature Request">Feature Request</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
               <div class="feedback-form-group">
@@ -1263,6 +1275,7 @@
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
                   <option value="High">High</option>
+                  <option value="Critical">Critical</option>
                 </select>
               </div>
             </div>
@@ -1278,7 +1291,7 @@
                 <label for="rating3">⭐</label>
                 <input type="radio" name="rating" value="4" id="rating4">
                 <label for="rating4">⭐</label>
-                <input type="radio" name="rating" value="5" id="rating5" checked>
+                <input type="radio" name="rating" value="5" id="rating5">
                 <label for="rating5">⭐</label>
               </div>
             </div>
@@ -1305,30 +1318,35 @@
           <div class="feedback-filters">
             <select id="feedbackTypeFilter" class="feedback-filter">
               <option value="">Type</option>
-              <option value="general">General Feedback</option>
-              <option value="bug">System Bug</option>
-              <option value="performance">Performance Issue</option>
-              <option value="feature">Feature Request</option>
+              <option value="General Feedback">General Feedback</option>
+              <option value="Device Issue">Device Issue</option>
+              <option value="System Bug">System Bug</option>
+              <option value="Sensor Problem">Sensor Problem</option>
+              <option value="App Crash">App Crash</option>
+              <option value="Performance Issue">Performance Issue</option>
+              <option value="Other">Other</option>
             </select>
             
             <select id="feedbackPriorityFilter" class="feedback-filter">
               <option value="">Priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
             </select>
             
             <select id="feedbackStatusFilter" class="feedback-filter">
               <option value="">Status</option>
-              <option value="active">Active</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="Active">Active</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
           
           <div class="feedback-view-toggle">
             <button class="view-toggle-btn" data-view="cards">Cards</button>
             <button class="view-toggle-btn active" data-view="table">Table</button>
+            <button id="clearFiltersBtn" class="clear-filters-btn">Clear Filters</button>
           </div>
         </div>
         
@@ -1497,6 +1515,7 @@
 <script src="../assets/js/User/user-log.js"></script>
 <script src="/js/User/config.js"></script>
 <script src="../assets/js/User/feedback.js"></script>
+<script src="../assets/js/User/alerts.js"></script>
 <script src="../assets/js/User/user-auth.js"></script>
 <script>
   // Navigation for dashboard/detailed report is handled globally by spa.js (switchPage).

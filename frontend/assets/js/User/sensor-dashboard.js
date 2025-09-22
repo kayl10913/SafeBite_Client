@@ -32,11 +32,17 @@ let scanningStartTime = null;
 
 class SensorDashboard {
   constructor() {
+    const instanceId = Math.random().toString(36).slice(2, 8);
+    console.log(`🔍 [${instanceId}] SensorDashboard constructor called`);
+    
     this.selectedFoodId = null;
     this.realtimeTimer = null;
     this.lastDataFingerprint = null;
     this._fetchingLatest = false;
     this._latestAbort = null;
+    this.currentScanSession = null; // Track current scan session
+    this.isScanningInProgress = false; // Prevent multiple simultaneous scans
+    this.instanceId = instanceId; // Store instance ID for debugging
     this.init();
     if (REALTIME_ENABLED) this.startRealTimeUpdates();
     // Ensure modal compatibility with SPA navigation
@@ -62,6 +68,148 @@ class SensorDashboard {
       this.fetchGaugeData(); // Also fetch gauge data on init
       // Test API connection on startup
       this.testAPIConnection();
+    }
+  }
+
+  // Create scan session for Arduino data reception
+  async createScanSession() {
+    try {
+      console.log('🔍 Creating scan session...');
+      
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                          localStorage.getItem('sessionToken') || 
+                          localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        console.error('❌ No session token found for scan session creation');
+        // Try without authentication for testing
+        console.log('🔄 Trying without authentication...');
+        
+        const response = await fetch('/api/sensor/scan-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: 11, // Arduino user ID
+            session_data: {
+              frontend_initiated: true,
+              timestamp: new Date().toISOString()
+            }
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Scan session created (no auth):', result.session);
+          this.currentScanSession = result.session;
+          return result.session;
+        } else {
+          throw new Error(result.error || 'Failed to create scan session');
+        }
+      }
+
+      console.log('🔑 Using session token for authentication');
+      const response = await fetch('/api/sensor/scan-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          user_id: 11, // Arduino user ID
+          session_data: {
+            frontend_initiated: true,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📊 Response data:', result);
+      
+      if (result.success) {
+        console.log('✅ Scan session created:', result.session);
+        this.currentScanSession = result.session;
+        return result.session;
+      } else {
+        throw new Error(result.error || 'Failed to create scan session');
+      }
+    } catch (error) {
+      console.error('❌ Error creating scan session:', error);
+      throw error;
+    }
+  }
+
+  // Complete scan session
+  async completeScanSession() {
+    if (!this.currentScanSession) {
+      console.log('No active scan session to complete');
+      return;
+    }
+
+    try {
+      console.log('🔍 Completing scan session:', this.currentScanSession.session_id);
+      
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                          localStorage.getItem('sessionToken') || 
+                          localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        console.log('🔄 No session token, trying without authentication...');
+        
+        const response = await fetch('/api/sensor/scan-session', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: 11, // Arduino user ID
+            session_id: this.currentScanSession.session_id
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Scan session completed (no auth):', result.session_id);
+          this.currentScanSession = null;
+          return;
+        } else {
+          throw new Error(result.error || 'Failed to complete scan session');
+        }
+      }
+
+      console.log('🔑 Using session token for authentication');
+      const response = await fetch('/api/sensor/scan-session', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          user_id: 11, // Arduino user ID
+          session_id: this.currentScanSession.session_id
+        })
+      });
+
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📊 Response data:', result);
+      
+      if (result.success) {
+        console.log('✅ Scan session completed:', result.session_id);
+        this.currentScanSession = null;
+      } else {
+        throw new Error(result.error || 'Failed to complete scan session');
+      }
+    } catch (error) {
+      console.error('❌ Error completing scan session:', error);
+      // Still clear the session even if completion fails
+      this.currentScanSession = null;
+      throw error;
     }
   }
 
@@ -921,6 +1069,9 @@ class SensorDashboard {
 
   // Perform ML prediction using existing training data
   async performMLPrediction(foodId, foodName, foodCategory, sensorData, actualOutcome = null, isTrainingData = false) {
+    const callId = Math.random().toString(36).slice(2, 8);
+    console.log(`🔍 [${callId}] performMLPrediction called with:`, { foodId, foodName, foodCategory, isTrainingData });
+    
     try {
       const sessionToken = localStorage.getItem('jwt_token') || 
                            localStorage.getItem('sessionToken') || 
@@ -941,7 +1092,7 @@ class SensorDashboard {
         is_training_data: isTrainingData ? 1 : 0
       };
 
-      console.log('Performing ML prediction:', predictionData);
+      console.log(`🔍 [${callId}] Performing ML prediction:`, predictionData);
 
       const response = await fetch('/api/ml/predict', {
         method: 'POST',
@@ -953,12 +1104,13 @@ class SensorDashboard {
       });
 
       const result = await response.json();
+      console.log(`🔍 [${callId}] ML prediction API response:`, result);
       
       if (result.success) {
-        console.log('ML prediction successful:', result);
+        console.log(`✅ [${callId}] ML prediction successful:`, result);
         return { success: true, prediction: result.prediction };
       } else {
-        console.error('ML prediction failed:', result.error);
+        console.error(`❌ [${callId}] ML prediction failed:`, result.error);
         return { success: false, error: result.error || 'Prediction failed' };
       }
     } catch (error) {
@@ -1152,14 +1304,20 @@ class SensorDashboard {
       });
     }
 
+
     // Ready Scan event listener for modal
     const readyScanBtn = document.getElementById('readyScanBtn');
     if (readyScanBtn) {
+      console.log('🔍 Setting up Ready Scan event listener');
       // Remove existing listener to prevent duplicates
       readyScanBtn.removeEventListener('click', this.handleReadyScan);
       readyScanBtn.addEventListener('click', async () => {
+        console.log('🔍 Ready Scan button clicked - calling handleReadyScan');
         await this.handleReadyScan();
       });
+      console.log('🔍 Ready Scan event listener attached');
+    } else {
+      console.log('⚠️ Ready Scan button not found');
     }
 
     // Refresh food list button event listener
@@ -1175,17 +1333,31 @@ class SensorDashboard {
   }
 
   // Open ML Scanner Modal
-  openMLScannerModal() {
+  async openMLScannerModal() {
     const modal = document.getElementById('mlFoodScannerModal');
     if (!modal) return;
     
-    const closeModal = () => { 
+    // Create scan session when modal opens
+    try {
+      await this.createScanSession();
+    } catch (error) {
+      console.error('Failed to create scan session:', error);
+      // Continue anyway - the blocking will just prevent Arduino data
+    }
+    
+    const closeModal = async () => { 
       modal.style.display = 'none';
       // Reset form
       const foodSelect = document.getElementById('mlFoodSelect');
       if (foodSelect) foodSelect.value = '';
       // Hide waiting indicator
       this.hideSensorWaitIndicator();
+      // Complete scan session when modal closes
+      try {
+        await this.completeScanSession();
+      } catch (error) {
+        console.error('Failed to complete scan session:', error);
+      }
     };
     
     modal.style.display = 'flex';
@@ -1259,22 +1431,9 @@ class SensorDashboard {
     // Show waiting indicator
     this.showSensorWaitIndicator();
     
-    // Helper to create a fingerprint of sensor data
-    const createSensorFingerprint = (data) => {
-      if (!data) return '';
-      try {
-        const t = data.temperature ? `${data.temperature.value}-${data.temperature.timestamp || ''}` : 'null';
-        const h = data.humidity ? `${data.humidity.value}-${data.humidity.timestamp || ''}` : 'null';
-        const g = data.gas ? `${data.gas.value}-${data.gas.timestamp || ''}` : 'null';
-        return [t, h, g].join('|');
-      } catch (error) {
-        console.error('Error creating sensor fingerprint:', error);
-        return '';
-      }
-    };
-
-    const baselineFingerprint = createSensorFingerprint(baselineData);
-    console.log('Baseline sensor fingerprint:', baselineFingerprint);
+    // Get baseline timestamp for comparison
+    const baselineTimestamp = this.getLatestTimestamp(baselineData);
+    console.log('Baseline timestamp:', baselineTimestamp);
 
     // Poll until data changes or timeout
     while (Date.now() - start < maxWaitMs) {
@@ -1298,25 +1457,31 @@ class SensorDashboard {
         // Reset error counter on successful data fetch
         consecutiveErrors = 0;
         
-        const currentFingerprint = createSensorFingerprint(currentData);
-        console.log('Current sensor fingerprint:', currentFingerprint);
+        // Get current timestamp
+        const currentTimestamp = this.getLatestTimestamp(currentData);
+        console.log('Current timestamp:', currentTimestamp, 'Baseline:', baselineTimestamp);
         
         // Update progress bar
         const elapsed = Date.now() - start;
         const progress = Math.min((elapsed / maxWaitMs) * 100, 100);
         this.updateSensorWaitProgress(progress);
         
-        // Check if data has changed
-        if (currentFingerprint !== baselineFingerprint) {
-          console.log('New sensor data detected!');
-          this.hideSensorWaitIndicator();
-          return currentData;
+        // Check if we have newer data (timestamp-based detection)
+        if (currentTimestamp && baselineTimestamp) {
+          const currentTime = new Date(currentTimestamp).getTime();
+          const baselineTime = new Date(baselineTimestamp).getTime();
+          
+          if (currentTime > baselineTime) {
+            console.log('New sensor data detected by timestamp!');
+            this.hideSensorWaitIndicator();
+            return currentData;
+          }
         }
-
-        // Also check if timestamps have advanced (indicating new readings)
-        const hasNewTimestamps = this.hasNewTimestamps(baselineData, currentData);
-        if (hasNewTimestamps) {
-          console.log('New sensor timestamps detected!');
+        
+        // Fallback: Check if any sensor has new data (value or timestamp change)
+        const hasNewData = this.hasNewSensorData(baselineData, currentData);
+        if (hasNewData) {
+          console.log('New sensor data detected by value/timestamp comparison!');
           this.hideSensorWaitIndicator();
           return currentData;
         }
@@ -1342,6 +1507,57 @@ class SensorDashboard {
     console.warn('No new sensor data detected within timeout');
     this.hideSensorWaitIndicator();
     return null;
+  }
+
+  // Get the latest timestamp from sensor data
+  getLatestTimestamp(sensorData) {
+    if (!sensorData) return null;
+    
+    const sensors = ['temperature', 'humidity', 'gas'];
+    let latestTimestamp = null;
+    
+    for (const sensor of sensors) {
+      const data = sensorData[sensor];
+      if (data && data.timestamp) {
+        const timestamp = new Date(data.timestamp).getTime();
+        if (!latestTimestamp || timestamp > latestTimestamp) {
+          latestTimestamp = data.timestamp;
+        }
+      }
+    }
+    
+    return latestTimestamp;
+  }
+
+  // Check if sensor data has new data (value or timestamp change)
+  hasNewSensorData(baselineData, currentData) {
+    if (!baselineData || !currentData) return false;
+
+    const sensors = ['temperature', 'humidity', 'gas'];
+    
+    for (const sensor of sensors) {
+      const baseline = baselineData[sensor];
+      const current = currentData[sensor];
+      
+      if (baseline && current) {
+        // Check if value has changed
+        if (baseline.value !== current.value) {
+          return true;
+        }
+        
+        // Check if timestamp has advanced
+        if (baseline.timestamp && current.timestamp) {
+          const baselineTime = new Date(baseline.timestamp).getTime();
+          const currentTime = new Date(current.timestamp).getTime();
+          
+          if (currentTime > baselineTime) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
   }
 
   // Check if sensor data has new timestamps
@@ -1453,7 +1669,29 @@ class SensorDashboard {
       }
     }
     if (confidenceElement) confidenceElement.textContent = `${prediction.confidence_score || prediction.confidence || '-'}%`;
-    if (recommendationElement) recommendationElement.textContent = prediction.recommendation || '';
+    if (recommendationElement) {
+      // Handle recommendations - could be string, array, or object
+      let recommendationText = '';
+      if (prediction.recommendation) {
+        recommendationText = prediction.recommendation;
+      } else if (prediction.recommendations) {
+        if (typeof prediction.recommendations === 'string') {
+          try {
+            const recArray = JSON.parse(prediction.recommendations);
+            if (Array.isArray(recArray) && recArray.length > 0) {
+              recommendationText = recArray.join('; ');
+            }
+          } catch (e) {
+            recommendationText = prediction.recommendations;
+          }
+        } else if (Array.isArray(prediction.recommendations)) {
+          recommendationText = prediction.recommendations.join('; ');
+        } else if (prediction.recommendations.main) {
+          recommendationText = prediction.recommendations.main;
+        }
+      }
+      recommendationElement.textContent = recommendationText || 'No recommendations available';
+    }
 
     // Show the modal
     modal.style.display = 'flex';
@@ -1486,10 +1724,39 @@ class SensorDashboard {
 
   // Handle Ready Scan button
   async handleReadyScan() {
+    const scanId = Math.random().toString(36).slice(2, 8);
+    console.log(`🔍 [${scanId}] handleReadyScan called by instance [${this.instanceId}]`);
+    console.log(`🔍 [${scanId}] Current isScanningInProgress:`, this.isScanningInProgress);
+    
+    // Prevent multiple simultaneous scans - use a more robust check
+    if (this.isScanningInProgress) {
+      console.log(`⚠️ [${scanId}] Scan already in progress, ignoring duplicate call`);
+      return;
+    }
+    
+    // Set flag immediately to prevent race conditions
+    this.isScanningInProgress = true;
+    console.log(`🔍 [${scanId}] Set isScanningInProgress to true`);
+    
+    // Double-check to prevent race conditions
+    if (window.smartSenseScanningInProgress) {
+      console.log(`⚠️ [${scanId}] Global scan flag already set, ignoring duplicate call`);
+      this.isScanningInProgress = false;
+      return;
+    }
+    window.smartSenseScanningInProgress = true;
+    console.log(`🔍 [${scanId}] Set global scan flag to true`);
+    
+    // Set global flag to prevent Smart Training system from running
+    window.smartSenseScannerActive = true;
+    console.log('🔍 SmartSense Scanner active - blocking Smart Training system');
+    console.log('🔍 Global flag set to:', window.smartSenseScannerActive);
+    
     const foodSelect = document.getElementById('mlFoodSelect');
     
     if (!foodSelect) {
       alert('Food selection controls not found');
+      this.isScanningInProgress = false;
       return;
     }
 
@@ -1497,8 +1764,11 @@ class SensorDashboard {
 
     if (!foodId) {
       alert('Please select a food to scan');
+      this.isScanningInProgress = false;
       return;
     }
+    
+    console.log('🔍 Starting scan for food ID:', foodId);
 
     const scanBtn = document.getElementById('readyScanBtn');
     if (scanBtn) {
@@ -1532,13 +1802,21 @@ class SensorDashboard {
         scanBtn.innerHTML = '<i class="bi bi-cpu"></i> Analyzing with ML...';
       }
 
-      // Perform ML prediction using new sensor data
-      const prediction = await this.performMLPrediction(foodId, foodName, foodCategory, newSensorData);
+      // Perform ML prediction using new sensor data (SmartSense Scanner creates training data)
+      console.log('🔍 Calling performMLPrediction with:', { foodId, foodName, foodCategory, isTrainingData: true });
+      const prediction = await this.performMLPrediction(foodId, foodName, foodCategory, newSensorData, null, true);
+      console.log('🔍 ML prediction result:', prediction);
       
       if (prediction.success) {
         // Show ML prediction results in custom modal
         this.showMLPredictionResults(foodName, prediction.prediction);
         foodSelect.value = '';
+        // Complete scan session when scanning is finished
+        try {
+          await this.completeScanSession();
+        } catch (error) {
+          console.error('Failed to complete scan session after successful prediction:', error);
+        }
         // Close scanner modal after successful prediction
         const modal = document.getElementById('mlFoodScannerModal');
         if (modal) modal.style.display = 'none';
@@ -1548,7 +1826,24 @@ class SensorDashboard {
     } catch (error) {
       console.error('ML prediction error:', error);
       alert('Prediction failed: ' + error.message);
+      // Complete scan session even on error
+      try {
+        await this.completeScanSession();
+      } catch (sessionError) {
+        console.error('Failed to complete scan session after error:', sessionError);
+      }
     } finally {
+      // Reset scanning flag
+      this.isScanningInProgress = false;
+      
+      // Clear global scan flag
+      window.smartSenseScanningInProgress = false;
+      console.log('🔍 Global scan flag cleared');
+      
+      // Clear global flag to allow Smart Training system to run again
+      window.smartSenseScannerActive = false;
+      console.log('🔍 SmartSense Scanner finished - allowing Smart Training system');
+      
       if (scanBtn) {
         scanBtn.disabled = false;
         scanBtn.innerHTML = '<i class="bi bi-scan"></i> Ready Scan';

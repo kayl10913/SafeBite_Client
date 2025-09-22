@@ -130,8 +130,8 @@ class FoodSelection {
 
     const confirmBtn = document.getElementById('confirmFoodSelection');
     if (confirmBtn) {
-      this.bindOnce(confirmBtn, 'click', () => {
-        this.confirmFoodSelection();
+      this.bindOnce(confirmBtn, 'click', async () => {
+        await this.confirmFoodSelection();
       }, 'confirmFoodSelection');
     }
 
@@ -463,7 +463,149 @@ class FoodSelection {
     }
   }
 
-  confirmFoodSelection() {
+  // Complete scan session
+  async completeScanSession() {
+    if (!this.currentScanSession) {
+      console.log('No active scan session to complete');
+      return;
+    }
+
+    try {
+      console.log('🔍 Completing scan session from food selection:', this.currentScanSession.session_id);
+      
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                          localStorage.getItem('sessionToken') || 
+                          localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        console.log('🔄 No session token, trying without authentication...');
+        
+        const response = await fetch('/api/sensor/scan-session', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: 11, // Arduino user ID
+            session_id: this.currentScanSession.session_id
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Scan session completed (no auth):', result.session_id);
+          this.currentScanSession = null;
+          return;
+        } else {
+          throw new Error(result.error || 'Failed to complete scan session');
+        }
+      }
+
+      console.log('🔑 Using session token for authentication');
+      const response = await fetch('/api/sensor/scan-session', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          user_id: 11, // Arduino user ID
+          session_id: this.currentScanSession.session_id
+        })
+      });
+
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📊 Response data:', result);
+      
+      if (result.success) {
+        console.log('✅ Scan session completed:', result.session_id);
+        this.currentScanSession = null;
+      } else {
+        throw new Error(result.error || 'Failed to complete scan session');
+      }
+    } catch (error) {
+      console.error('❌ Error completing scan session:', error);
+      // Still clear the session even if completion fails
+      this.currentScanSession = null;
+      throw error;
+    }
+  }
+
+  // Create scan session for Arduino data reception
+  async createScanSession() {
+    try {
+      console.log('🔍 Creating scan session from food selection...');
+      
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                          localStorage.getItem('sessionToken') || 
+                          localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        console.log('🔄 No session token, trying without authentication...');
+        
+        const response = await fetch('/api/sensor/scan-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: 11, // Arduino user ID
+            session_data: {
+              frontend_initiated: true,
+              timestamp: new Date().toISOString(),
+              source: 'food_selection'
+            }
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Scan session created (no auth):', result.session);
+          this.currentScanSession = result.session;
+          return result.session;
+        } else {
+          throw new Error(result.error || 'Failed to create scan session');
+        }
+      }
+
+      console.log('🔑 Using session token for authentication');
+      const response = await fetch('/api/sensor/scan-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          user_id: 11, // Arduino user ID
+          session_data: {
+            frontend_initiated: true,
+            timestamp: new Date().toISOString(),
+            source: 'food_selection'
+          }
+        })
+      });
+
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📊 Response data:', result);
+      
+      if (result.success) {
+        console.log('✅ Scan session created:', result.session);
+        this.currentScanSession = result.session;
+        return result.session;
+      } else {
+        throw new Error(result.error || 'Failed to create scan session');
+      }
+    } catch (error) {
+      console.error('❌ Error creating scan session:', error);
+      throw error;
+    }
+  }
+
+  async confirmFoodSelection() {
     const customName = document.getElementById('customFoodName');
     const customCategory = document.getElementById('customFoodCategory');
     const customCategoryInput = document.getElementById('customCategoryInput');
@@ -505,6 +647,14 @@ class FoodSelection {
       this.closeFoodSelectionModal();
       this.showFoodSelectedConfirmation(selectedFood);
 
+      // Create scan session for Arduino data reception
+      try {
+        await this.createScanSession();
+      } catch (error) {
+        console.error('Failed to create scan session:', error);
+        // Continue anyway - the blocking will just prevent Arduino data
+      }
+
       // Start polling sensors and trigger ML prediction → expiry update
       this.isScanningInProgress = true;
       this.startSensorPollingAndPredict();
@@ -545,6 +695,14 @@ class FoodSelection {
       confirmation.style.display = 'none';
       document.body.style.overflow = 'auto';
     }
+    
+    // Complete scan session when OK button is clicked
+    try {
+      this.completeScanSession();
+    } catch (error) {
+      console.error('Failed to complete scan session when closing confirmation:', error);
+    }
+    
     // Safety: ensure any ongoing scan is not re-triggered after closing
     const cancelBtn = document.getElementById('cancelScanBtn');
     if (cancelBtn) cancelBtn.remove();
@@ -652,6 +810,17 @@ class FoodSelection {
   // --- ML + Polling Flow ---
   async startSensorPollingAndPredict() {
     try {
+      console.log('🔍 Smart Training system startSensorPollingAndPredict called');
+      console.log('🔍 Global flag check - smartSenseScannerActive:', window.smartSenseScannerActive);
+      
+      // Check if SmartSense Scanner is active - if so, skip this system
+      if (window.smartSenseScannerActive) {
+        console.log('🔍 SmartSense Scanner is active - skipping Smart Training system');
+        return;
+      }
+      
+      console.log('🔍 Smart Training system proceeding with ML prediction');
+      
       // create a new idempotency id for this scan
       this._scanId = `scan_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
       if (this._pollingActive) {
@@ -868,6 +1037,13 @@ class FoodSelection {
     } catch (err) {
       console.error('Polling/ML flow error:', err);
     } finally {
+      // Complete scan session when scanning is finished
+      try {
+        await this.completeScanSession();
+      } catch (error) {
+        console.error('Failed to complete scan session after scanning:', error);
+      }
+      
       // Only now allow subsequent scans
       this.isScanningInProgress = false;
       this._pollingActive = false;
@@ -2771,6 +2947,13 @@ class FoodSelection {
     if (okBtn) {
       okBtn.disabled = false;
       okBtn.textContent = 'OK';
+    }
+    
+    // Complete scan session when scanning is cancelled
+    try {
+      this.completeScanSession();
+    } catch (error) {
+      console.error('Failed to complete scan session after cancellation:', error);
     }
     
     // Show cancelled message

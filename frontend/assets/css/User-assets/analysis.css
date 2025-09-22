@@ -1,6 +1,6 @@
 /* Analysis Page Styles - User-Friendly & Wider Layout */
 .analysis-main {
-  padding: 32px 32px 32px 32px;
+  padding: 20px 24px 24px 24px;
   min-height: 100vh;
   background: #181f36;
 }
@@ -14,9 +14,9 @@
   align-items: flex-end;
   width: 100%;
   max-width: 1200px;
-  margin: 40px auto 32px auto;
-  padding: 0 24px;
-  gap: 24px;
+  margin: 20px auto 20px auto;
+  padding: 0 16px;
+  gap: 20px;
 }
 .analysis-header-left {
   display: flex;
@@ -65,12 +65,12 @@
 .analysis-content-row {
   display: flex;
   justify-content: center;
-  align-items: stretch; /* Changed from flex-start to stretch */
-  gap: 32px;
+  align-items: stretch;
+  gap: 24px;
   width: 100%;
   max-width: 1200px;
-  margin: 32px auto 0 auto;
-  min-height: 420px;
+  margin: 20px auto 0 auto;
+  min-height: 320px;
   transition: gap 0.2s;
 }
 #aiChatTabContent .analysis-content-row {
@@ -86,21 +86,21 @@
 
 .analysis-card {
   background: #212c4d;
-  border-radius: 20px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
   border: 1.5px solid rgba(255,255,255,0.04);
-  padding: 36px 32px 32px 32px;
-  min-width: 380px;
-  max-width: 540px;
+  padding: 24px 28px 28px 28px;
+  min-width: 360px;
+  max-width: 520px;
   width: 100%;
-  flex: 1 1 380px;
+  flex: 1 1 360px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
   color: #fff;
   align-items: stretch;
   justify-content: flex-start;
-  min-height: 380px;
+  min-height: 320px;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .analysis-card:hover {
@@ -126,8 +126,8 @@
 
 .analysis-form-row {
   display: flex;
-  gap: 18px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-bottom: 12px;
   align-items: flex-end;
 }
 
@@ -135,7 +135,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .analysis-form-group label {
@@ -223,16 +223,16 @@
   align-items: center;
   color: #b0b0b0;
   font-size: 1.1rem;
-  gap: 10px;
-  margin-top: 30px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
 .analysis-results-output {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 16px;
   color: #fff;
   font-size: 1.1rem;
   font-weight: 500;
@@ -571,7 +571,7 @@
 @media (max-width: 1300px) {
   .analysis-content-row {
     max-width: 98vw;
-    gap: 24px;
+    gap: 20px;
   }
   .analysis-card, .analysis-input-card, .analysis-results-card {
     min-width: 0;
@@ -607,14 +607,14 @@
 
 @media (max-width: 600px) {
   .analysis-main {
-    padding: 8px 0;
+    padding: 12px 8px;
   }
   .analysis-header {
-    margin-bottom: 14px;
-    margin-top: 16px;
+    margin-bottom: 12px;
+    margin-top: 12px;
   }
   .analysis-content-row {
-    margin-top: 10px;
+    margin-top: 8px;
     min-height: 0;
     gap: 20px;
   }

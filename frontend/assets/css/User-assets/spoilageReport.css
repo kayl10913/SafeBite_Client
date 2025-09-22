@@ -814,4 +814,63 @@ body {
   .spoilage-stat-card { flex: 1 1 calc(50% - 16px); min-width: 260px; }
   .spoilage-main-cards { flex-direction: column; gap: 20px; }
   .spoilage-bar-card, .spoilage-summary-card { margin: 0; }
-} 
+}
+
+/* Recommendations column styling */
+.no-recommendations {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.recommendations-content {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #e5e7eb;
+}
+
+.recommendations-main {
+  font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.recommendations-details {
+  margin-top: 4px;
+}
+
+.recommendations-details ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.recommendations-details li {
+  color: #d1d5db;
+  font-size: 11px;
+  margin-bottom: 2px;
+  padding-left: 8px;
+  position: relative;
+}
+
+.recommendations-details li:before {
+  content: "•";
+  color: #fbbf24;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.recommendations-details li:last-child {
+  margin-bottom: 0;
+}
+
+.detailed-report-table td:nth-child(8) {
+  max-width: 200px;
+  word-wrap: break-word;
+  font-size: 12px;
+  vertical-align: top;
+  padding: 8px 12px;
+  line-height: 1.4;
+}

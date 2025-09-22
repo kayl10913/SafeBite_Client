@@ -8,7 +8,25 @@ function showDashboard() {
     mainContent.innerHTML = template.innerHTML;
     // Re-initialize the dashboard charts after loading the content.
     initializeDashboardStatCharts();
-    initializeActivityChart();
+    
+                // Initialize dashboard charts using existing function
+                setTimeout(() => {
+                  if (typeof loadSensorData === 'function' && typeof initializeActivityChart === 'function') {
+                    loadSensorData().then(() => {
+                      initializeActivityChart();
+                    });
+                  } else if (typeof initializeActivityChart === 'function') {
+                    initializeActivityChart();
+                  }
+                  
+                  // Dispatch custom event for chart initialization
+                  document.dispatchEvent(new CustomEvent('dashboardLoaded'));
+                  
+                  // Initialize alerts
+                  if (typeof initializeAlerts === 'function') {
+                    initializeAlerts();
+                  }
+                }, 100);
     
     // Initialize sensor dashboard
     if (window.SensorDashboard) {
@@ -141,6 +159,9 @@ function showUserLog() {
   const template = document.getElementById('user-log-template');
   if (mainContent && template) {
     mainContent.innerHTML = template.innerHTML;
+    
+    // Reset initialization flag when navigating to user log
+    window.userLogInitialized = false;
     
     // Initialize user log functionality
     if (window.initUserLogPage) {
@@ -328,6 +349,24 @@ function switchDashboardTab(tabName) {
 
     // Initialize specific tab functionality
     if (tabName === 'dashboard') {
+                // Re-initialize dashboard charts if needed
+                setTimeout(() => {
+                  if (typeof loadSensorData === 'function' && typeof initializeActivityChart === 'function') {
+                    loadSensorData().then(() => {
+                      initializeActivityChart();
+                    });
+                  } else if (typeof initializeActivityChart === 'function') {
+                    initializeActivityChart();
+                  }
+                  
+                  // Dispatch custom event for chart initialization
+                  document.dispatchEvent(new CustomEvent('dashboardLoaded'));
+                  
+                  // Initialize alerts
+                  if (typeof initializeAlerts === 'function') {
+                    initializeAlerts();
+                  }
+                }, 100);
         // Re-initialize sensor dashboard if needed
         if (window.SensorDashboard && !window.sensorDashboard) {
             window.sensorDashboard = new SensorDashboard();

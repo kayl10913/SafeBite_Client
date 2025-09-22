@@ -197,6 +197,15 @@
   min-height: 52px;
   box-sizing: border-box;
   font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.feedback-form-group input:hover,
+.feedback-form-group select:hover,
+.feedback-form-group textarea:hover {
+  border-color: #4a9eff;
+  background: #3a4a6b;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
 }
 
 .feedback-form-group input:focus,
@@ -253,6 +262,7 @@
 /* Rating Input Styling */
 .rating-input {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   align-items: center;
   margin-top: 8px;
@@ -277,12 +287,37 @@
   transform: scale(1.1);
 }
 
-.rating-input input[type="radio"]:checked ~ label,
+/* Star rating styling - highlight selected star and all previous stars */
 .rating-input input[type="radio"]:checked + label {
   opacity: 1;
   color: #facc15;
   transform: scale(1.1);
 }
+
+/* Highlight all stars up to and including the selected one (left to right) */
+.rating-input input[type="radio"]:checked ~ label {
+  opacity: 1;
+  color: #facc15;
+}
+
+/* Reset stars after the selected one */
+.rating-input input[type="radio"]:checked ~ input[type="radio"] + label {
+  opacity: 0.3;
+  color: inherit;
+  transform: none;
+}
+
+/* Alternative approach: Use JavaScript to handle star highlighting */
+.rating-input .star-highlighted {
+  opacity: 1;
+  color: #facc15;
+}
+
+.rating-input .star-dimmed {
+  opacity: 0.3;
+  color: inherit;
+}
+
 
 /* Form Validation Styling - only show after user interaction */
 .feedback-form-group input.touched:invalid,
@@ -329,6 +364,13 @@
   color: #ffffff;
   min-height: 48px;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.feedback-search-input:hover {
+  border-color: #4a9eff;
+  background: #3a4a6b;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
 }
 
 .feedback-search-input:focus {
@@ -365,6 +407,14 @@
   cursor: pointer;
   min-height: 48px;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.feedback-filter:hover {
+  border-color: #4a9eff;
+  background: #3a4a6b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
 }
 
 .feedback-filter:focus {
@@ -377,6 +427,27 @@
   background: #3a4a6b;
   border-radius: 6px;
   padding: 2px;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-filters-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 12px;
+}
+
+.clear-filters-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .view-toggle-btn {

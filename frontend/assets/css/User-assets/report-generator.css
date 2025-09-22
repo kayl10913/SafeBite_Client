@@ -340,6 +340,31 @@
   color: #ffffff;
 }
 
+/* Sensor Status Badge Styles */
+.status-badge.online {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.recent {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-badge.offline {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.no-data {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
 /* Activity Badge Styles */
 .activity-badge {
   padding: 4px 8px;
@@ -378,34 +403,38 @@
 /* Empty State Styles */
 .empty-state {
   text-align: center;
-  padding: 60px 20px !important;
+  padding: 40px 20px !important;
   border: none !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .empty-state-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  max-width: 100%;
 }
 
 .empty-state-icon {
-  font-size: 48px;
+  font-size: 36px;
   opacity: 0.6;
 }
 
 .empty-state-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #e0e0e0;
   margin: 0;
 }
 
 .empty-state-desc {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #b0b0b0;
-  max-width: 400px;
-  line-height: 1.5;
+  max-width: 350px;
+  line-height: 1.4;
   margin: 0;
 }
 

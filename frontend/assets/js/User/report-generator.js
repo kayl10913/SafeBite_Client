@@ -119,7 +119,7 @@ class ReportGenerator {
                     if (endDateInput) endDateInput.value = '';
                 }
                 // Reset to first page when date range changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
                 // Don't auto-refresh - user must click Generate Report button
@@ -135,7 +135,7 @@ class ReportGenerator {
                     this.customEndDate = e.target.value;
                 }
                 // Reset to first page when date changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
             });
@@ -150,7 +150,7 @@ class ReportGenerator {
                     this.customEndDate = this.customStartDate;
                 }
                 // Reset to first page when date changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
             });
@@ -164,7 +164,7 @@ class ReportGenerator {
                 console.log('🔍 Week picker changed:', e.target.value);
                 
                 // Reset to first page when week changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
                 // Keep existing data visible - user must click Generate Report to update data
@@ -182,7 +182,7 @@ class ReportGenerator {
                 console.log('🔍 Month picker changed:', e.target.value);
                 
                 // Reset to first page when month changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
                 // Keep existing data visible - user must click Generate Report to update data
@@ -200,7 +200,7 @@ class ReportGenerator {
                 console.log('🔍 Year picker changed:', e.target.value);
                 
                 // Reset to first page when year changes
-                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+                if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
                     this.currentPage = 1;
                 }
                 // Keep existing data visible - user must click Generate Report to update data
@@ -213,9 +213,13 @@ class ReportGenerator {
         // Generate report button
         const generateBtn = document.getElementById('userGenerateReport');
         if (generateBtn) {
+            console.log('✅ Generate Report button found and event listener attached');
             generateBtn.addEventListener('click', () => {
+                console.log('🔘 Generate Report button clicked!');
                 this.generateReport();
             });
+        } else {
+            console.error('❌ Generate Report button not found!');
         }
 
         // Download Excel button
@@ -692,7 +696,6 @@ class ReportGenerator {
                     status: item.status || item['STATUS'] || '',
                     riskScore: item.riskScore || item['RISK SCORE'] || 0,
                     expiryDate: item.expiryDate || item['EXPIRY DATE'] || '',
-                    createdAt: item.createdAt || item['CREATED AT'] || '',
                     sensorReadings: item.sensorReadings || item['SENSOR READINGS'] || '',
                     alertCount: item.alertCount || item['ALERT COUNT'] || 0
                 }));
@@ -725,85 +728,6 @@ class ReportGenerator {
         }
     }
 
-    async loadSensorDataWithFilter(page = 1, limit = 25, autoRender = false) {
-        try {
-            // Get session token for authentication
-            const sessionToken = localStorage.getItem('jwt_token') || 
-                                 localStorage.getItem('sessionToken') || 
-                                 localStorage.getItem('session_token');
-            
-            if (!sessionToken) {
-                console.error('No session token found');
-                return;
-            }
-
-            // Build query parameters for filtering
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString()
-            });
-
-            // Add date range filtering using picker values
-            const { startDate, endDate } = this.getDatesFromPicker();
-                params.append('start_date', startDate.toISOString().split('T')[0]);
-                params.append('end_date', endDate.toISOString().split('T')[0]);
-
-            const response = await fetch(`/api/users/sensor-data-report?${params.toString()}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${sessionToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            if (result.success && result.data) {
-                // Check if data is empty
-                if (result.data.length === 0) {
-                    this.showNoDataState();
-                    return;
-                }
-                
-                // Transform the data to match the expected format
-                this.reportData['sensor-data'] = result.data.map(item => ({
-                    sensorId: item['SENSOR ID'],
-                    location: item['LOCATION'],
-                    sensorType: item['SENSOR TYPE'],
-                    currentValue: item['CURRENT VALUE'],
-                    status: item['STATUS'],
-                    lastUpdate: item['LAST UPDATE']
-                }));
-                
-                // Update pagination info
-                if (result.pagination) {
-                    this.currentPage = result.pagination.current_page;
-                    this.totalPages = result.pagination.total_pages;
-                    this.totalRecords = result.pagination.total_records;
-                    this.recordsPerPage = result.pagination.records_per_page;
-                }
-                
-                console.log('Sensor data loaded with filter:', this.reportData['sensor-data']);
-                console.log('Pagination info:', result.pagination);
-                console.log('Date range:', this.currentDateRange);
-                
-                // Only render if autoRender is true (for pagination navigation)
-                if (autoRender && this.currentReportType === 'sensor-data') {
-                    this.renderSensorDataReport();
-                }
-            } else {
-                console.error('Failed to load sensor data:', result.error);
-                this.showNoDataState();
-            }
-        } catch (error) {
-            console.error('Error loading sensor data with filter:', error);
-            this.showNoDataState();
-        }
-    }
 
     async loadAlertSummaryDataWithFilter(page = 1, limit = 25, autoRender = false) {
         try {
@@ -892,7 +816,7 @@ class ReportGenerator {
         console.log('🔍 Current report type:', this.currentReportType);
         console.log('🔍 Total pages:', this.totalPages, 'Total records:', this.totalRecords);
         
-        if (!paginationContainer || (this.currentReportType !== 'user-activity' && this.currentReportType !== 'food-spoilage' && this.currentReportType !== 'sensor-data' && this.currentReportType !== 'alert-summary')) {
+        if (!paginationContainer || (this.currentReportType !== 'user-activity' && this.currentReportType !== 'food-spoilage' && this.currentReportType !== 'alert-summary')) {
             console.log('❌ Pagination container not found or invalid report type');
             return;
         }
@@ -963,8 +887,6 @@ class ReportGenerator {
                 this.loadActivityLogDataWithFilter(this.currentPage, this.recordsPerPage, true);
             } else if (this.currentReportType === 'food-spoilage') {
                 this.loadFoodSpoilageDataWithFilter(this.currentPage, this.recordsPerPage, true);
-            } else if (this.currentReportType === 'sensor-data') {
-                this.loadSensorDataWithFilter(this.currentPage, this.recordsPerPage, true);
             } else if (this.currentReportType === 'alert-summary') {
                 this.loadAlertSummaryDataWithFilter(this.currentPage, this.recordsPerPage, true);
             }
@@ -1045,37 +967,6 @@ class ReportGenerator {
         this.showNotification('Food spoilage report generated successfully!', 'success');
     }
 
-    renderSensorDataReport() {
-        const tableBody = document.getElementById('userReportTableBody');
-        const tableHead = document.querySelector('.report-table thead tr');
-        if (!tableBody || !tableHead) return;
-
-        // Clear existing table data
-        tableBody.innerHTML = '';
-
-        // Update table headers
-        this.updateTableHeaders(tableHead);
-
-        // Get sensor data
-        const data = this.reportData['sensor-data'] || [];
-
-        // Populate table
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = this.generateTableRow(item);
-            tableBody.appendChild(row);
-        });
-
-        // Update report title
-        this.updateReportTitle(data.length);
-
-        // Render pagination
-        console.log('📊 renderSensorDataReport calling renderPagination');
-        this.renderPagination();
-
-        // Show success notification
-        this.showNotification('Sensor data report generated successfully!', 'success');
-    }
 
     renderAlertSummaryReport() {
         const tableBody = document.getElementById('userReportTableBody');
@@ -1115,7 +1006,7 @@ class ReportGenerator {
         
         console.log('togglePaginationControls - currentReportType:', this.currentReportType);
         
-        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
             if (recordsPerPageGroup) {
                 recordsPerPageGroup.style.display = 'block';
                 console.log('Showing records per page group');
@@ -1226,7 +1117,6 @@ class ReportGenerator {
         this.reportData = {
             'user-activity': [], // Will be populated from API
             'food-spoilage': [], // Will be populated from API
-            'sensor-data': [], // Will be populated from API when implemented
             'alert-summary': [] // Will be populated from API when implemented
         };
     }
@@ -1334,7 +1224,6 @@ class ReportGenerator {
         this.reportData = {
             'user-activity': [],
             'food-spoilage': [],
-            'sensor-data': [],
             'alert-summary': []
         };
         
@@ -1362,12 +1251,11 @@ class ReportGenerator {
 
         // Get the number of columns for the current report type
         const columnCounts = {
-            'user-activity': 5,
-            'food-spoilage': 6,
-            'sensor-data': 6,
+            'user-activity': 3,
+            'food-spoilage': 8,
             'alert-summary': 7
         };
-        const columnCount = columnCounts[this.currentReportType] || 5;
+        const columnCount = columnCounts[this.currentReportType] || 3;
 
         // Clear table and show empty state
         tableBody.innerHTML = `
@@ -1399,7 +1287,6 @@ class ReportGenerator {
         const tableBodyIds = {
             'user-activity': 'userReportTableBody',
             'food-spoilage': 'userReportTableBody', // Same table for now
-            'sensor-data': 'userReportTableBody', // Same table for now
             'alert-summary': 'userReportTableBody' // Same table for now
         };
         
@@ -1425,12 +1312,11 @@ class ReportGenerator {
 
         // Get the number of columns for the current report type
         const columnCounts = {
-            'user-activity': 5,
-            'food-spoilage': 6,
-            'sensor-data': 6,
+            'user-activity': 3,
+            'food-spoilage': 8,
             'alert-summary': 7
         };
-        const columnCount = columnCounts[this.currentReportType] || 5;
+        const columnCount = columnCounts[this.currentReportType] || 3;
 
         // Get the selected date range for the message
         const { startDate, endDate } = this.getDatesFromPicker();
@@ -1490,6 +1376,8 @@ class ReportGenerator {
     generateReport() {
         console.log('🔘 Generate Report button clicked - loading data for:', this.currentReportType);
         console.log('📅 Current date range:', this.currentDateRange);
+        console.log('📄 Current page:', this.currentPage);
+        console.log('📊 Records per page:', this.recordsPerPage);
         
         // Clear any existing data first
         console.log('🧹 Clearing all existing data before generating new report');
@@ -1520,17 +1408,6 @@ class ReportGenerator {
                     console.log('📊 No data to render - showNoDataState should have been called');
                 }
             });
-        } else if (this.currentReportType === 'sensor-data') {
-            // For sensor data, load data with current pagination and date filtering when generate is clicked
-            this.loadSensorDataWithFilter(this.currentPage, this.recordsPerPage, false).then(() => {
-                // Check if we have data - if not, showNoDataState was already called
-                if (this.reportData['sensor-data'] && this.reportData['sensor-data'].length > 0) {
-                    console.log('📊 Rendering sensor data report with data');
-                    this.renderSensorDataReport();
-                } else {
-                    console.log('📊 No data to render - showNoDataState should have been called');
-                }
-            });
         } else if (this.currentReportType === 'alert-summary') {
             // For alert summary, load data with current pagination and date filtering when generate is clicked
             this.loadAlertSummaryDataWithFilter(this.currentPage, this.recordsPerPage, false).then(() => {
@@ -1556,10 +1433,9 @@ class ReportGenerator {
 
             // Show message that this report type is not yet implemented
             const columnCounts = {
-                'sensor-data': 6,
                 'alert-summary': 7
             };
-            const columnCount = columnCounts[this.currentReportType] || 5;
+            const columnCount = columnCounts[this.currentReportType] || 3;
 
             tableBody.innerHTML = `
                 <tr>
@@ -1588,7 +1464,6 @@ class ReportGenerator {
         const headers = {
             'user-activity': ['LOG ID', 'ACTION', 'TIMESTAMP'],
             'food-spoilage': ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts'],
-            'sensor-data': ['SENSOR ID', 'LOCATION', 'SENSOR TYPE', 'CURRENT VALUE', 'STATUS', 'LAST UPDATE'],
             'alert-summary': ['ALERT ID', 'ALERT TYPE', 'SEVERITY', 'LOCATION', 'MESSAGE', 'TIMESTAMP', 'STATUS']
         };
 
@@ -1616,15 +1491,6 @@ class ReportGenerator {
                     <td>${item.expiryDate || ''}</td>
                     <td>${item.sensorReadings || ''}</td>
                     <td>${alertText}</td>
-                `;
-            case 'sensor-data':
-                return `
-                    <td>${item.sensorId}</td>
-                    <td>${item.location}</td>
-                    <td>${item.sensorType}</td>
-                    <td>${item.currentValue}</td>
-                    <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
-                    <td>${item.lastUpdate}</td>
                 `;
             case 'alert-summary':
                 return `
@@ -1717,7 +1583,6 @@ class ReportGenerator {
         const reportTypes = {
             'user-activity': 'User Activity',
             'food-spoilage': 'Food Spoilage',
-            'sensor-data': 'Sensor Data',
             'alert-summary': 'Alert Summary'
         };
         return reportTypes[this.currentReportType] || 'Report';
@@ -1728,7 +1593,7 @@ class ReportGenerator {
         let filteredData = [];
         
         // For API-based reports, use the data directly
-        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
             filteredData = data;
         } else {
             // For mock data, apply filtering
@@ -1769,7 +1634,6 @@ class ReportGenerator {
         const headers = {
             'user-activity': ['Log ID', 'Action', 'Timestamp'],
             'food-spoilage': ['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings'],
-            'sensor-data': ['Sensor ID', 'Location', 'Sensor Type', 'Current Value', 'Status', 'Last Update'],
             'alert-summary': ['Alert ID', 'Alert Type', 'Severity', 'Location', 'Message', 'Timestamp', 'Status']
         };
         return headers[this.currentReportType] || [];
@@ -1791,15 +1655,6 @@ class ReportGenerator {
                     `"${item.riskScore}"`,
                     `"${item.expiryDate}"`,
                     `"${item.sensorReadings}"`
-                ];
-            case 'sensor-data':
-                return [
-                    `"${item.sensorId}"`,
-                    `"${item.location}"`,
-                    `"${item.sensorType}"`,
-                    `"${item.currentValue}"`,
-                    `"${item.status}"`,
-                    `"${item.lastUpdate}"`
                 ];
             case 'alert-summary':
                 return [
@@ -1828,7 +1683,7 @@ class ReportGenerator {
         let filteredData = [];
         
         // For API-based reports, use the data directly
-        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'sensor-data' || this.currentReportType === 'alert-summary') {
+        if (this.currentReportType === 'user-activity' || this.currentReportType === 'food-spoilage' || this.currentReportType === 'alert-summary') {
             filteredData = data;
         } else {
             // For mock data, apply filtering
@@ -1947,7 +1802,6 @@ class ReportGenerator {
         const titles = {
             'user-activity': 'User Activity Report',
             'food-spoilage': 'Food Spoilage Report',
-            'sensor-data': 'Sensor Data Report',
             'alert-summary': 'Alert Summary Report'
         };
         return titles[this.currentReportType] || 'Report';
@@ -1974,17 +1828,6 @@ class ReportGenerator {
                     5: { cellWidth: 80, halign: 'center' },   // Expiry Date
                     6: { cellWidth: 150, halign: 'left' },    // Sensor Readings
                     7: { cellWidth: 60, halign: 'center' }    // Alerts
-                }
-            },
-            'sensor-data': {
-                headers: ['Sensor ID', 'Location', 'Sensor Type', 'Current Value', 'Status', 'Last Update'],
-                columnStyles: {
-                    0: { cellWidth: 90, halign: 'center' },   // Sensor ID
-                    1: { cellWidth: 120, halign: 'left' },    // Location
-                    2: { cellWidth: 90, halign: 'center' },   // Sensor Type
-                    3: { cellWidth: 90, halign: 'center' },   // Current Value
-                    4: { cellWidth: 70, halign: 'center' },   // Status
-                    5: { cellWidth: 120, halign: 'center' }   // Last Update
                 }
             },
             'alert-summary': {
@@ -2028,15 +1871,6 @@ class ReportGenerator {
                     formattedExpiry,
                     item.sensorReadings || '',
                     alertText
-                ];
-            case 'sensor-data':
-                return [
-                    item.sensorId || '',
-                    item.location || '',
-                    item.sensorType || '',
-                    item.currentValue || '',
-                    item.status || '',
-                    item.lastUpdate ? new Date(item.lastUpdate).toLocaleString() : ''
                 ];
             case 'alert-summary':
                 return [

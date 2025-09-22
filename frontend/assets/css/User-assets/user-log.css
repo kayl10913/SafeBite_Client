@@ -230,6 +230,44 @@
 .user-log-activity-badge.login { background: #4a9eff; color: #fff; }
 .user-log-activity-badge.logout { background: #6c757d; color: #fff; }
 
+/* Empty State Styles */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px !important;
+  border: none !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.empty-state-icon {
+  font-size: 36px;
+  opacity: 0.6;
+}
+
+.empty-state-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+.empty-state-desc {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  max-width: 350px;
+  line-height: 1.4;
+  margin: 0;
+}
+
 /* Pagination Styles - Dark Theme */
 .user-log-pagination {
   margin-top: 20px;

@@ -299,4 +299,43 @@
   .sidebar.collapsed + #main-content {
     margin-left: 64px;
   }
+}
+
+/* Navigation sections styling */
+.nav-section {
+  margin: 20px 0;
+}
+
+.nav-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9fb8ff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 20px 4px 20px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.nav-section ul {
+  margin: 0;
+  padding: 0;
+}
+
+.nav-section .nav-item {
+  margin: 1px 8px;
+}
+
+/* Hide section titles when sidebar is collapsed */
+.sidebar.collapsed .nav-section-title {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Better spacing for main navigation */
+.sidebar-nav > ul:first-child {
+  margin-bottom: 8px;
 } 

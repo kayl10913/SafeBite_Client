@@ -68,10 +68,10 @@ window.initAnalysisPage = function() {
       </div>`;
   }
 
-  // Populate Food Type options from DB (actual food items) - using dashboard approach
+  // Populate Food Type options from ML prediction data - using SmartSense Scanner approach
   async function populateFoodItems() {
     try {
-      console.log('Populating food items...');
+      console.log('Populating food items from ML prediction data...');
       const foodTypeSelect = document.getElementById('analysisProductType');
       if (!foodTypeSelect) {
         console.log('Food type select not found');
@@ -87,8 +87,8 @@ window.initAnalysisPage = function() {
         return;
       }
       
-      console.log('Fetching food items from API...');
-      const res = await fetch('/api/users/food-items', {
+      console.log('Fetching food types from ML prediction data...');
+      const res = await fetch('/api/ml/food-types', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${sessionToken}`
@@ -96,10 +96,10 @@ window.initAnalysisPage = function() {
       });
       
       const data = await res.json();
-      console.log('Food items API response:', data);
+      console.log('ML prediction food types API response:', data);
       
-      if (data && data.success && Array.isArray(data.food_items) && data.food_items.length) {
-        console.log(`Found ${data.food_items.length} food items`);
+      if (data && data.success && Array.isArray(data.foodTypes) && data.foodTypes.length) {
+        console.log(`Found ${data.foodTypes.length} food types from ML prediction data`);
         // Clear existing options
         foodTypeSelect.innerHTML = '';
         
@@ -109,21 +109,19 @@ window.initAnalysisPage = function() {
         placeholder.value = '';
         foodTypeSelect.appendChild(placeholder);
         
-        // Add food items from database (using dashboard format)
-        data.food_items.forEach(food => {
+        // Add food names from ML prediction data
+        data.foodTypes.forEach(foodType => {
           const opt = document.createElement('option');
-          opt.textContent = `${food.name} (${food.category || 'No Category'})`;
-          opt.value = String(food.food_id);
-          opt.dataset.name = food.name;
-          opt.dataset.category = food.category || '';
-          opt.dataset.foodId = food.food_id;
+          opt.textContent = foodType.food_name;
+          opt.value = foodType.food_name;
+          opt.dataset.name = foodType.food_name;
           foodTypeSelect.appendChild(opt);
         });
         
         // Update category info to show count
         const catLabel = document.getElementById('analysisCategoryInfo');
         if (catLabel) {
-          catLabel.textContent = `Available Foods: ${data.food_items.length} items`;
+          catLabel.textContent = `Available Foods: ${data.foodTypes.length} types`;
         }
         
         console.log('Food items populated successfully');
@@ -169,17 +167,16 @@ window.initAnalysisPage = function() {
       }
     });
     
-    // When selecting a food, attempt to autofill sensor data from dashboard logic (latest readings)
+    // When selecting a food, attempt to autofill sensor data from ML prediction data
     foodTypeSelect.addEventListener('change', async function() {
-      const foodId = this.value ? parseInt(this.value, 10) : 0;
+      const foodName = this.value;
       const nameFromOption = this.selectedOptions && this.selectedOptions[0] ? this.selectedOptions[0].dataset.name : '';
-      const catFromOption = this.selectedOptions && this.selectedOptions[0] ? (this.selectedOptions[0].dataset.category || '') : '';
       
       // Update category info
       const catLabel = document.getElementById('analysisCategoryInfo');
       if (catLabel) {
-        if (foodId) {
-          catLabel.textContent = `Selected: ${nameFromOption} (${catFromOption || 'No Category'})`;
+        if (foodName) {
+          catLabel.textContent = `Selected: ${nameFromOption}`;
           catLabel.style.color = '#28a745';
         } else {
           catLabel.textContent = 'Available Foods: Select a food to analyze';
@@ -187,16 +184,16 @@ window.initAnalysisPage = function() {
         }
       }
 
-      if (!foodId) return;
+      if (!foodName) return;
 
       try {
-        console.log(`Fetching sensor data for food ID: ${foodId}`);
+        console.log(`Fetching latest sensor data for food: ${foodName}`);
         const sessionToken = localStorage.getItem('jwt_token') || 
                              localStorage.getItem('sessionToken') || 
                              localStorage.getItem('session_token');
         
-        // Use the same API endpoint as dashboard for consistency
-        const url = `/api/sensor/gauges?food_id=${encodeURIComponent(foodId)}`;
+        // Fetch latest ML prediction data for this food type to get sensor readings
+        const url = `/api/ml/latest-sensor-data?food_name=${encodeURIComponent(foodName)}`;
         const res = await fetch(url, {
           method: 'GET',
           headers: {
@@ -205,37 +202,48 @@ window.initAnalysisPage = function() {
         });
         
         const data = await res.json();
-        console.log('Sensor data response:', data);
+        console.log('Latest sensor data response:', data);
         
-        if (data && data.success && data.gauge_data) {
-          // Auto-fill sensor values from the latest readings
+        if (data && data.success && data.sensorData) {
+          // Auto-fill sensor values from the latest ML prediction data
           const tempEl = document.getElementById('analysisTemp');
           const humEl = document.getElementById('analysisHumidity');
           const gasEl = document.getElementById('analysisGas');
 
-          // Map sensor data by type (using dashboard logic)
-          if (data.gauge_data.temperature && data.gauge_data.temperature.value !== null) {
-            if (tempEl) tempEl.value = data.gauge_data.temperature.value;
-            console.log('Auto-filled temperature:', data.gauge_data.temperature.value);
+          // Map sensor data from ML prediction
+          if (data.sensorData.temperature !== null && data.sensorData.temperature !== undefined) {
+            if (tempEl) tempEl.value = data.sensorData.temperature;
+            console.log('Auto-filled temperature:', data.sensorData.temperature);
           }
           
-          if (data.gauge_data.humidity && data.gauge_data.humidity.value !== null) {
-            if (humEl) humEl.value = data.gauge_data.humidity.value;
-            console.log('Auto-filled humidity:', data.gauge_data.humidity.value);
+          if (data.sensorData.humidity !== null && data.sensorData.humidity !== undefined) {
+            if (humEl) humEl.value = data.sensorData.humidity;
+            console.log('Auto-filled humidity:', data.sensorData.humidity);
           }
           
-          if (data.gauge_data.gas && data.gauge_data.gas.value !== null) {
-            if (gasEl) gasEl.value = data.gauge_data.gas.value;
-            console.log('Auto-filled gas:', data.gauge_data.gas.value);
+          if (data.sensorData.gas_level !== null && data.sensorData.gas_level !== undefined) {
+            if (gasEl) gasEl.value = data.sensorData.gas_level;
+            console.log('Auto-filled gas:', data.sensorData.gas_level);
           }
           
-          console.log('Sensor data auto-filled successfully');
+          console.log('Sensor data auto-filled successfully from ML prediction data');
         } else {
-          console.log('No sensor data available for this food');
+          console.log('No sensor data available for this food type');
+          // Show message to user
+          const catLabel = document.getElementById('analysisCategoryInfo');
+          if (catLabel) {
+            catLabel.textContent = `Selected: ${nameFromOption} - No sensor data available`;
+            catLabel.style.color = '#ffc107';
+          }
         }
       } catch (e) {
         console.error('Error fetching sensor data for food:', e);
         // User can still enter values manually
+        const catLabel = document.getElementById('analysisCategoryInfo');
+        if (catLabel) {
+          catLabel.textContent = `Selected: ${nameFromOption} - Enter sensor values manually`;
+          catLabel.style.color = '#ffc107';
+        }
       }
     });
   }
@@ -245,15 +253,14 @@ window.initAnalysisPage = function() {
       // Get input values
       const foodSelect = document.getElementById('analysisProductType');
       const selectedOption = foodSelect && foodSelect.selectedOptions ? foodSelect.selectedOptions[0] : null;
-      const foodId = foodSelect ? foodSelect.value : '';
+      const foodName = foodSelect ? foodSelect.value : '';
       const foodTypeName = selectedOption ? (selectedOption.dataset.name || selectedOption.textContent || '') : '';
-      const foodCategory = selectedOption ? (selectedOption.dataset.category || '') : '';
       const temp = parseFloat(document.getElementById('analysisTemp').value);
       const humidity = parseFloat(document.getElementById('analysisHumidity').value);
       const gas = parseFloat(document.getElementById('analysisGas').value);
 
       // Validate
-      if (!foodId || foodTypeName === '') {
+      if (!foodName || foodTypeName === '') {
         resultsEmpty.style.display = '';
         resultsOutput.style.display = 'none';
         resultsEmpty.innerHTML = '<div style="color:#dc3545;font-weight:600;">Please select a food type first.</div>';
@@ -313,8 +320,7 @@ window.initAnalysisPage = function() {
         const recs = Array.isArray(a.recommendations) ? a.recommendations.map(f=>`<li>${escapeHtml(String(f))}</li>`).join('') : '';
         resultsOutput.innerHTML = `
           <div style="font-size:1.3rem;font-weight:700;">Spoilage Risk: <span style="color:${color}">${escapeHtml(risk)}</span>${score}</div>
-          <div>Food Type: <b>${escapeHtml(foodTypeName || '')}</b></div>
-          <div>Category: <b>${escapeHtml(foodCategory || '—')}</b></div>
+          <div>Food: <b>${escapeHtml(foodTypeName || '')}</b></div>
           <div>Temp: <b>${temp}°C</b> | Humidity: <b>${humidity}%</b> | Gas: <b>${gas}</b></div>
           ${a.summary ? `<div style=\"margin-top:8px;color:#dbe7ff;\">${escapeHtml(String(a.summary))}</div>` : ''}
           <div style="display:flex; gap:24px; margin-top:12px; width:100%;">

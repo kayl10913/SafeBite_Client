@@ -762,7 +762,7 @@ function updateDetailedReportTable(data, pagination) {
   if (!data || data.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-state">
+        <td colspan="8" class="empty-state">
           <div class="empty-state-content">
             <div class="empty-state-icon">📊</div>
             <div class="empty-state-title">No Data Available</div>
@@ -805,6 +805,7 @@ function updateDetailedReportTable(data, pagination) {
       </td>
       <td>${formatSensorReadings(item['SENSOR READINGS'])}</td>
       <td><span class="alert-badge ${alertClass}">${item['ALERT COUNT'] === 0 ? 'No alerts' : item['ALERT COUNT'] + ' alerts'}</span></td>
+      <td>${formatRecommendations(item['RECOMMENDATIONS'])}</td>
     `;
     
     tableBody.appendChild(row);
@@ -818,7 +819,8 @@ function updateDetailedReportTable(data, pagination) {
   // Update report title with item count
   const reportTitle = document.querySelector('.detailed-report-title');
   if (reportTitle) {
-    reportTitle.textContent = `Detailed Spoilage Report (${pagination?.total_records || data.length} items)`;
+    const totalRecords = pagination?.total_records || pagination?.totalRecords || data.length;
+    reportTitle.textContent = `Detailed Spoilage Report (${totalRecords} items)`;
   }
 }
 
@@ -896,15 +898,72 @@ function formatDate(dateString) {
   });
 }
 
+// Format recommendations for display
+function formatRecommendations(recommendations) {
+  if (!recommendations) return '<span class="no-recommendations">No recommendations</span>';
+  
+  try {
+    // Parse JSON string if it's a string
+    let recData = recommendations;
+    if (typeof recommendations === 'string') {
+      recData = JSON.parse(recommendations);
+    }
+    
+    // Handle object format with main and details
+    if (recData && typeof recData === 'object' && !Array.isArray(recData)) {
+      if (recData.main && recData.details && Array.isArray(recData.details)) {
+        // Format main recommendation and details with proper styling
+        let formatted = `<div class="recommendations-content">
+          <div class="recommendations-main">${recData.main}</div>
+          <div class="recommendations-details">
+            <ul>${recData.details.map(detail => `<li>${detail}</li>`).join('')}</ul>
+          </div>
+        </div>`;
+        return formatted;
+      } else if (recData.main) {
+        // Only main recommendation
+        return `<div class="recommendations-content">
+          <div class="recommendations-main">${recData.main}</div>
+        </div>`;
+      } else if (Array.isArray(recData.details) && recData.details.length > 0) {
+        // Only details array
+        return `<div class="recommendations-content">
+          <div class="recommendations-details">
+            <ul>${recData.details.map(detail => `<li>${detail}</li>`).join('')}</ul>
+          </div>
+        </div>`;
+      }
+    }
+    
+    // Handle array format (legacy)
+    if (Array.isArray(recData) && recData.length > 0) {
+      return `<div class="recommendations-content">
+        <div class="recommendations-details">
+          <ul>${recData.map(rec => `<li>${rec}</li>`).join('')}</ul>
+        </div>
+      </div>`;
+    }
+    
+    return '<span class="no-recommendations">No recommendations</span>';
+  } catch (error) {
+    console.error('Error parsing recommendations:', error);
+    return '<span class="no-recommendations">Invalid recommendations</span>';
+  }
+}
+
 // Update detailed report pagination
 function updateDetailedReportPagination(pagination) {
   const paginationContainer = document.getElementById('detailedReportPagination');
   if (!paginationContainer) return;
 
-  const currentPage = pagination.current_page || 1;
-  const totalPages = pagination.total_pages || 1;
-  const totalRecords = pagination.total_records || 0;
-  const limit = pagination.limit || 25;
+  console.log('Pagination data received:', pagination);
+
+  const currentPage = pagination?.current_page || 1;
+  const totalPages = pagination?.total_pages || pagination?.totalPages || 1;
+  const totalRecords = pagination?.total_records || pagination?.totalRecords || 0;
+  const limit = pagination?.records_per_page || pagination?.recordsPerPage || pagination?.limit || 25;
+  
+  console.log('Pagination values:', { currentPage, totalPages, totalRecords, limit });
   const startRecord = (currentPage - 1) * limit + 1;
   const endRecord = Math.min(currentPage * limit, totalRecords);
 
@@ -966,30 +1025,38 @@ function goToDetailedReportPage(page) {
 
 // Export detailed report to CSV
 function exportDetailedReportCSV() {
-  // Get current filter values
-  const startDate = document.getElementById('start-date')?.value;
-  const endDate = document.getElementById('end-date')?.value;
-  const foodCategory = document.getElementById('food-category')?.value;
+  try {
+    // Get current filter values
+    const startDate = document.getElementById('start-date')?.value;
+    const endDate = document.getElementById('end-date')?.value;
+    const foodCategory = document.getElementById('food-category')?.value;
 
-  // Create CSV content
-  let csvContent = 'data:text/csv;charset=utf-8,';
-  
-  // Add headers
-  const headers = [
-    'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alert Count'
-  ];
-  csvContent += headers.join(',') + '\n';
+    // Create CSV content
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    
+    // Add headers
+    const headers = [
+      'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alert Count'
+    ];
+    csvContent += headers.join(',') + '\n';
 
   // Get table data
   const tableRows = document.querySelectorAll('.detailed-report-table tbody tr');
+  if (tableRows.length === 0) {
+    showNotification('No data available to export. Please apply filters first.', 'warning');
+    return;
+  }
+  
   tableRows.forEach(row => {
     const cells = row.querySelectorAll('td');
-    const rowData = Array.from(cells).map(cell => {
-      // Remove HTML tags and escape quotes
-      const text = cell.textContent.replace(/"/g, '""');
-      return `"${text}"`;
-    });
-    csvContent += rowData.join(',') + '\n';
+    if (cells.length > 0) {
+      const rowData = Array.from(cells).map(cell => {
+        // Remove HTML tags and escape quotes
+        const text = cell.textContent.replace(/"/g, '""').trim();
+        return `"${text}"`;
+      });
+      csvContent += rowData.join(',') + '\n';
+    }
   });
 
   // Create download link
@@ -1008,8 +1075,12 @@ function exportDetailedReportCSV() {
   link.click();
   document.body.removeChild(link);
 
-  // Show success notification
-  showNotification('Detailed report exported to CSV successfully!', 'success');
+    // Show success notification
+    showNotification('Detailed report exported to CSV successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    showNotification('Failed to export CSV. Please try again.', 'error');
+  }
 }
 
 // Show notification function
@@ -1204,6 +1275,12 @@ function exportDetailedReportPDF() {
       compress: true
     });
     
+    // Calculate available width for table (landscape A4 = 842pt, minus margins)
+    const pageWidth = doc.internal.pageSize.width;
+    const marginLeft = 40;
+    const marginRight = 40;
+    const availableWidth = pageWidth - marginLeft - marginRight;
+    
     // Add professional header with logo area
     doc.setFillColor(74, 158, 255); // SafeBite blue
     doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
@@ -1255,50 +1332,97 @@ function exportDetailedReportPDF() {
       const riskScore = item['RISK SCORE'] || 0;
       const formattedRiskScore = `${parseFloat(riskScore).toFixed(1)}%`;
       
+      // Format recommendations for PDF (shorter format)
+      const recommendations = item['RECOMMENDATIONS'] || '';
+      let formattedRecommendations = 'None';
+      if (recommendations) {
+        try {
+          const recArray = typeof recommendations === 'string' ? JSON.parse(recommendations) : recommendations;
+          if (Array.isArray(recArray) && recArray.length > 0) {
+            // Limit to first 2 recommendations for PDF
+            const limitedRecs = recArray.slice(0, 2);
+            formattedRecommendations = limitedRecs.join('; ');
+            if (recArray.length > 2) {
+              formattedRecommendations += '...';
+            }
+          } else if (typeof recArray === 'object' && recArray.main) {
+            // Handle object format
+            formattedRecommendations = recArray.main;
+          }
+        } catch (error) {
+          formattedRecommendations = 'Invalid';
+        }
+      }
+      
+      // Format sensor readings for PDF (shorter format)
+      const sensorReadings = item['SENSOR READINGS'] || '';
+      let formattedSensorReadings = sensorReadings;
+      if (sensorReadings && sensorReadings.length > 50) {
+        // Truncate long sensor readings for PDF
+        formattedSensorReadings = sensorReadings.substring(0, 47) + '...';
+      }
+      
       return [
         item['FOOD ITEM'] || '',
         item['CATEGORY'] || '',
         item['STATUS'] || '',
         formattedRiskScore,
         formattedExpiry,
-        item['SENSOR READINGS'] || '',
-        alertText
+        formattedSensorReadings,
+        alertText,
+        formattedRecommendations
       ];
     });
     
+    // Calculate optimal column widths to fit the page
+    const columnWidths = {
+      0: Math.floor(availableWidth * 0.18), // Food Item (18%)
+      1: Math.floor(availableWidth * 0.12), // Category (12%)
+      2: Math.floor(availableWidth * 0.10), // Status (10%)
+      3: Math.floor(availableWidth * 0.10), // Risk Score (10%)
+      4: Math.floor(availableWidth * 0.12), // Expiry Date (12%)
+      5: Math.floor(availableWidth * 0.20), // Sensor Readings (20%)
+      6: Math.floor(availableWidth * 0.08), // Alerts (8%)
+      7: Math.floor(availableWidth * 0.10)  // Recommendations (10%)
+    };
+    
     // Add professional table
     doc.autoTable({
-      head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts']],
+      head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts', 'Recommendations']],
       body: tableData,
       startY: 180,
-      margin: { left: 40, right: 40 },
+      margin: { left: marginLeft, right: marginRight },
+      tableWidth: 'wrap',
       styles: {
-        fontSize: 9,
-        cellPadding: 4,
+        fontSize: 8,
+        cellPadding: 3,
         overflow: 'linebreak',
         halign: 'left',
-        valign: 'middle',
+        valign: 'top',
         lineColor: [200, 200, 200],
-        lineWidth: 0.5
+        lineWidth: 0.5,
+        textColor: [0, 0, 0]
       },
       headStyles: {
         fillColor: [74, 158, 255],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 10,
-        halign: 'center'
+        fontSize: 9,
+        halign: 'center',
+        valign: 'middle'
       },
       alternateRowStyles: {
         fillColor: [248, 249, 250]
       },
       columnStyles: {
-        0: { cellWidth: 120, halign: 'left' },  // Food Item
-        1: { cellWidth: 90, halign: 'center' },  // Category
-        2: { cellWidth: 90, halign: 'center' },  // Status
-        3: { cellWidth: 90, halign: 'center' },  // Risk Score
-        4: { cellWidth: 100, halign: 'center' }, // Expiry Date
-        5: { cellWidth: 200, halign: 'left' },   // Sensor Readings
-        6: { cellWidth: 80, halign: 'center' }   // Alerts
+        0: { cellWidth: columnWidths[0], halign: 'left' },   // Food Item
+        1: { cellWidth: columnWidths[1], halign: 'center' }, // Category
+        2: { cellWidth: columnWidths[2], halign: 'center' }, // Status
+        3: { cellWidth: columnWidths[3], halign: 'center' }, // Risk Score
+        4: { cellWidth: columnWidths[4], halign: 'center' }, // Expiry Date
+        5: { cellWidth: columnWidths[5], halign: 'left' },   // Sensor Readings
+        6: { cellWidth: columnWidths[6], halign: 'center' }, // Alerts
+        7: { cellWidth: columnWidths[7], halign: 'left' }    // Recommendations
       },
       didDrawPage: function (data) {
         // Add page number
@@ -1325,7 +1449,7 @@ function exportDetailedReportPDF() {
 // Get data from the current table display as fallback
 function getDataFromTable() {
   try {
-    const table = document.querySelector('#detailedReportTable tbody');
+    const table = document.querySelector('.detailed-report-table tbody');
     if (!table) return [];
     
     const rows = table.querySelectorAll('tr');

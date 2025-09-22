@@ -117,6 +117,13 @@ class SensorAnalyticsConnector {
             });
         }
 
+        const foodType = document.getElementById('foodType');
+        if (foodType) {
+            foodType.addEventListener('change', async (e) => {
+                await this.handleFilterChange('foodType', e.target.value);
+            });
+        }
+
         const status = document.getElementById('status');
         if (status) {
             status.addEventListener('change', async (e) => {
@@ -266,6 +273,73 @@ class SensorAnalyticsConnector {
                 sensorTypeSelect.appendChild(option);
             });
         }
+
+        // Populate food type options from ML prediction data
+        this.populateFoodTypeOptions();
+    }
+
+    async populateFoodTypeOptions() {
+        try {
+            const foodTypeSelect = document.getElementById('foodType');
+            if (!foodTypeSelect) return;
+
+            // Keep the "All Food Types" option
+            const allOption = foodTypeSelect.querySelector('option[value="all"]');
+            foodTypeSelect.innerHTML = '';
+            if (allOption) foodTypeSelect.appendChild(allOption);
+
+            // Fetch unique food types from ML prediction data
+            const response = await fetch('/api/ml/food-types', {
+                headers: {
+                    'Authorization': `Bearer ${this.api.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && Array.isArray(data.foodTypes)) {
+                    // Add unique food types from ML prediction data
+                    data.foodTypes.forEach(foodType => {
+                        const option = document.createElement('option');
+                        option.value = foodType.food_name;
+                        option.textContent = `${foodType.food_name} (${foodType.food_category})`;
+                        option.dataset.category = foodType.food_category;
+                        foodTypeSelect.appendChild(option);
+                    });
+                }
+            } else {
+                console.warn('Failed to fetch food types from ML prediction data');
+                // Fallback to static options if API fails
+                this.addFallbackFoodTypes(foodTypeSelect);
+            }
+        } catch (error) {
+            console.error('Error populating food type options:', error);
+            // Fallback to static options if API fails
+            const foodTypeSelect = document.getElementById('foodType');
+            if (foodTypeSelect) {
+                this.addFallbackFoodTypes(foodTypeSelect);
+            }
+        }
+    }
+
+    addFallbackFoodTypes(foodTypeSelect) {
+        // Add fallback food types if API fails
+        const fallbackTypes = [
+            { name: 'Tomato', category: 'Vegetables' },
+            { name: 'Apple', category: 'Fruits' },
+            { name: 'Banana', category: 'Fruits' },
+            { name: 'Chicken', category: 'Meat' },
+            { name: 'Fish', category: 'Seafood' },
+            { name: 'Milk', category: 'Dairy' }
+        ];
+
+        fallbackTypes.forEach(foodType => {
+            const option = document.createElement('option');
+            option.value = foodType.name;
+            option.textContent = `${foodType.name} (${foodType.category})`;
+            option.dataset.category = foodType.category;
+            foodTypeSelect.appendChild(option);
+        });
     }
 
     updateSummaryDisplay(data) {
@@ -607,6 +681,11 @@ class SensorAnalyticsConnector {
             filters.sensorType = sensorType.value;
         }
         
+        const foodType = document.getElementById('foodType');
+        if (foodType && foodType.value !== 'all') {
+            filters.foodType = foodType.value;
+        }
+        
         const status = document.getElementById('status');
         if (status && status.value !== 'all') {
             filters.status = status.value;
@@ -656,6 +735,9 @@ class SensorAnalyticsConnector {
             const sensorType = document.getElementById('sensorType');
             if (sensorType) sensorType.value = 'all';
             
+            const foodType = document.getElementById('foodType');
+            if (foodType) foodType.value = 'all';
+            
             const status = document.getElementById('status');
             if (status) status.value = 'all';
 
@@ -679,6 +761,7 @@ class SensorAnalyticsConnector {
                 endDate: '',
                 testerType: 'All Types',
                 sensorType: 'All Types',
+                foodType: 'All Food Types',
                 status: 'All Status'
             });
             const detailed = await this.api.fetchDetailedData({});

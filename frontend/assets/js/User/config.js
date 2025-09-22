@@ -3,33 +3,9 @@
 console.log('config.js loaded!');
 
 window.initConfigPage = function() {
-  function setupConfigTabs() {
-    const tabButtons = document.querySelectorAll('.config-tab');
-    const foodTab = document.getElementById('config-food-tab');
-    const sensorsTab = document.getElementById('config-sensors-tab');
-    if (!tabButtons.length || !foodTab || !sensorsTab) return;
-
-    // Force initial state: show food, hide sensors
-    foodTab.classList.remove('d-none');
-    sensorsTab.classList.add('d-none');
-    tabButtons.forEach(b => b.classList.remove('active'));
-    tabButtons[0].classList.add('active');
-
-    tabButtons.forEach(btn => {
-      btn.onclick = function() {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (btn.dataset.tab === 'food') {
-          foodTab.classList.remove('d-none');
-          sensorsTab.classList.add('d-none');
-          loadFoodItems();
-        } else {
-          sensorsTab.classList.remove('d-none');
-          foodTab.classList.add('d-none');
-          // TODO: load sensors if needed
-        }
-      };
-    });
+  function setupConfigPage() {
+    // No tabs needed anymore, just initialize the page
+    console.log('Config page initialized without tabs');
   }
 
   // Modal logic (use modal from HTML inside main-content)
@@ -110,22 +86,22 @@ window.initConfigPage = function() {
   }
 
   function ensureFoodListContainer() {
-    const foodTab = document.getElementById('config-food-tab');
-    if (!foodTab) return null;
-    let list = foodTab.querySelector('#configFoodList');
+    const configContent = document.querySelector('.config-content');
+    if (!configContent) return null;
+    let list = configContent.querySelector('#configFoodList');
     if (!list) {
       list = document.createElement('div');
       list.id = 'configFoodList';
       list.style.marginTop = '16px';
-      foodTab.appendChild(list);
+      configContent.appendChild(list);
     }
     return list;
   }
 
-  function renderFoodItems(items) {
-    const foodTab = document.getElementById('config-food-tab');
-    if (!foodTab) return;
-    const empty = foodTab.querySelector('.config-empty');
+  function renderMLPredictions(items) {
+    const configContent = document.querySelector('.config-content');
+    if (!configContent) return;
+    const empty = configContent.querySelector('.config-empty');
     const list = ensureFoodListContainer();
     if (!list) return;
 
@@ -136,16 +112,47 @@ window.initConfigPage = function() {
     }
     if (empty) empty.style.display = 'none';
 
-    const rows = items.map(it => {
-      const id = it.food_id || it.id;
-      const name = it.name || '';
-      const category = it.category || '';
+    const rows = items.map(item => {
+      const name = item.name || '';
+      const category = item.category || '';
+      const predictionCount = item.prediction_count || 0;
+      const latestStatus = item.latest_status || 'unknown';
+      const avgSpoilage = item.avg_spoilage_probability || '0';
+      const latestScan = item.latest_scan ? new Date(item.latest_scan).toLocaleDateString() : 'Never';
+      
+      // Status color coding
+      let statusColor = '#888';
+      let statusText = latestStatus;
+      if (latestStatus === 'safe') {
+        statusColor = '#27ae60';
+        statusText = 'Safe';
+      } else if (latestStatus === 'caution') {
+        statusColor = '#f39c12';
+        statusText = 'Caution';
+      } else if (latestStatus === 'unsafe') {
+        statusColor = '#e74c3c';
+        statusText = 'Unsafe';
+      }
+
       return `
-        <tr data-id="${id}">
-          <td style="padding:8px 12px;">${name}</td>
-          <td style="padding:8px 12px;color:#bfc9da;">${category || '<span style=\"opacity:.6\">Uncategorized</span>'}</td>
+        <tr data-name="${name}">
+          <td style="padding:8px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:500;">${name}</span>
+              <span style="font-size:0.8em;color:#888;">(${item.sensor_types ? item.sensor_types.join(', ') : 'Temperature, Humidity, Gas'})</span>
+            </div>
+          </td>
+          <td style="padding:8px 12px;color:#bfc9da;">${category || '<span style="opacity:.6">Uncategorized</span>'}</td>
+          <td style="padding:8px 12px;color:#bfc9da;text-align:center;">
+            <span style="color:${statusColor};font-weight:500;">${statusText}</span>
+            <br><span style="font-size:0.8em;opacity:0.7;">${avgSpoilage}% risk</span>
+          </td>
+          <td style="padding:8px 12px;color:#bfc9da;text-align:center;">
+            ${predictionCount} scans
+            <br><span style="font-size:0.8em;opacity:0.7;">Last: ${latestScan}</span>
+          </td>
           <td style="padding:8px 12px;text-align:right;">
-            <button class="config-delete-btn" data-id="${id}" style="background:#c0392b;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Delete</button>
+            <button class="config-delete-btn" data-name="${name}" style="background:#c0392b;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Delete</button>
           </td>
         </tr>`;
     }).join('');
@@ -156,6 +163,8 @@ window.initConfigPage = function() {
           <tr>
             <th style="text-align:left;padding:8px 12px;color:#bfc9da;font-weight:600;">Food Name</th>
             <th style="text-align:left;padding:8px 12px;color:#bfc9da;font-weight:600;">Category</th>
+            <th style="text-align:center;padding:8px 12px;color:#bfc9da;font-weight:600;">Status</th>
+            <th style="text-align:center;padding:8px 12px;color:#bfc9da;font-weight:600;">Scans</th>
             <th style="text-align:right;padding:8px 12px;color:#bfc9da;font-weight:600;">Actions</th>
           </tr>
         </thead>
@@ -167,10 +176,12 @@ window.initConfigPage = function() {
 
     list.querySelectorAll('.config-delete-btn').forEach(btn => {
       btn.onclick = function() {
-        const id = this.getAttribute('data-id');
-        if (!id) return;
-        if (!confirm('Delete this food item?')) return;
-        fetch(`/api/users/food-items/${encodeURIComponent(id)}`, {
+        const foodName = this.getAttribute('data-name');
+        if (!foodName) return;
+        if (!confirm(`Delete all ML prediction data for "${foodName}"? This will remove all scan history for this food item.`)) return;
+        
+        // Delete ML predictions for this food item
+        fetch(`/api/users/ml-predictions/${encodeURIComponent(foodName)}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -180,27 +191,34 @@ window.initConfigPage = function() {
         .then(r => r.json())
         .then(j => {
           if (j && j.success) {
-            loadFoodItems();
+            alert(`Successfully deleted ${j.deleted_count} scan records for ${foodName}`);
+            loadFoodItems(); // Reload the list
           } else {
-            alert(j && j.message ? j.message : 'Failed to delete');
+            alert(j && j.message ? j.message : 'Failed to delete ML prediction data');
           }
         })
-        .catch(() => alert('Failed to delete'));
+        .catch(() => alert('Failed to delete ML prediction data'));
       };
     });
   }
 
+  // Keep the old function for backward compatibility
+  function renderFoodItems(items) {
+    renderMLPredictions(items);
+  }
+
   function loadFoodItems() {
-    fetch('/api/users/food-items', { headers: { ...authHeader() }})
+    // Load ML predictions instead of food items
+    fetch('/api/users/ml-predictions', { headers: { ...authHeader() }})
       .then(r => r.json())
       .then(j => {
         const items = (j && j.success && Array.isArray(j.food_items)) ? j.food_items : [];
-        renderFoodItems(items);
+        renderMLPredictions(items);
       })
-      .catch(() => renderFoodItems([]));
+      .catch(() => renderMLPredictions([]));
   }
 
-  setupConfigTabs();
+  setupConfigPage();
   // initial load
   loadFoodItems();
 

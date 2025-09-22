@@ -38,6 +38,9 @@ class FeedbackCenter {
       });
     });
 
+    // Star rating handling
+    this.setupStarRating();
+
     // Form submission
     const feedbackForm = document.getElementById('feedbackForm');
     if (feedbackForm) {
@@ -105,6 +108,14 @@ class FeedbackCenter {
       });
     });
 
+    // Clear filters button
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => {
+        this.clearFilters();
+      });
+    }
+
     // Action buttons
     document.addEventListener('click', (e) => {
       if (e.target.classList.contains('action-btn') || e.target.classList.contains('feedback-card-action')) {
@@ -133,6 +144,11 @@ class FeedbackCenter {
       content.classList.remove('active');
     });
     document.getElementById(`${tabName}TabContent`).classList.add('active');
+
+    // Clear form validation when switching to form tab
+    if (tabName === 'form') {
+      this.clearFormValidation();
+    }
 
     // If switching to history tab, refresh the current view
     if (tabName === 'history') {
@@ -190,6 +206,8 @@ class FeedbackCenter {
         await Promise.all([this.loadFeedbacks(), this.loadStats()]);
         this.switchTab('history');
         form.reset();
+        this.resetStarDisplay();
+        this.clearFormValidation();
         this.showNotification('Feedback submitted successfully!', 'success');
       } else {
         throw new Error(json && json.message ? json.message : 'Failed to submit');
@@ -198,6 +216,65 @@ class FeedbackCenter {
       console.error('Submit feedback error:', e);
       this.showNotification('Failed to submit feedback', 'info');
     }
+  }
+
+  setupStarRating() {
+    const ratingInputs = document.querySelectorAll('.rating-input input[type="radio"]');
+    ratingInputs.forEach((input, index) => {
+      input.addEventListener('change', () => {
+        this.updateStarDisplay(index + 1);
+      });
+    });
+  }
+
+  updateStarDisplay(selectedRating) {
+    const ratingLabels = document.querySelectorAll('.rating-input label');
+    ratingLabels.forEach((label, index) => {
+      if (index < selectedRating) {
+        label.classList.add('star-highlighted');
+        label.classList.remove('star-dimmed');
+      } else {
+        label.classList.add('star-dimmed');
+        label.classList.remove('star-highlighted');
+      }
+    });
+  }
+
+  resetStarDisplay() {
+    const ratingLabels = document.querySelectorAll('.rating-input label');
+    ratingLabels.forEach(label => {
+      label.classList.remove('star-highlighted', 'star-dimmed');
+    });
+  }
+
+  clearFormValidation() {
+    const formInputs = document.querySelectorAll('#feedbackForm input, #feedbackForm select, #feedbackForm textarea');
+    formInputs.forEach(input => {
+      input.classList.remove('touched');
+    });
+  }
+
+  clearFilters() {
+    this.currentFilters = {
+      search: '',
+      type: '',
+      priority: '',
+      status: ''
+    };
+    
+    // Reset filter inputs
+    const searchInput = document.getElementById('feedbackSearch');
+    const typeFilter = document.getElementById('feedbackTypeFilter');
+    const priorityFilter = document.getElementById('feedbackPriorityFilter');
+    const statusFilter = document.getElementById('feedbackStatusFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (typeFilter) typeFilter.value = '';
+    if (priorityFilter) priorityFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+    
+    this.currentPage = 1;
+    this.renderTable();
   }
 
   prefillUserContactFields() {
@@ -304,18 +381,22 @@ class FeedbackCenter {
 
   getFilteredData() {
     return this.feedbackData.filter(feedback => {
+      // Search filter - check customer name and description
       const matchesSearch = !this.currentFilters.search || 
-        feedback.customer.toLowerCase().includes(this.currentFilters.search) ||
-        feedback.description.toLowerCase().includes(this.currentFilters.search);
+        (feedback.customer && feedback.customer.toLowerCase().includes(this.currentFilters.search.toLowerCase())) ||
+        (feedback.description && feedback.description.toLowerCase().includes(this.currentFilters.search.toLowerCase()));
       
+      // Type filter - exact match
       const matchesType = !this.currentFilters.type || 
-        feedback.type.toLowerCase().includes(this.currentFilters.type);
+        (feedback.type && feedback.type.toLowerCase() === this.currentFilters.type.toLowerCase());
       
+      // Priority filter - exact match
       const matchesPriority = !this.currentFilters.priority || 
-        feedback.priority.toLowerCase() === this.currentFilters.priority;
+        (feedback.priority && feedback.priority.toLowerCase() === this.currentFilters.priority.toLowerCase());
       
+      // Status filter - exact match
       const matchesStatus = !this.currentFilters.status || 
-        feedback.status.toLowerCase() === this.currentFilters.status;
+        (feedback.status && feedback.status.toLowerCase() === this.currentFilters.status.toLowerCase());
 
       return matchesSearch && matchesType && matchesPriority && matchesStatus;
     });
