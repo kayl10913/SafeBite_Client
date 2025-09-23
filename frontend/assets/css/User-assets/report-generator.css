@@ -439,18 +439,28 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .report-generator-container { margin-left: 0; padding: 32px 24px; }
+  .report-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .report-control-group { min-width: 0; }
+  #customDateRangeGroup { gap: 12px; }
+}
+
+@media (max-width: 992px) {
+  .report-generator-main { padding: 24px; }
+  .report-generator-title { font-size: 2.1rem; }
+  .report-generator-card { padding: 24px; }
+  .report-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 768px) {
-  .report-generator-main {
-    margin-left: 95px;  }
+  .report-generator-main { padding: 20px; }
+  .report-generator-container { margin-left: 0; padding: 20px 16px; gap: 20px; }
   
   .report-generator-title {
     font-size: 2rem;
   }
   
-  .report-controls {
-    flex-direction: column;
-    gap: 15px;
-  }
+  .report-controls { display: grid; grid-template-columns: 1fr; gap: 12px; }
   
   .report-control-group {
     min-width: 100%;
@@ -465,9 +475,7 @@
     min-width: 100%;
   }
   
-  .report-actions {
-    justify-content: stretch;
-  }
+  .report-actions { justify-content: stretch; }
   
   .report-btn {
     flex: 1;
@@ -485,9 +493,11 @@
 }
 
 @media (max-width: 480px) {
-  .report-generator-card {
-    padding: 20px;
-  }
+  .report-generator-card { padding: 16px; }
+  .report-controls { grid-template-columns: 1fr; }
+  .report-btn { width: 100%; }
+  .report-control-group label { font-size: 13px; }
+  .report-date-input, #weekPicker, #monthPicker, #yearPicker, .report-control-group select { min-width: 0; }
   
   .report-table {
     display: block;

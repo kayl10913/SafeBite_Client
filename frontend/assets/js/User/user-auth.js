@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('user-auth.js: Full name created:', fullName);
         
         if (accountText) {
-            accountText.textContent = fullName;
-            console.log('user-auth.js: Updated account text to:', fullName);
+            accountText.textContent = 'Profile';
+            console.log('user-auth.js: Updated account text to: Profile');
         }
         
         if (sidebarTitle) {

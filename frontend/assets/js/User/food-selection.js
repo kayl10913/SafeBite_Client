@@ -605,6 +605,60 @@ class FoodSelection {
     }
   }
 
+  // Create an alert for SmartSense Scanner when condition is caution/unsafe
+  async createScannerAlert(foodName, tableCondition, sensorData, spoilageScore) {
+    try {
+      if (!tableCondition || tableCondition === 'safe') return;
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
+      if (!sessionToken) {
+        console.warn('Skipping alert creation: no auth token');
+        return;
+      }
+
+      const alertLevel = tableCondition === 'unsafe' ? 'High' : 'Medium';
+      const recommendedAction = tableCondition === 'unsafe'
+        ? 'Discard immediately and sanitize storage area.'
+        : 'Consume soon or improve storage conditions.';
+      const probability = typeof spoilageScore === 'number' ? Math.max(0, Math.min(100, Math.round(spoilageScore))) : undefined;
+
+      const body = {
+        food_id: null,
+        message: `SmartSense: ${foodName} is ${tableCondition.toUpperCase()}`,
+        alert_level: alertLevel,
+        alert_type: 'sensor',
+        ml_prediction_id: null,
+        spoilage_probability: probability,
+        recommended_action: recommendedAction,
+        is_ml_generated: false,
+        confidence_score: probability,
+        alert_data: JSON.stringify({
+          source: 'smartsense_scanner',
+          condition: tableCondition,
+          sensor_readings: sensorData,
+          spoilage_score: probability,
+          timestamp: new Date().toISOString()
+        })
+      };
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionToken}`
+      };
+      const resp = await fetch('/api/alerts', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+      if (!resp.ok) {
+        console.warn('Alert creation failed with status:', resp.status);
+      }
+    } catch (e) {
+      console.warn('Non-blocking: failed to create scanner alert:', e.message);
+    }
+  }
+
   async confirmFoodSelection() {
     const customName = document.getElementById('customFoodName');
     const customCategory = document.getElementById('customFoodCategory');
@@ -1753,7 +1807,14 @@ class FoodSelection {
         // Get AI-assessed condition and table-assessed condition
         const aiCondition = aiAnalysisResult.success ? 
           this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe';
-        const tableCondition = (this.assessFoodCondition(sensorData) || {}).condition || aiCondition;
+        const assessed = this.assessFoodCondition(sensorData) || {};
+        const tableCondition = assessed.condition || aiCondition;
+
+        // Fire alert immediately for caution/unsafe conditions
+        if (tableCondition === 'caution' || tableCondition === 'unsafe') {
+          console.log('Creating SmartSense alert for condition:', tableCondition, 'score:', assessed.spoilageScore);
+          await this.createScannerAlert(this.selectedFood.name, tableCondition, sensorData, assessed.spoilageScore);
+        }
         
         // Check if scanning was cancelled before ML workflow
         if (this.isScanningCancelled) {
@@ -2622,46 +2683,9 @@ class FoodSelection {
       const foodIds = [];
       const currentTime = new Date().toISOString();
 
-      // Create multiple food items in parallel
-      const createPromises = [];
-      for (let i = 0; i < count; i++) {
-        const sensorId = sensorIds[i] || null; // Use actual sensor ID or null
-        createPromises.push(
-          fetch('/api/users/food-items', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${sessionToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              name: foodName,
-              category: foodCategory,
-              scan_status: 'analyzed',
-              scan_timestamp: currentTime,
-              expiration_date: this.calculateExpirationDate(foodCategory),
-              sensor_id: sensorId // Use actual sensor ID from database
-            })
-          })
-        );
-      }
-
-      const responses = await Promise.all(createPromises);
-      
-      for (let i = 0; i < responses.length; i++) {
-        const response = responses[i];
-        const result = await response.json();
-        
-        if (result.success && result.food_id) {
-          foodIds.push(result.food_id);
-          console.log(`Food item ${i + 1} created successfully with analyzed status, ID:`, result.food_id);
-        } else {
-          console.error(`Food item ${i + 1} creation failed:`, result);
-          throw new Error(`Food item ${i + 1} creation failed: ${result.message || 'Unknown error'}`);
-        }
-      }
-
-      console.log(`Successfully created ${foodIds.length} food items with analyzed status:`, foodIds);
-      return foodIds;
+      // Scanner should NOT insert into food_items. Use existing items only.
+      console.warn('Smart Training createMultipleFoodItemsWithAnalyzedStatus is disabled to avoid inserting into food_items via scanner.');
+      return [];
     } catch (error) {
       console.error('Error creating multiple food items with analyzed status:', error);
       throw error;
@@ -2681,30 +2705,9 @@ class FoodSelection {
 
       console.log('Creating food item with analyzed status:', { foodName, foodCategory });
 
-      const response = await fetch('/api/users/food-items', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: foodName,
-          category: foodCategory,
-          scan_status: 'analyzed',
-          scan_timestamp: new Date().toISOString()
-        })
-      });
-
-      const result = await response.json();
-      console.log('Food creation response:', result);
-      
-      if (result.success && result.food_id) {
-        console.log('Food item created successfully with analyzed status, ID:', result.food_id);
-        return result.food_id;
-      } else {
-        console.error('Food creation failed:', result);
-        throw new Error(result.message || 'Food item creation failed');
-      }
+      // Disable direct insertion from scanner path
+      console.warn('createFoodItemWithAnalyzedStatus disabled for SmartSense Scanner to prevent DB insert.');
+      return null;
     } catch (error) {
       console.error('Error creating food item with analyzed status:', error);
       throw error;
@@ -2722,30 +2725,8 @@ class FoodSelection {
         throw new Error('No authentication token available');
       }
 
-      const response = await fetch('/api/users/food-items', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: foodName,
-          category: foodCategory,
-          scan_timestamp: scanTimestamp
-        })
-      });
-
-      const result = await response.json();
-      
-      console.log('Food creation response:', result);
-      
-      if (result.success && result.food_id) {
-        console.log('Food item created successfully with ID:', result.food_id);
-        return result.food_id;
-      } else {
-        console.error('Food creation failed:', result);
-        throw new Error(result.message || 'Food item creation failed');
-      }
+      console.warn('createFoodItem disabled for SmartSense Scanner to prevent inserting into food_items.');
+      return null;
     } catch (error) {
       console.error('Error creating food item:', error);
       throw error; // Re-throw to be handled by caller
@@ -2949,11 +2930,20 @@ class FoodSelection {
       okBtn.textContent = 'OK';
     }
     
-    // Complete scan session when scanning is cancelled
+    // Cancel/close scan session when scanning is cancelled
     try {
-      this.completeScanSession();
+      const sessionToken = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+      fetch('/api/sensor/scan-session', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+        },
+        body: JSON.stringify({ user_id: 11, session_id: this.currentScanSession?.session_id })
+      }).finally(() => { this.currentScanSession = null; });
     } catch (error) {
-      console.error('Failed to complete scan session after cancellation:', error);
+      console.error('Failed to cancel scan session after cancellation:', error);
+      this.currentScanSession = null;
     }
     
     // Show cancelled message

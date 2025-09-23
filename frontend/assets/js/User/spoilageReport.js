@@ -46,10 +46,9 @@ async function loadUserInfo() {
       const accountTextElement = document.getElementById('accountText');
       console.log('Account text element found:', accountTextElement);
       
-      if (accountTextElement && result.user.first_name) {
-        const fullName = `${result.user.first_name} ${result.user.last_name || ''}`.trim();
-        accountTextElement.textContent = fullName || 'Account';
-        console.log('Updated account text to:', fullName);
+      if (accountTextElement) {
+        accountTextElement.textContent = 'Profile';
+        console.log('Updated account text to: Profile');
       }
       
       console.log('User info loaded successfully:', result.user);
@@ -1613,7 +1612,7 @@ class SpoilageAnalytics {
         } catch (error) {
             console.error('Error loading spoilage data:', error);
             // Show error message instead of hardcoded data
-            this.showErrorMessage();
+            this.showErrorMessage(error);
         } finally {
             this.isLoading = false;
         }
@@ -1655,17 +1654,34 @@ class SpoilageAnalytics {
         }
     }
 
-    showErrorMessage() {
+    showErrorMessage(error = null) {
         const barList = document.querySelector('.spoilage-bar-list');
         const summaryList = document.querySelector('.spoilage-summary-list');
+        
+        // Determine error message based on error type
+        let errorTitle = 'Failed to Load Data';
+        let errorDescription = 'Unable to fetch spoilage data. Please check your connection and try again.';
+        
+        if (error) {
+            if (error.message && error.message.includes('401')) {
+                errorTitle = 'Authentication Required';
+                errorDescription = 'Please log in again to access spoilage data.';
+            } else if (error.message && error.message.includes('500')) {
+                errorTitle = 'Server Error';
+                errorDescription = 'There was a server error. Please try again later.';
+            } else if (error.message && error.message.includes('Network')) {
+                errorTitle = 'Connection Error';
+                errorDescription = 'Unable to connect to the server. Please check your internet connection.';
+            }
+        }
         
         if (barList) {
             barList.innerHTML = `
                 <div class="no-data-state">
                     <div class="no-data-icon">⚠️</div>
-                    <div class="no-data-title">Failed to Load Data</div>
-                    <div class="no-data-description">Unable to fetch spoilage data. Please check your connection and try again.</div>
-                    <div class="no-data-action">Click refresh to retry</div>
+                    <div class="no-data-title">${errorTitle}</div>
+                    <div class="no-data-description">${errorDescription}</div>
+                    <div class="no-data-action" onclick="window.spoilageAnalytics && window.spoilageAnalytics.loadSpoilageData()" style="cursor: pointer; color: #4a9eff; text-decoration: underline;">Click refresh to retry</div>
                 </div>
             `;
         }
@@ -1674,14 +1690,14 @@ class SpoilageAnalytics {
             summaryList.innerHTML = `
                 <div class="no-data-state">
                     <div class="no-data-icon">⚠️</div>
-                    <div class="no-data-title">Failed to Load Summary</div>
-                    <div class="no-data-description">Unable to fetch category summary. Please check your connection and try again.</div>
-                    <div class="no-data-action">Click refresh to retry</div>
+                    <div class="no-data-title">${errorTitle}</div>
+                    <div class="no-data-description">${errorDescription}</div>
+                    <div class="no-data-action" onclick="window.spoilageAnalytics && window.spoilageAnalytics.loadSpoilageData()" style="cursor: pointer; color: #4a9eff; text-decoration: underline;">Click refresh to retry</div>
                 </div>
             `;
         }
         
-        // Reset stat cards to show loading state
+        // Reset stat cards to show error state
         document.querySelectorAll('.spoilage-stat-card .stat-value').forEach(el => {
             el.textContent = '--';
         });
@@ -1747,16 +1763,31 @@ class SpoilageAnalytics {
         // Clear existing bars
         barList.innerHTML = '';
 
-        // Check if we have data
+        // Check if we have data - only show no data state if we truly have no data
         if (!topSpoiledFoods || topSpoiledFoods.length === 0) {
-            barList.innerHTML = `
-                <div class="no-data-state">
-                    <div class="no-data-icon">📊</div>
-                    <div class="no-data-title">No Food Data Available</div>
-                    <div class="no-data-description">Start scanning food items to see spoilage rates by food type</div>
-                    <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
-                </div>
-            `;
+            // Check if we have any data at all in the system
+            const stats = this.spoilageData.stats;
+            if (stats && stats.total_items > 0) {
+                // We have data but no spoiled foods - show a positive message
+                barList.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon">✅</div>
+                        <div class="no-data-title">No Spoiled Foods Detected</div>
+                        <div class="no-data-description">Great news! All your food items are currently safe and fresh</div>
+                        <div class="no-data-action">Continue monitoring to maintain food safety</div>
+                    </div>
+                `;
+            } else {
+                // No data at all in the system
+                barList.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon">📊</div>
+                        <div class="no-data-title">No Food Data Available</div>
+                        <div class="no-data-description">Start scanning food items to see spoilage rates by food type</div>
+                        <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -1789,21 +1820,42 @@ class SpoilageAnalytics {
         // Clear existing summary items
         summaryList.innerHTML = '';
 
-        // Check if we have data
+        // Check if we have data - only show no data state if we truly have no data
         if (!categorySummary || categorySummary.length === 0) {
-            summaryList.innerHTML = `
-                <div class="no-data-state">
-                    <div class="no-data-icon">📈</div>
-                    <div class="no-data-title">No Category Data Available</div>
-                    <div class="no-data-description">Start scanning food items to see spoilage summary by category</div>
-                    <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
-                </div>
-            `;
-            
-            // Update total overview for no data
-            const totalOverview = document.querySelector('.summary-total-right');
-            if (totalOverview) {
-                totalOverview.textContent = '0 spoiled out of 0 items';
+            // Check if we have any data at all in the system
+            const stats = this.spoilageData.stats;
+            if (stats && stats.total_items > 0) {
+                // We have data but no category summary - show a positive message
+                summaryList.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon">✅</div>
+                        <div class="no-data-title">All Categories Safe</div>
+                        <div class="no-data-description">Excellent! No spoilage detected across any food categories</div>
+                        <div class="no-data-action">Keep up the good food safety practices</div>
+                    </div>
+                `;
+                
+                // Update total overview for positive data
+                const totalOverview = document.querySelector('.summary-total-right');
+                if (totalOverview) {
+                    totalOverview.textContent = `0 spoiled out of ${stats.total_items} items`;
+                }
+            } else {
+                // No data at all in the system
+                summaryList.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon">📈</div>
+                        <div class="no-data-title">No Category Data Available</div>
+                        <div class="no-data-description">Start scanning food items to see spoilage summary by category</div>
+                        <div class="no-data-action">Use the Smart Training feature to scan your first food item</div>
+                    </div>
+                `;
+                
+                // Update total overview for no data
+                const totalOverview = document.querySelector('.summary-total-right');
+                if (totalOverview) {
+                    totalOverview.textContent = '0 spoiled out of 0 items';
+                }
             }
             return;
         }

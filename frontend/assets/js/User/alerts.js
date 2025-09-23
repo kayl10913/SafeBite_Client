@@ -3,12 +3,14 @@
 class AlertsManager {
   constructor() {
     this.alerts = [];
+    this._pollId = null;
     this.init();
   }
 
   async init() {
     await this.loadAlerts();
     this.renderAlerts();
+    this.startRealtime();
   }
 
   async loadAlerts() {
@@ -22,7 +24,8 @@ class AlertsManager {
         return;
       }
 
-      const response = await fetch('/api/alerts?limit=10&is_resolved=false', {
+      // Fetch all alerts (both resolved and unresolved) to get the latest status
+      const response = await fetch('/api/alerts?limit=20', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -32,12 +35,26 @@ class AlertsManager {
 
       if (response.ok) {
         const result = await response.json();
+        console.log('🔍 API Response:', result);
         if (result.success && result.data) {
+          // Store all alerts but only show unresolved ones in the UI
           this.alerts = result.data;
-          console.log('Loaded alerts:', this.alerts);
+          console.log('✅ Loaded all alerts:', this.alerts.length);
+          console.log('📊 Alert status breakdown:', {
+            total: this.alerts.length,
+            resolved: this.alerts.filter(a => a.is_resolved).length,
+            unresolved: this.alerts.filter(a => !a.is_resolved).length
+          });
+          console.log('📋 All alerts details:', this.alerts.map(a => ({
+            id: a.alert_id,
+            resolved: a.is_resolved,
+            message: a.message?.substring(0, 50) + '...'
+          })));
+        } else {
+          console.log('❌ No data in response:', result);
         }
       } else {
-        console.log('Failed to fetch alerts');
+        console.log('❌ Failed to fetch alerts, status:', response.status);
         // Create sample alerts for demonstration
         this.createSampleAlerts();
       }
@@ -45,6 +62,37 @@ class AlertsManager {
       console.log('Error loading alerts:', error);
       // Create sample alerts for demonstration
       this.createSampleAlerts();
+    }
+  }
+
+  startRealtime() {
+    if (this._pollId) return;
+    // Poll every 10s for new alerts; lightweight and avoids full page reload
+    this._pollId = setInterval(async () => {
+      if (document.hidden) return; // skip when tab hidden
+      const beforeIds = new Set(this.alerts.map(a => a.alert_id));
+      await this.loadAlerts();
+      const afterIds = new Set(this.alerts.map(a => a.alert_id));
+      // If there is any change, re-render
+      let changed = false;
+      if (beforeIds.size !== afterIds.size) changed = true;
+      else {
+        for (const id of afterIds) { if (!beforeIds.has(id)) { changed = true; break; } }
+      }
+      if (changed) this.renderAlerts();
+    }, 10000);
+
+    // Stop when navigating away from dashboard
+    window.addEventListener('spa:navigate:after', (e) => {
+      const to = (e && e.detail && e.detail.to) || '';
+      if (to !== 'dashboard') this.stopRealtime();
+    });
+  }
+
+  stopRealtime() {
+    if (this._pollId) {
+      clearInterval(this._pollId);
+      this._pollId = null;
     }
   }
 
@@ -96,14 +144,28 @@ class AlertsManager {
 
   renderAlerts() {
     const container = document.getElementById('alerts-container');
-    if (!container) return;
+    if (!container) {
+      console.log('❌ Alerts container not found');
+      return;
+    }
 
-    // Show all alerts (both resolved and active) for demonstration
-    // In production, you might want to filter by is_resolved
-    const alertsToShow = this.alerts;
+    // Only show unresolved alerts in the dashboard
+    const alertsToShow = this.alerts.filter(alert => !alert.is_resolved);
+    
+    console.log('🔍 Rendering alerts:');
+    console.log('  - Total alerts:', this.alerts.length);
+    console.log('  - Unresolved alerts:', alertsToShow.length);
+    console.log('  - All alerts:', this.alerts.map(a => ({ id: a.alert_id, resolved: a.is_resolved })));
     
     if (alertsToShow.length === 0) {
-      container.innerHTML = '<div class="no-alerts">No alerts</div>';
+      console.log('📭 No active alerts to show');
+      container.innerHTML = `
+        <div class="no-alerts">
+          <div class="no-alerts-icon">🥬</div>
+          <div class="no-alerts-title">No Food Spoilage Alerts</div>
+          <div class="no-alerts-message">All your food items are fresh and safe to consume. Our SmartSense system is continuously monitoring for any signs of spoilage.</div>
+        </div>
+      `;
       return;
     }
 
@@ -111,12 +173,14 @@ class AlertsManager {
       const levelClass = this.getAlertLevelClass(alert.alert_level);
       const timeAgo = this.getTimeAgo(alert.timestamp);
       const foodInfo = alert.food_name ? `for ${alert.food_name}` : '';
+      const typeLabel = this.getAlertTypeLabel(alert.alert_type);
       
       return `
         <div class="alert-item ${levelClass} ${alert.is_resolved ? 'alert-resolved' : ''}" data-alert-id="${alert.alert_id}">
           <div class="alert-header">
             <div class="alert-level">
               <span class="alert-level-badge">${alert.alert_level}</span>
+              <span class="alert-type-badge">${typeLabel}</span>
               ${alert.is_resolved ? '<span class="alert-resolved-badge">RESOLVED</span>' : ''}
             </div>
             <div class="alert-time">${timeAgo}</div>
@@ -132,7 +196,6 @@ class AlertsManager {
           ${!alert.is_resolved ? `
             <div class="alert-actions">
               <button class="btn-resolve" onclick="alertsManager.resolveAlert(${alert.alert_id})">Mark Resolved</button>
-              <button class="btn-dismiss" onclick="alertsManager.dismissAlert(${alert.alert_id})">Dismiss</button>
             </div>
           ` : ''}
         </div>
@@ -150,6 +213,16 @@ class AlertsManager {
       case 'low': return 'alert-low';
       default: return 'alert-medium';
     }
+  }
+
+  getAlertTypeLabel(type) {
+    const t = String(type || '').toLowerCase();
+    if (t === 'scanner') return 'Scanner';
+    if (t === 'ml_prediction') return 'AI/ML';
+    if (t === 'system') return 'System';
+    if (t === 'device') return 'Device';
+    if (t === 'sensor') return 'Sensor';
+    return t || 'Alert';
   }
 
   getTimeAgo(timestamp) {
@@ -185,10 +258,42 @@ class AlertsManager {
       });
 
       if (response.ok) {
-        // Remove from local array
-        this.alerts = this.alerts.filter(alert => alert.alert_id !== alertId);
-        this.renderAlerts();
         this.showNotification('Alert resolved successfully!', 'success');
+        
+        // Immediately update the local alert status
+        const alertIndex = this.alerts.findIndex(alert => alert.alert_id === alertId);
+        if (alertIndex !== -1) {
+          this.alerts[alertIndex].is_resolved = 1;
+          this.alerts[alertIndex].resolved_at = new Date().toISOString();
+          console.log('✅ Updated local alert status for ID:', alertId);
+        }
+        
+        // Re-render immediately to show the change
+        this.renderAlerts();
+        
+        // Also refresh from server to ensure consistency
+        console.log('🔄 Forcing alert refresh after resolution');
+        setTimeout(async () => {
+          await this.loadAlerts();
+          this.renderAlerts();
+        }, 1000);
+        
+        // Dispatch custom event to notify other components
+        console.log('🔔 Dispatching alertResolved event for alert ID:', alertId);
+        const event = new CustomEvent('alertResolved', {
+          detail: { alertId: alertId, timestamp: new Date().toISOString() }
+        });
+        document.dispatchEvent(event);
+        
+        // Also dispatch a general data updated event
+        const dataEvent = new CustomEvent('dataUpdated', {
+          detail: { type: 'alert', action: 'resolved', alertId: alertId }
+        });
+        document.dispatchEvent(dataEvent);
+        
+        // Update localStorage to trigger storage event for other tabs
+        localStorage.setItem('alertsUpdated', new Date().toISOString());
+        localStorage.setItem('userLogsUpdated', new Date().toISOString());
       }
     } catch (error) {
       console.log('Error resolving alert:', error);

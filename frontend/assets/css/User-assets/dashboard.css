@@ -742,6 +742,21 @@ main {
   height: 100%;
 }
 
+/* Make alerts card auto-fit to the same height as the chart card */
+.dashboard-row .activity-card,
+.dashboard-row .alerts-card {
+  align-self: stretch;
+}
+
+.alerts-container {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 250px; /* match chart area */
+}
+
 .alerts-card h4 {
   color: #ffffff;
   font-size: 1.3em;
@@ -752,13 +767,12 @@ main {
 
 /* Alerts Container */
 .alerts-container {
-  max-height: 300px;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: 200px;
+  justify-content: flex-start;
+  min-height: 250px; /* match chart area height */
 }
 
 /* Food Selection Layout */
@@ -1864,6 +1878,7 @@ main {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
+  align-items: stretch;
 }
 
 .dashboard-row:last-child {
@@ -1892,7 +1907,7 @@ main {
 }
 
 .dashboard-card.tall {
-  min-height: 300px;
+  min-height: 378px;
 }
 
 /* Sensors Card Styles */

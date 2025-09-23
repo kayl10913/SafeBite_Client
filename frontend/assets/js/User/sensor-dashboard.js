@@ -74,6 +74,10 @@ class SensorDashboard {
   // Create scan session for Arduino data reception
   async createScanSession() {
     try {
+      if (this.currentScanSession && this.currentScanSession.session_id) {
+        console.log('Scan session already active:', this.currentScanSession.session_id);
+        return this.currentScanSession;
+      }
       console.log('🔍 Creating scan session...');
       
       const sessionToken = localStorage.getItem('jwt_token') || 
@@ -104,6 +108,10 @@ class SensorDashboard {
         if (result.success) {
           console.log('✅ Scan session created (no auth):', result.session);
           this.currentScanSession = result.session;
+          
+          // Set up automatic timeout to ensure session is completed/cancelled
+          this.setupSessionTimeout();
+          
           return result.session;
         } else {
           throw new Error(result.error || 'Failed to create scan session');
@@ -133,6 +141,10 @@ class SensorDashboard {
       if (result.success) {
         console.log('✅ Scan session created:', result.session);
         this.currentScanSession = result.session;
+        
+        // Set up automatic timeout to ensure session is completed/cancelled
+        this.setupSessionTimeout();
+        
         return result.session;
       } else {
         throw new Error(result.error || 'Failed to create scan session');
@@ -146,12 +158,37 @@ class SensorDashboard {
   // Complete scan session
   async completeScanSession() {
     if (!this.currentScanSession) {
-      console.log('No active scan session to complete');
-      return;
+      console.log('❌ No active scan session to complete');
+      console.log('🔍 Current scan session state:', this.currentScanSession);
+      console.log('🔍 Attempting to check for any active sessions...');
+      
+      // Try to check if there are any active sessions
+      try {
+        const response = await fetch('/api/sensor/scan-session-status?user_id=11', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const result = await response.json();
+        console.log('🔍 Active session check result:', result);
+        
+        if (result.success && result.active) {
+          console.log('🔍 Found active session, using it:', result.session);
+          this.currentScanSession = result.session;
+        } else {
+          console.log('⚠️ No active sessions found, skipping completion');
+          return;
+        }
+      } catch (error) {
+        console.error('❌ Error checking for active sessions:', error);
+        return;
+      }
     }
 
     try {
       console.log('🔍 Completing scan session:', this.currentScanSession.session_id);
+      console.log('🔍 Session details:', this.currentScanSession);
       
       const sessionToken = localStorage.getItem('jwt_token') || 
                           localStorage.getItem('sessionToken') || 
@@ -176,6 +213,14 @@ class SensorDashboard {
         if (result.success) {
           console.log('✅ Scan session completed (no auth):', result.session_id);
           this.currentScanSession = null;
+          
+          // Clear the timeout since session completed successfully
+          if (this.sessionTimeout) {
+            clearTimeout(this.sessionTimeout);
+            this.sessionTimeout = null;
+            console.log('⏰ Session timeout cleared - session completed successfully');
+          }
+          
           return;
         } else {
           throw new Error(result.error || 'Failed to complete scan session');
@@ -202,6 +247,16 @@ class SensorDashboard {
       if (result.success) {
         console.log('✅ Scan session completed:', result.session_id);
         this.currentScanSession = null;
+        
+        // Clear the timeout since session completed successfully
+        if (this.sessionTimeout) {
+          clearTimeout(this.sessionTimeout);
+          this.sessionTimeout = null;
+          console.log('⏰ Session timeout cleared - session completed successfully');
+        }
+        
+        // Verify that Arduino data is now blocked
+        await this.verifyArduinoBlocking();
       } else {
         throw new Error(result.error || 'Failed to complete scan session');
       }
@@ -211,6 +266,86 @@ class SensorDashboard {
       this.currentScanSession = null;
       throw error;
     }
+  }
+
+  // Force block Arduino data when session completion fails
+  async forceBlockArduinoData() {
+    try {
+      console.log('🚫 Force blocking Arduino data...');
+      
+      // Try to complete any active sessions for user 11 (Arduino)
+      const response = await fetch('/api/sensor/scan-session', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: 11 // Arduino user ID
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Force blocked Arduino data - all active sessions cancelled');
+      } else {
+        console.log('⚠️ Force block attempt completed, but may not have found active sessions');
+      }
+    } catch (error) {
+      console.error('❌ Error force blocking Arduino data:', error);
+    }
+  }
+
+  // Verify that Arduino data is properly blocked
+  async verifyArduinoBlocking() {
+    try {
+      console.log('🔍 Verifying Arduino data blocking...');
+      
+      const response = await fetch('/api/sensor/scan-session-status?user_id=11', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        if (result.active) {
+          console.log('⚠️ WARNING: Arduino data is still allowed - active session found:', result.session);
+        } else {
+          console.log('✅ Arduino data is properly blocked - no active sessions found');
+        }
+      } else {
+        console.log('⚠️ Could not verify Arduino blocking status:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Error verifying Arduino blocking:', error);
+    }
+  }
+
+  // Set up automatic timeout for scan session
+  setupSessionTimeout() {
+    // Clear any existing timeout
+    if (this.sessionTimeout) {
+      clearTimeout(this.sessionTimeout);
+    }
+    
+    // Set timeout for 5 minutes (300000ms) to automatically cancel session
+    this.sessionTimeout = setTimeout(async () => {
+      if (this.currentScanSession) {
+        console.log('⏰ Scan session timeout reached - automatically cancelling session');
+        try {
+          await this.forceBlockArduinoData();
+          this.currentScanSession = null;
+          console.log('✅ Session automatically cancelled due to timeout');
+        } catch (error) {
+          console.error('❌ Error auto-cancelling session:', error);
+        }
+      }
+    }, 300000); // 5 minutes
+    
+    console.log('⏰ Session timeout set for 5 minutes');
   }
 
   // Fetch sensor devices from database
@@ -1339,9 +1474,11 @@ class SensorDashboard {
     
     // Create scan session when modal opens
     try {
-      await this.createScanSession();
+      console.log('🔍 Creating scan session when modal opens...');
+      const session = await this.createScanSession();
+      console.log('✅ Scan session created successfully:', session);
     } catch (error) {
-      console.error('Failed to create scan session:', error);
+      console.error('❌ Failed to create scan session:', error);
       // Continue anyway - the blocking will just prevent Arduino data
     }
     
@@ -1352,12 +1489,8 @@ class SensorDashboard {
       if (foodSelect) foodSelect.value = '';
       // Hide waiting indicator
       this.hideSensorWaitIndicator();
-      // Complete scan session when modal closes
-      try {
-        await this.completeScanSession();
-      } catch (error) {
-        console.error('Failed to complete scan session:', error);
-      }
+      // Don't complete scan session when modal closes - let the scan process handle it
+      console.log('🔍 Modal closed - scan session will be completed when scan finishes');
     };
     
     modal.style.display = 'flex';
@@ -1667,6 +1800,51 @@ class SensorDashboard {
       } else if (status.includes('risk')) {
         statusElement.classList.add('status-at-risk');
       }
+
+      // Create scanner alert for caution/unsafe conditions using logged-in user
+      try {
+        const isCaution = status.includes('caution') || status.includes('risk');
+        const isUnsafe = status.includes('unsafe') || status.includes('spoiled');
+        if (isCaution || isUnsafe) {
+          const token = localStorage.getItem('jwt_token') || 
+                        localStorage.getItem('sessionToken') || 
+                        localStorage.getItem('session_token');
+          if (token) {
+            const spoilageScore = prediction?.spoilage_probability || prediction?.riskScore || prediction?.confidence_score || 75;
+            const body = {
+              food_id: prediction?.food_id || null,
+              message: `SmartSense: ${foodName} is ${isUnsafe ? 'UNSAFE' : 'CAUTION'}`,
+              alert_level: isUnsafe ? 'High' : 'Medium',
+              alert_type: 'sensor',
+              ml_prediction_id: prediction?.prediction_id || null,
+              spoilage_probability: Math.max(0, Math.min(100, Math.round(spoilageScore))),
+              recommended_action: isUnsafe ? 'Discard immediately and sanitize storage area.' : 'Consume soon or improve storage conditions.',
+              is_ml_generated: false,
+              confidence_score: Math.max(0, Math.min(100, Math.round(spoilageScore))),
+              alert_data: JSON.stringify({
+                source: 'smartsense_scanner',
+                condition: isUnsafe ? 'unsafe' : 'caution',
+                sensor_readings: {
+                  temperature: prediction.temperature ?? prediction.tempValue ?? null,
+                  humidity: prediction.humidity ?? prediction.humidityValue ?? null,
+                  gas_level: prediction.gas_level ?? prediction.gasValue ?? null
+                },
+                timestamp: new Date().toISOString()
+              })
+            };
+            fetch('/api/alerts', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            }).then(r => {
+              if (!r.ok) console.warn('Scanner alert insert failed with status:', r.status);
+              return null;
+            }).catch(err => console.warn('Scanner alert insert error:', err.message));
+          } else {
+            console.warn('Skipping scanner alert: no auth token present');
+          }
+        }
+      } catch (_) {}
     }
     if (confidenceElement) confidenceElement.textContent = `${prediction.confidence_score || prediction.confidence || '-'}%`;
     if (recommendationElement) {
@@ -1811,26 +1989,48 @@ class SensorDashboard {
         // Show ML prediction results in custom modal
         this.showMLPredictionResults(foodName, prediction.prediction);
         foodSelect.value = '';
-        // Complete scan session when scanning is finished
+        
+        // Complete scan session when scanning is finished - this will block Arduino data
         try {
+          console.log('🔍 Completing scan session to block Arduino data...');
+          console.log('🔍 Current session before completion:', this.currentScanSession);
           await this.completeScanSession();
+          console.log('✅ Scan session completed successfully - Arduino data is now blocked');
         } catch (error) {
-          console.error('Failed to complete scan session after successful prediction:', error);
+          console.error('❌ Failed to complete scan session after successful prediction:', error);
+          // Even if completion fails, we should still try to block Arduino data
+          console.log('⚠️ Attempting to force block Arduino data...');
+          await this.forceBlockArduinoData();
         }
+        
         // Close scanner modal after successful prediction
         const modal = document.getElementById('mlFoodScannerModal');
         if (modal) modal.style.display = 'none';
       } else {
         alert(`ML Prediction failed: ${prediction.error}`);
+        // Complete scan session even on prediction failure
+        try {
+          console.log('🔍 Completing scan session after prediction failure...');
+          console.log('🔍 Current session before completion:', this.currentScanSession);
+          await this.completeScanSession();
+          console.log('✅ Scan session completed after prediction failure - Arduino data is now blocked');
+        } catch (error) {
+          console.error('❌ Failed to complete scan session after prediction failure:', error);
+          await this.forceBlockArduinoData();
+        }
       }
     } catch (error) {
       console.error('ML prediction error:', error);
       alert('Prediction failed: ' + error.message);
       // Complete scan session even on error
       try {
+        console.log('🔍 Completing scan session after error...');
+        console.log('🔍 Current session before completion:', this.currentScanSession);
         await this.completeScanSession();
+        console.log('✅ Scan session completed after error - Arduino data is now blocked');
       } catch (sessionError) {
-        console.error('Failed to complete scan session after error:', sessionError);
+        console.error('❌ Failed to complete scan session after error:', sessionError);
+        await this.forceBlockArduinoData();
       }
     } finally {
       // Reset scanning flag

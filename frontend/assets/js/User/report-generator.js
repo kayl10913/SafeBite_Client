@@ -280,10 +280,10 @@ class ReportGenerator {
     setDefaultWeekPicker() {
         const weekPicker = document.getElementById('weekPicker');
         if (weekPicker) {
-            console.log('🔧 setDefaultWeekPicker called - setting default value');
-            // Set to Week 38, 2025 (September 17-23, 2025) where your data exists
-            const year = 2025;
-            const weekNumber = 38; // Week 38 contains September 17-20, 2025
+            console.log('🔧 setDefaultWeekPicker called - setting current ISO week');
+            const today = new Date();
+            const year = today.getFullYear();
+            const weekNumber = this.getWeekNumber(today);
             
             // Temporarily remove the event listener to prevent triggering change event
             if (this.weekPickerHandler) {
@@ -307,10 +307,10 @@ class ReportGenerator {
     setDefaultMonthPicker() {
         const monthPicker = document.getElementById('monthPicker');
         if (monthPicker) {
-            console.log('🔧 setDefaultMonthPicker called - setting default value');
-            // Set to September 2025 where your data exists
-            const year = 2025;
-            const month = '09'; // September
+            console.log('🔧 setDefaultMonthPicker called - setting current month');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
             
             // Temporarily remove the event listener to prevent triggering change event
             if (this.monthPickerHandler) {
@@ -357,11 +357,67 @@ class ReportGenerator {
     }
 
     getWeekNumber(date) {
-        // Simplified week calculation - more reliable for month transitions
-        const startOfYear = new Date(date.getFullYear(), 0, 1);
-        const daysSinceStart = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
-        const weekNumber = Math.ceil((daysSinceStart + startOfYear.getDay() + 1) / 7);
-        return Math.max(1, weekNumber);
+        // ISO week number (Monday-based). Week 1 is the week with Jan 4th.
+        const target = new Date(date);
+        target.setHours(0, 0, 0, 0);
+        // Thursday in current week decides the year.
+        target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
+        const week1 = new Date(target.getFullYear(), 0, 4);
+        // Adjust to Thursday in week 1 and count number of weeks from week1 to target.
+        const weekNumber =
+            1 + Math.round(((target.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+        return weekNumber;
+    }
+
+    // Build a set of YYYY-MM-DD (local) strings for the selected range
+    buildSelectedDaysSet() {
+        const { startDate, endDate } = this.getDatesFromPicker();
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        const days = new Set();
+        const cur = new Date(start);
+        while (cur <= end) {
+            const y = cur.getFullYear();
+            const m = String(cur.getMonth() + 1).padStart(2, '0');
+            const d = String(cur.getDate()).padStart(2, '0');
+            days.add(`${y}-${m}-${d}`);
+            cur.setDate(cur.getDate() + 1);
+        }
+        return days;
+    }
+
+    // Compare an item's timestamp against the selected range using UTC date bucketing
+    filterItemsByUTCDate(items, getTimestamp) {
+        const daysSetLocal = this.buildSelectedDaysSet();
+        const parseToDateUtc = (ts) => {
+            if (!ts) return new Date('');
+            if (ts instanceof Date) return ts;
+            const s = String(ts).trim();
+            // If ISO with timezone or Z, rely on Date
+            if (s.includes('T') && (s.endsWith('Z') || /[\+\-]\d{2}:?\d{2}$/.test(s))) return new Date(s);
+            // If ISO without TZ, treat as UTC by appending Z
+            if (s.includes('T')) return new Date(s + 'Z');
+            // If space separated "YYYY-MM-DD HH:MM:SS", convert to ISO and treat as UTC
+            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(s)) return new Date(s.replace(' ', 'T') + 'Z');
+            // Fallback
+            return new Date(s);
+        };
+        const formatUTC = (dt) => {
+            const y = dt.getUTCFullYear();
+            const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(dt.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+        return items.filter(item => {
+            const ts = getTimestamp(item);
+            if (!ts) return false;
+            const dt = parseToDateUtc(ts);
+            if (isNaN(dt.getTime())) return false;
+            // If the item's UTC date matches any local day in the picker range, include it
+            return daysSetLocal.has(formatUTC(dt));
+        });
     }
 
     getDatesFromPicker() {
@@ -371,45 +427,15 @@ class ReportGenerator {
         switch (this.currentDateRange) {
             case 'weekly':
                 const weekPicker = document.getElementById('weekPicker');
-                console.log('🔍 Weekly case - weekPicker:', weekPicker);
-                console.log('🔍 Weekly case - weekPicker.value:', weekPicker ? weekPicker.value : 'weekPicker not found');
                 if (weekPicker && weekPicker.value) {
                     const [year, week] = weekPicker.value.split('-W');
-                    console.log('🔍 Parsed week values - year:', year, 'week:', week);
-                    console.log('🔍 Week picker raw value:', weekPicker.value);
-                    
-                    // Try to match the calendar widget exactly
-                    // The calendar shows Week 38 as Sept 15-21, Week 39 as Sept 22-28
-                    // This suggests a different week numbering system
-                    
-                    // For 2025, let's manually map the weeks to match the calendar exactly
-                    if (year === '2025') {
-                        if (week === '38') {
-                            startDate = new Date('2025-09-15'); // Monday
-                            endDate = new Date('2025-09-21');   // Sunday
-                        } else if (week === '39') {
-                            startDate = new Date('2025-09-22'); // Monday
-                            endDate = new Date('2025-09-28');   // Sunday
-                        } else {
-                            // Fallback to our calculation for other weeks
                     startDate = this.getWeekStartDate(parseInt(year), parseInt(week));
                     endDate = this.getWeekEndDate(parseInt(year), parseInt(week));
-                        }
                 } else {
-                        // Use our calculation for other years
-                        startDate = this.getWeekStartDate(parseInt(year), parseInt(week));
-                        endDate = this.getWeekEndDate(parseInt(year), parseInt(week));
-                    }
-                    
-                    console.log('🔍 Week calculation - startDate:', startDate.toISOString().split('T')[0], 'endDate:', endDate.toISOString().split('T')[0]);
-                } else {
-                    console.log('🔍 No week picker value, using current week');
-                    // Default to current week (Monday to Sunday)
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - today.getDay() + 1); // Monday
-                    endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + 6); // Sunday
-                    console.log('🔍 Current week calculated - startDate:', startDate.toISOString().split('T')[0], 'endDate:', endDate.toISOString().split('T')[0]);
+                    // Default to current ISO week (Monday-Sunday)
+                    const currentWeek = this.getWeekNumber(today);
+                    startDate = this.getWeekStartDate(today.getFullYear(), currentWeek);
+                    endDate = this.getWeekEndDate(today.getFullYear(), currentWeek);
                 }
                 break;
             case 'monthly':
@@ -477,6 +503,7 @@ class ReportGenerator {
         // Calculate the start of the requested week
         const weekStart = new Date(week1Start);
         weekStart.setDate(week1Start.getDate() + (week - 1) * 7);
+        weekStart.setHours(0, 0, 0, 0); // Ensure local start of day
         
         console.log(`📅 Week ${week}, ${year} starts:`, weekStart.toISOString().split('T')[0]);
         return weekStart;
@@ -486,6 +513,7 @@ class ReportGenerator {
         const weekStart = this.getWeekStartDate(year, week);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999); // End of Sunday local time
         console.log(`📅 Week ${week}, ${year} ends:`, weekEnd.toISOString().split('T')[0]);
         return weekEnd;
     }
@@ -549,92 +577,98 @@ class ReportGenerator {
 
     async loadActivityLogDataWithFilter(page = 1, limit = 25, autoRender = false) {
         try {
-            // Get session token for authentication
             const sessionToken = localStorage.getItem('jwt_token') || 
                                  localStorage.getItem('sessionToken') || 
                                  localStorage.getItem('session_token');
-            
-            if (!sessionToken) {
-                console.error('No session token found');
+            if (!sessionToken) return;
+
+            // Always fetch a larger window from activity logs, then filter + paginate client-side
+            const apiParams = new URLSearchParams({ limit: '1000', offset: '0' });
+            const resp = await fetch(`/api/users/activity-report?${apiParams.toString()}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }
+            });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const json = await resp.json();
+            const rows = Array.isArray(json?.data) ? json.data : [];
+
+            // Normalize from activity logs table
+            const all = rows.map(r => ({
+                logId: r['LOG ID'] ?? r.id ?? '',
+                action: r['ACTION'] ?? r.action ?? '',
+                timestamp: r['TIMESTAMP'] ?? r.timestamp ?? '',
+                timestampRaw: r['TIMESTAMP'] ?? r.timestamp ?? ''
+            }));
+
+            // Date range filter (client-side, inclusive to end-of-day) with daily exact-date handling
+            const { startDate, endDate } = this.getDatesFromPicker();
+            const start = new Date(startDate); start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate); end.setHours(23, 59, 59, 999);
+
+            const formatLocal = (d) => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const da = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${da}`;
+            };
+
+            const isDaily = this.currentDateRange === 'daily';
+            const dailyLocalStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+
+            let filtered;
+            if (isDaily) {
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return formatLocal(d) === dailyLocalStr;
+                });
+            } else if (this.currentDateRange === 'weekly') {
+                // Build set of 7 local date strings from start..end to avoid TZ edge cases
+                const days = new Set();
+                const cur = new Date(start);
+                while (cur <= end) {
+                    const y = cur.getFullYear();
+                    const m = String(cur.getMonth() + 1).padStart(2, '0');
+                    const da = String(cur.getDate()).padStart(2, '0');
+                    days.add(`${y}-${m}-${da}`);
+                    cur.setDate(cur.getDate() + 1);
+                }
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return days.has(formatLocal(d));
+                });
+            } else {
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return d >= start && d <= end;
+                });
+            }
+
+            // Pagination (client-side)
+            this.totalRecords = filtered.length;
+            this.recordsPerPage = parseInt(limit);
+            this.currentPage = parseInt(page);
+            this.totalPages = Math.max(1, Math.ceil(this.totalRecords / this.recordsPerPage));
+            const startIdx = (this.currentPage - 1) * this.recordsPerPage;
+            const pageSlice = filtered.slice(startIdx, startIdx + this.recordsPerPage);
+
+            this.reportData['user-activity'] = pageSlice;
+
+            if (filtered.length === 0) {
+                this.showNoDataState();
                 return;
             }
-
-            // Build query parameters for filtering
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString()
-            });
-
-            // Add date range filtering using picker values
-            const { startDate, endDate } = this.getDatesFromPicker();
-            const startDateStr = startDate.toISOString().split('T')[0];
-            const endDateStr = endDate.toISOString().split('T')[0];
-            params.append('start_date', startDateStr);
-            params.append('end_date', endDateStr);
-            
-            console.log('🔍 Activity Log Date Range Debug:', {
-                currentDateRange: this.currentDateRange,
-                startDate: startDateStr,
-                endDate: endDateStr,
-                weekPickerValue: document.getElementById('weekPicker')?.value,
-                monthPickerValue: document.getElementById('monthPicker')?.value,
-                yearPickerValue: document.getElementById('yearPicker')?.value
-            });
-
-            const response = await fetch(`/api/users/activity-report?${params.toString()}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${sessionToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            console.log('🔍 Activity Log API Response:', result);
-            console.log('🔍 result.success:', result.success);
-            console.log('🔍 result.data:', result.data);
-            console.log('🔍 result.data length:', result.data ? result.data.length : 'data is null/undefined');
-            
-            if (result.success && result.data) {
-                // Check if data is empty
-                if (result.data.length === 0) {
-                    console.log('📊 No data found - calling showNoDataState');
-                    this.showNoDataState();
-                    return;
-                }
                 
-                // Transform the data to match the expected format
-                this.reportData['user-activity'] = result.data.map(log => ({
-                    logId: log['LOG ID'],
-                    action: log['ACTION'],
-                    timestamp: log['TIMESTAMP']
-                }));
-                
-                // Update pagination info
-                if (result.pagination) {
-                    this.currentPage = result.pagination.current_page;
-                    this.totalPages = result.pagination.total_pages;
-                    this.totalRecords = result.pagination.total_records;
-                    this.recordsPerPage = result.pagination.records_per_page;
-                }
-                
-                console.log('Activity log data loaded with filter:', this.reportData['user-activity']);
-                console.log('Pagination info:', result.pagination);
-                console.log('Date range:', this.currentDateRange);
-                
-                // Only render if autoRender is true (for pagination navigation)
-                if (autoRender && this.currentReportType === 'user-activity') {
-                    this.renderActivityLogReport();
-                }
-            } else {
-                console.error('Failed to load activity log data:', result.error);
-                console.log('📊 API call failed - calling showNoDataState');
-                this.showNoDataState();
+            if (autoRender && this.currentReportType === 'user-activity') {
+                this.renderActivityLogReport();
             }
         } catch (error) {
             console.error('Error loading activity log data with filter:', error);
@@ -654,18 +688,8 @@ class ReportGenerator {
                 return;
             }
 
-            // Build query parameters for filtering
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString()
-            });
-
-            // Add date range filtering using picker values
-            const { startDate, endDate } = this.getDatesFromPicker();
-                params.append('start_date', startDate.toISOString().split('T')[0]);
-                params.append('end_date', endDate.toISOString().split('T')[0]);
-
-            const response = await fetch(`/api/users/food-spoilage-report?${params.toString()}`, {
+            // Fetch a larger window and filter on the client similar to Alert Summary
+            const response = await fetch(`/api/users/food-spoilage-report?limit=1000&offset=0`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${sessionToken}`,
@@ -689,7 +713,7 @@ class ReportGenerator {
                 }
                 
                 // Transform the data to match the expected format
-                this.reportData['food-spoilage'] = result.data.map(item => ({
+                const allItems = result.data.map(item => ({
                     foodId: item.foodId || item['FOOD ID'] || '',
                     foodItem: item.foodItem || item['FOOD ITEM'] || '',
                     category: item.category || item['CATEGORY'] || '',
@@ -697,27 +721,22 @@ class ReportGenerator {
                     riskScore: item.riskScore || item['RISK SCORE'] || 0,
                     expiryDate: item.expiryDate || item['EXPIRY DATE'] || '',
                     sensorReadings: item.sensorReadings || item['SENSOR READINGS'] || '',
-                    alertCount: item.alertCount || item['ALERT COUNT'] || 0
+                    alertCount: item.alertCount || item['ALERT COUNT'] || 0,
+                    _rawTs: item.expiryDate || item['EXPIRY DATE'] || item.lastUpdate || item['LAST UPDATE'] || ''
                 }));
-                
-                console.log('🔍 Transformed food spoilage data:', this.reportData['food-spoilage']);
-                
-                // Update pagination info
-                if (result.pagination) {
-                    this.currentPage = result.pagination.current_page;
-                    this.totalPages = result.pagination.total_pages;
-                    this.totalRecords = result.pagination.total_records;
-                    this.recordsPerPage = result.pagination.records_per_page;
-                }
-                
-                console.log('Food spoilage data loaded with filter:', this.reportData['food-spoilage']);
-                console.log('Pagination info:', result.pagination);
-                console.log('Date range:', this.currentDateRange);
-                
-                // Only render if autoRender is true (for pagination navigation)
-                if (autoRender && this.currentReportType === 'food-spoilage') {
-                    this.renderFoodSpoilageReport();
-                }
+                // Client-side UTC date filtering (by expiryDate/lastUpdate when available)
+                const filtered = this.filterItemsByUTCDate(allItems, (it) => it._rawTs);
+
+                // Manual pagination
+                this.totalRecords = filtered.length;
+                this.recordsPerPage = parseInt(limit);
+                this.currentPage = parseInt(page);
+                this.totalPages = Math.max(1, Math.ceil(this.totalRecords / this.recordsPerPage));
+                const startIdx = (this.currentPage - 1) * this.recordsPerPage;
+                this.reportData['food-spoilage'] = filtered.slice(startIdx, startIdx + this.recordsPerPage);
+
+                // Render if requested
+                if (autoRender && this.currentReportType === 'food-spoilage') this.renderFoodSpoilageReport();
             } else {
                 console.error('Failed to load food spoilage data:', result.error);
                 this.showNoDataState();
@@ -735,74 +754,110 @@ class ReportGenerator {
             const sessionToken = localStorage.getItem('jwt_token') || 
                                  localStorage.getItem('sessionToken') || 
                                  localStorage.getItem('session_token');
-            
             if (!sessionToken) {
                 console.error('No session token found');
                 return;
             }
 
-            // Build query parameters for filtering
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString()
-            });
-
-            // Add date range filtering using picker values
-            const { startDate, endDate } = this.getDatesFromPicker();
-                params.append('start_date', startDate.toISOString().split('T')[0]);
-                params.append('end_date', endDate.toISOString().split('T')[0]);
-
-            const response = await fetch(`/api/users/alert-summary-report?${params.toString()}`, {
+            // Always fetch a larger window from alerts table, then filter + paginate client-side
+            const apiParams = new URLSearchParams({ limit: '1000', offset: '0' });
+            const resp = await fetch(`/api/alerts?${apiParams.toString()}`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${sessionToken}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }
             });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const json = await resp.json();
+            const rows = Array.isArray(json?.data) ? json.data : [];
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Normalize from alerts table
+            const normalizeStatus = (val) => {
+                if (val === null || val === undefined) return 'Unresolved';
+                const s = String(val).trim().toLowerCase();
+                if (s === '1' || s === 'true' || s === 'resolved') return 'Resolved';
+                if (s === '0' || s === 'false' || s === 'active' || s === 'unresolved') return 'Unresolved';
+                return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Unresolved';
+            };
+
+            const all = rows.map(r => ({
+                alertId: r.alert_id,
+                alertType: r.alert_type, // from alerts table
+                severity: r.alert_level,
+                location: r.food_name || 'Unknown Location', // join provided by backend
+                message: r.message,
+                timestamp: (r.timestamp ? new Date(r.timestamp).toLocaleString() : ''),
+                timestampRaw: r.timestamp,
+                status: normalizeStatus(r.is_resolved)
+            }));
+
+            // Date range filter (client-side, inclusive to end-of-day) with daily exact-date handling
+            const { startDate, endDate } = this.getDatesFromPicker();
+            const start = new Date(startDate); start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate); end.setHours(23, 59, 59, 999);
+
+            const formatUTC = (d) => {
+                const y = d.getUTCFullYear();
+                const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+                const da = String(d.getUTCDate()).padStart(2, '0');
+                return `${y}-${m}-${da}`;
+            };
+
+            const isDaily = this.currentDateRange === 'daily';
+            const dailyUTCStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+
+            let filtered;
+            if (isDaily) {
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return formatUTC(d) === dailyUTCStr;
+                });
+            } else if (this.currentDateRange === 'weekly') {
+                // Build set of 7 local date strings from start..end to avoid TZ edge cases
+                const days = new Set();
+                const cur = new Date(start);
+                while (cur <= end) {
+                    const y = cur.getFullYear();
+                    const m = String(cur.getMonth() + 1).padStart(2, '0');
+                    const da = String(cur.getDate()).padStart(2, '0');
+                    days.add(`${y}-${m}-${da}`);
+                    cur.setDate(cur.getDate() + 1);
+                }
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return days.has(formatLocal(d));
+                });
+            } else {
+                filtered = all.filter(item => {
+                    const ts = item.timestampRaw || item.timestamp;
+                    if (!ts) return false;
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return false;
+                    return d >= start && d <= end;
+                });
             }
 
-            const result = await response.json();
-            
-            if (result.success && result.data) {
-                // Check if data is empty
-                if (result.data.length === 0) {
+            // Pagination (client-side)
+            this.totalRecords = filtered.length;
+            this.recordsPerPage = parseInt(limit);
+            this.currentPage = parseInt(page);
+            this.totalPages = Math.max(1, Math.ceil(this.totalRecords / this.recordsPerPage));
+            const startIdx = (this.currentPage - 1) * this.recordsPerPage;
+            const pageSlice = filtered.slice(startIdx, startIdx + this.recordsPerPage);
+
+            this.reportData['alert-summary'] = pageSlice;
+
+            if (filtered.length === 0) {
                     this.showNoDataState();
                     return;
                 }
                 
-                // Transform the data to match the expected format
-                this.reportData['alert-summary'] = result.data.map(item => ({
-                    alertId: item['ALERT ID'],
-                    alertType: item['ALERT TYPE'],
-                    severity: item['SEVERITY'],
-                    location: item['LOCATION'],
-                    message: item['MESSAGE'],
-                    timestamp: item['TIMESTAMP'],
-                    status: item['STATUS']
-                }));
-                
-                // Update pagination info
-                if (result.pagination) {
-                    this.currentPage = result.pagination.current_page;
-                    this.totalPages = result.pagination.total_pages;
-                    this.totalRecords = result.pagination.total_records;
-                    this.recordsPerPage = result.pagination.records_per_page;
-                }
-                
-                console.log('Alert summary data loaded with filter:', this.reportData['alert-summary']);
-                console.log('Pagination info:', result.pagination);
-                console.log('Date range:', this.currentDateRange);
-                
-                // Only render if autoRender is true (for pagination navigation)
                 if (autoRender && this.currentReportType === 'alert-summary') {
                     this.renderAlertSummaryReport();
-                }
-            } else {
-                console.error('Failed to load alert summary data:', result.error);
-                this.showNoDataState();
             }
         } catch (error) {
             console.error('Error loading alert summary data with filter:', error);
@@ -1187,19 +1242,22 @@ class ReportGenerator {
     updateDefaultPickersWithActualData() {
         if (!this.actualDateRange) return;
 
-        // Update week picker
+        // Update week picker (use current ISO week, not DB week to avoid drift)
         const weekPicker = document.getElementById('weekPicker');
         if (weekPicker && !weekPicker.value) {
             this.isSettingDefaultValue = true;
-            weekPicker.value = `${this.actualDateRange.year}-W${this.actualDateRange.week.toString().padStart(2, '0')}`;
+            const today = new Date();
+            const wk = this.getWeekNumber(today);
+            weekPicker.value = `${today.getFullYear()}-W${wk.toString().padStart(2, '0')}`;
             this.isSettingDefaultValue = false;
         }
 
-        // Update month picker
+        // Update month picker (use current month)
         const monthPicker = document.getElementById('monthPicker');
         if (monthPicker && !monthPicker.value) {
             this.isSettingDefaultValue = true;
-            monthPicker.value = `${this.actualDateRange.year}-${this.actualDateRange.month.toString().padStart(2, '0')}`;
+            const today = new Date();
+            monthPicker.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
             this.isSettingDefaultValue = false;
         }
 
@@ -1499,7 +1557,7 @@ class ReportGenerator {
                     <td><span class="severity-badge ${item.severity.toLowerCase()}">${item.severity}</span></td>
                     <td>${item.location}</td>
                     <td>${item.message}</td>
-                    <td>${item.timestamp}</td>
+                    <td>${item.timestampRaw ? new Date(item.timestampRaw).toLocaleString() : (item.timestamp || '')}</td>
                     <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
                 `;
             default:

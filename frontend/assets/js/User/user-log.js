@@ -111,44 +111,21 @@ window.initUserLogPage = function() {
           const [year, week] = weekPicker.value.split('-W');
           console.log('🔍 Parsed week values - year:', year, 'week:', week);
           
-          // Try to match the calendar widget exactly
-          // The calendar shows Week 38 as Sept 15-21, Week 39 as Sept 22-28
-          // This suggests a different week numbering system
+          // Use dynamic week calculation that matches the HTML5 week input behavior
+          const weekStart = getWeekStartFromWeekNumber(parseInt(year), parseInt(week));
+          const weekEnd = getWeekEndFromWeekNumber(parseInt(year), parseInt(week));
           
-          // For 2025, let's manually map the weeks to match the calendar exactly
-          if (year === '2025') {
-            if (week === '38') {
-              const weekStart = new Date('2025-09-15'); // Monday
-              const weekEnd = new Date('2025-09-21');   // Sunday
-              return {
-                startDate: weekStart.toISOString().split('T')[0],
-                endDate: weekEnd.toISOString().split('T')[0]
-              };
-            } else if (week === '39') {
-              const weekStart = new Date('2025-09-22'); // Monday
-              const weekEnd = new Date('2025-09-28');   // Sunday
-              return {
-                startDate: weekStart.toISOString().split('T')[0],
-                endDate: weekEnd.toISOString().split('T')[0]
-              };
-            } else {
-              // Fallback to our calculation for other weeks
-              const weekStart = getWeekStartFromWeekNumber(parseInt(year), parseInt(week));
-              const weekEnd = getWeekEndFromWeekNumber(parseInt(year), parseInt(week));
-              return {
-                startDate: weekStart.toISOString().split('T')[0],
-                endDate: weekEnd.toISOString().split('T')[0]
-              };
-            }
-          } else {
-            // Use our calculation for other years
-            const weekStart = getWeekStartFromWeekNumber(parseInt(year), parseInt(week));
-            const weekEnd = getWeekEndFromWeekNumber(parseInt(year), parseInt(week));
-            return {
-              startDate: weekStart.toISOString().split('T')[0],
-              endDate: weekEnd.toISOString().split('T')[0]
-            };
-          }
+          console.log('🔍 Calculated week range:', {
+            week: week,
+            year: year,
+            start: weekStart.toISOString().split('T')[0],
+            end: weekEnd.toISOString().split('T')[0]
+          });
+          
+          return {
+            startDate: weekStart.toISOString().split('T')[0],
+            endDate: weekEnd.toISOString().split('T')[0]
+          };
         } else {
           // Default to current week
           const startOfWeek = new Date(today);
@@ -212,15 +189,20 @@ window.initUserLogPage = function() {
     }
   }
 
-  // Week calculation helper functions - matching report generator logic
+  // Week calculation helper functions - matching HTML5 week input behavior
   function getWeekStartFromWeekNumber(year, weekNumber) {
-    // ISO week calculation that matches the calendar widget
-    // January 4th is always in week 1 of the year
+    // HTML5 week input uses ISO 8601 week numbering
+    // Week 1 is the first week with at least 4 days in the new year
+    // Monday is the first day of the week
+    
+    // Create a date for January 4th of the year (always in week 1)
     const jan4 = new Date(year, 0, 4);
     const jan4Day = jan4.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToMonday = jan4Day === 0 ? 6 : jan4Day - 1; // Days to get to Monday
     
-    // Calculate the start of week 1
+    // Calculate days to get to Monday (start of week)
+    const daysToMonday = jan4Day === 0 ? 6 : jan4Day - 1;
+    
+    // Calculate the start of week 1 (Monday of the week containing Jan 4)
     const week1Start = new Date(jan4);
     week1Start.setDate(jan4.getDate() - daysToMonday);
     
@@ -235,7 +217,7 @@ window.initUserLogPage = function() {
   function getWeekEndFromWeekNumber(year, weekNumber) {
     const weekStart = getWeekStartFromWeekNumber(year, weekNumber);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setDate(weekStart.getDate() + 6); // Sunday
     console.log(`📅 Week ${weekNumber}, ${year} ends:`, weekEnd.toISOString().split('T')[0]);
     return weekEnd;
   }
@@ -324,11 +306,27 @@ window.initUserLogPage = function() {
     if (weekPicker && !weekPicker.value) {
       const today = new Date();
       const year = today.getFullYear();
-      // Set default to week 38 instead of current week
-      const week = 38;
+      // Calculate current ISO week number
+      const week = getISOWeekNumber(today);
       weekPicker.value = `${year}-W${week.toString().padStart(2, '0')}`;
       console.log('📅 Set default week picker to:', weekPicker.value);
     }
+  }
+
+  // Get ISO week number for a date
+  function getISOWeekNumber(date) {
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    
+    // Thursday in current week decides the year
+    target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
+    
+    // January 4th is always in week 1
+    const week1 = new Date(target.getFullYear(), 0, 4);
+    
+    // Calculate week number
+    const weekNumber = 1 + Math.round(((target.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+    return weekNumber;
   }
 
   function setDefaultMonthPicker() {
@@ -358,32 +356,20 @@ window.initUserLogPage = function() {
     return Math.max(1, weekNumber);
   }
 
-  // Fetch user log data from backend
+  // Fetch user log data from backend with client-side filtering
   function fetchUserLogs(page = 1, filters = {}) {
     console.log('Fetching user logs for user ID:', currentUserId, 'Page:', page, 'Filters:', filters);
     
-    // Calculate date range based on selection
-    const dateRange = getDateRange(filters.date_range || 'daily');
-    const finalFilters = {
-      ...filters,
-      start_date: dateRange.startDate,
-      end_date: dateRange.endDate
-    };
-    
-    // Build query parameters
-    const params = new URLSearchParams({
-      page: page,
-      limit: recordsPerPage,
-      ...finalFilters
-    });
+    // Always fetch a larger window from user logs, then filter + paginate client-side
+    const apiParams = new URLSearchParams({ limit: '1000', offset: '0' });
     
     // Prefer central API config if available
     let apiUrl;
     if (typeof window !== 'undefined' && window.buildApiUrl) {
       const base = window.buildApiUrl('/api/users/logs');
-      apiUrl = `${base}?${params.toString()}`;
+      apiUrl = `${base}?${apiParams.toString()}`;
     } else {
-      apiUrl = `http://localhost:3000/api/users/logs?${params.toString()}`;
+      apiUrl = `http://localhost:3000/api/users/logs?${apiParams.toString()}`;
     }
     console.log('API URL:', apiUrl);
     
@@ -428,23 +414,29 @@ window.initUserLogPage = function() {
           return;
         }
         
-        // Update pagination info
-        currentPage = data.pagination.current_page;
-        totalPages = data.pagination.total_pages;
-        totalRecords = data.pagination.total_records;
-        recordsPerPage = data.pagination.records_per_page;
+        // Get all data from response
+        const allData = Array.isArray(data.data) ? data.data : [];
+        console.log('All user log data:', allData);
         
-        // Update filters
-        currentFilters = data.filters || currentFilters;
+        // Apply client-side filtering
+        const filteredData = applyClientSideFilters(allData, filters);
+        console.log('Filtered user log data:', filteredData);
         
-        // Update data
-        userLogData = Array.isArray(data.data) ? data.data : [];
+        // Update pagination info based on filtered data
+        totalRecords = filteredData.length;
+        totalPages = Math.max(1, Math.ceil(totalRecords / recordsPerPage));
+        currentPage = Math.min(page, totalPages);
+        
+        // Get page slice
+        const startIdx = (currentPage - 1) * recordsPerPage;
+        const endIdx = startIdx + recordsPerPage;
+        userLogData = filteredData.slice(startIdx, endIdx);
+        
         console.log('User log data set:', userLogData);
         
         // Render table and pagination
         renderTable(userLogData);
         renderPagination();
-        // Don't call updateFilterDisplay() here to prevent loops
       })
       .catch(error => {
         console.error('Error fetching log data:', error);
@@ -454,6 +446,118 @@ window.initUserLogPage = function() {
           tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ff6b6b;">Error loading data: ${error.message}</td></tr>`;
         }
       });
+  }
+
+  // Apply client-side filtering to user log data using actual table timestamps
+  function applyClientSideFilters(data, filters) {
+    let filtered = [...data];
+    
+    // Filter by action type
+    if (filters.action_type && filters.action_type !== 'all') {
+      const actionType = filters.action_type.toLowerCase();
+      filtered = filtered.filter(item => {
+        const activity = (item.activity || '').toLowerCase();
+        const details = (item.details || '').toLowerCase();
+        
+        switch (actionType) {
+          case 'login':
+            return activity === 'login' || activity === 'session' || details.includes('login');
+          case 'logout':
+            return activity === 'logout' || details.includes('logout');
+          case 'add':
+            return details.includes('add') || details.includes('created') || details.includes('added');
+          case 'update':
+            return details.includes('update') || details.includes('edit') || details.includes('changed') || details.includes('updated');
+          case 'delete':
+            return details.includes('delete') || details.includes('deleted');
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Filter by date range using actual table timestamps
+    const dateRange = getDateRange(filters.date_range || 'daily');
+    if (dateRange.startDate && dateRange.endDate) {
+      const start = new Date(dateRange.startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(dateRange.endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      // Extract date from table timestamp format (e.g., "2025-09-23 07:23:25 +08:00")
+      const extractDateFromTimestamp = (timestamp) => {
+        if (!timestamp) return null;
+        
+        // Handle different timestamp formats
+        let dateStr = timestamp.toString();
+        
+        // If it's in format "2025-09-23 07:23:25 +08:00", extract just the date part
+        if (dateStr.includes(' ')) {
+          dateStr = dateStr.split(' ')[0]; // Get "2025-09-23"
+        }
+        
+        // If it's in format "2025-09-23T07:23:25+08:00", extract just the date part
+        if (dateStr.includes('T')) {
+          dateStr = dateStr.split('T')[0]; // Get "2025-09-23"
+        }
+        
+        return dateStr;
+      };
+      
+      const isDaily = filters.date_range === 'daily';
+      const targetDateStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+      
+      console.log('🔍 Filtering for date range:', filters.date_range);
+      console.log('🔍 Target date string:', targetDateStr);
+      console.log('🔍 Start date:', start.toISOString().split('T')[0]);
+      console.log('🔍 End date:', end.toISOString().split('T')[0]);
+      
+      if (isDaily) {
+        filtered = filtered.filter(item => {
+          const ts = item.date_time || item.timestamp;
+          if (!ts) return false;
+          
+          const itemDateStr = extractDateFromTimestamp(ts);
+          console.log('🔍 Item timestamp:', ts, '-> Extracted date:', itemDateStr);
+          
+          return itemDateStr === targetDateStr;
+        });
+      } else if (filters.date_range === 'weekly') {
+        // Build set of 7 date strings from start..end
+        const targetDates = new Set();
+        const cur = new Date(start);
+        while (cur <= end) {
+          const y = cur.getFullYear();
+          const m = String(cur.getMonth() + 1).padStart(2, '0');
+          const da = String(cur.getDate()).padStart(2, '0');
+          targetDates.add(`${y}-${m}-${da}`);
+          cur.setDate(cur.getDate() + 1);
+        }
+        
+        filtered = filtered.filter(item => {
+          const ts = item.date_time || item.timestamp;
+          if (!ts) return false;
+          
+          const itemDateStr = extractDateFromTimestamp(ts);
+          return targetDates.has(itemDateStr);
+        });
+      } else {
+        // For monthly, yearly, and custom ranges - use date string comparison
+        const startDateStr = start.toISOString().split('T')[0];
+        const endDateStr = end.toISOString().split('T')[0];
+        
+        filtered = filtered.filter(item => {
+          const ts = item.date_time || item.timestamp;
+          if (!ts) return false;
+          
+          const itemDateStr = extractDateFromTimestamp(ts);
+          return itemDateStr >= startDateStr && itemDateStr <= endDateStr;
+        });
+      }
+    }
+    
+    console.log('🔍 Filtered data count:', filtered.length);
+    return filtered;
   }
 
   function renderTable(data) {
@@ -642,8 +746,57 @@ window.initUserLogPage = function() {
       });
     }
     
+    // Add real-time event listener for week picker changes
+    if (weekPicker) {
+      weekPicker.addEventListener('change', function() {
+        console.log('🔍 Week picker changed to:', this.value);
+        // Update the calendar highlighting in real-time
+        updateCalendarHighlighting();
+      });
+    }
+    
+    // Add real-time event listener for month picker changes
+    if (monthPicker) {
+      monthPicker.addEventListener('change', function() {
+        console.log('🔍 Month picker changed to:', this.value);
+        // Update the calendar highlighting in real-time
+        updateCalendarHighlighting();
+      });
+    }
+    
+    // Add real-time event listener for year picker changes
+    if (yearPicker) {
+      yearPicker.addEventListener('change', function() {
+        console.log('🔍 Year picker changed to:', this.value);
+        // Update the calendar highlighting in real-time
+        updateCalendarHighlighting();
+      });
+    }
+    
     // No auto-apply filters - user must click filter button to fetch data
     console.log('🔍 Filter controls ready. Click "Apply Filters" to load data.');
+  }
+
+  // Update calendar highlighting in real-time
+  function updateCalendarHighlighting() {
+    console.log('🔍 Updating calendar highlighting...');
+    
+    // Get current date range selection
+    const dateRangeSelect = document.getElementById('userLogDateRange');
+    const dateRange = dateRangeSelect ? dateRangeSelect.value : 'daily';
+    
+    // Calculate the date range based on current selection
+    const dateRangeData = getDateRange(dateRange);
+    
+    console.log('🔍 Calendar highlighting for:', {
+      dateRange: dateRange,
+      startDate: dateRangeData.startDate,
+      endDate: dateRangeData.endDate
+    });
+    
+    // The HTML5 week/month/year inputs handle their own highlighting
+    // This function is here for future enhancements if needed
+    // For now, the browser's native highlighting should work correctly
   }
 
   // Global function for pagination (accessible from HTML)
@@ -734,6 +887,46 @@ window.initUserLogPage = function() {
 
   // Show initial empty state
   showInitialEmptyState();
+  
+  // Set up global refresh function for external components
+  window.refreshUserLogs = function() {
+    console.log('🔄 External refresh requested for User Logs');
+    if (currentFilters && Object.keys(currentFilters).length > 0) {
+      // Only refresh if filters are already applied
+      fetchUserLogs(currentPage, currentFilters);
+    }
+  };
+  
+  // Listen for custom events that might indicate data changes
+  document.addEventListener('alertResolved', function(event) {
+    console.log('🔔 Alert resolved event received, refreshing User Logs');
+    window.refreshUserLogs();
+  });
+  
+  document.addEventListener('dataUpdated', function(event) {
+    console.log('🔔 Data updated event received, refreshing User Logs');
+    window.refreshUserLogs();
+  });
+  
+  // Listen for storage changes (when data is updated in other tabs/components)
+  window.addEventListener('storage', function(event) {
+    if (event.key === 'userLogsUpdated' || event.key === 'alertsUpdated') {
+      console.log('🔔 Storage change detected, refreshing User Logs');
+      window.refreshUserLogs();
+    }
+  });
+  
+  // Listen for clicks on "Mark Resolved" buttons in device alerts
+  document.addEventListener('click', function(event) {
+    // Check if the clicked element is a "Mark Resolved" button
+    if (event.target && event.target.textContent && event.target.textContent.includes('Mark Resolved')) {
+      console.log('🔔 Mark Resolved button clicked, refreshing User Logs');
+      // Add a small delay to allow the alert resolution to complete
+      setTimeout(() => {
+        window.refreshUserLogs();
+      }, 1000);
+    }
+  });
   
   // No auto-fetch - user must click filter button to load data
   console.log('📋 User Log page initialized. Click "Apply Filters" to load data.');

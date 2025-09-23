@@ -2,6 +2,9 @@
 
 // Global variables for chart data
 let currentFilter = 'monthly';
+const REALTIME_CHART_ENABLED = true;
+const REALTIME_REFRESH_MS = 10000; // 10s
+let activityChartIntervalId = null;
 let chartData = {
   monthly: [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0], // September = 2 devices
   yearly: [0, 0, 0, 0, 0, 2] // 2025 = 2 devices
@@ -84,6 +87,37 @@ async function loadSensorData() {
     } else if (currentFilter === 'yearly') {
       chartData.yearly = [0, 0, 0, 0, 0, 2]; // 2025 = 2 devices
     }
+  }
+}
+
+async function loadActivityCounts() {
+  try {
+    const token = localStorage.getItem('jwt_token') || 
+                  localStorage.getItem('sessionToken') || 
+                  localStorage.getItem('session_token');
+    const elToday = document.getElementById('count-today');
+    const el7d = document.getElementById('count-7d');
+    const el30d = document.getElementById('count-30d');
+    if (!elToday || !el7d || !el30d) return;
+
+    if (!token) {
+      elToday.textContent = 'Today: 0';
+      el7d.textContent = 'Last 7d: 0';
+      el30d.textContent = 'Last 30d: 0';
+      return;
+    }
+
+    const resp = await fetch('/api/sensor/activity-counts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error('counts fetch failed');
+    const json = await resp.json();
+    const c = json?.counts || { today: 0, last7d: 0, last30d: 0 };
+    elToday.textContent = `Today: ${c.today || 0}`;
+    el7d.textContent = `Last 7d: ${c.last7d || 0}`;
+    el30d.textContent = `Last 30d: ${c.last30d || 0}`;
+  } catch (e) {
+    console.log('Failed to load activity counts:', e.message);
   }
 }
 
@@ -230,6 +264,38 @@ function initializeActivityChart() {
   });
 }
 
+function startRealtimeActivityUpdates() {
+  if (!REALTIME_CHART_ENABLED) return;
+  const canvas = document.getElementById('activityChart');
+  if (!canvas) return;
+  if (activityChartIntervalId) return; // already running
+
+  activityChartIntervalId = setInterval(async () => {
+    // Do nothing if page is hidden to save resources
+    if (document.hidden) return;
+    await loadSensorData();
+    await loadActivityCounts();
+    initializeActivityChart();
+  }, REALTIME_REFRESH_MS);
+}
+
+function stopRealtimeActivityUpdates() {
+  if (activityChartIntervalId) {
+    clearInterval(activityChartIntervalId);
+    activityChartIntervalId = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  // Pause when hidden, resume when visible (if dashboard canvas exists)
+  if (document.hidden) {
+    stopRealtimeActivityUpdates();
+  } else {
+    const canvas = document.getElementById('activityChart');
+    if (canvas) startRealtimeActivityUpdates();
+  }
+});
+
 // Function to update chart when filter changes
 async function updateChartWithFilter(filter) {
   currentFilter = filter;
@@ -256,8 +322,9 @@ document.addEventListener('click', (event) => {
 function initializeChartOnLoad() {
   const canvas = document.getElementById('activityChart');
   if (canvas) {
-    loadSensorData().then(() => {
+    Promise.all([loadSensorData(), loadActivityCounts()]).then(() => {
       initializeActivityChart();
+      startRealtimeActivityUpdates();
     });
   }
 }
@@ -267,3 +334,15 @@ document.addEventListener('DOMContentLoaded', initializeChartOnLoad);
 
 // Also listen for custom events when dashboard is loaded via SPA
 document.addEventListener('dashboardLoaded', initializeChartOnLoad);
+
+// Handle SPA navigation to stop/start polling appropriately
+window.addEventListener('spa:navigate:after', (e) => {
+  const to = (e && e.detail && e.detail.to) || '';
+  if (to === 'dashboard') {
+    // Start if on dashboard and canvas exists
+    initializeChartOnLoad();
+  } else {
+    // Stop when leaving dashboard
+    stopRealtimeActivityUpdates();
+  }
+});
