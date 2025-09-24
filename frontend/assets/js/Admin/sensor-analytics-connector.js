@@ -37,14 +37,8 @@ class SensorAnalyticsConnector {
             }
         });
 
-        // Filter inputs
-        const nameSearch = document.getElementById('nameSearch');
-        if (nameSearch) {
-            nameSearch.addEventListener('input', this.debounce(async (e) => {
-                const searchTerm = e.target.value;
-                await this.handleNameSearch(searchTerm);
-            }, 300));
-        }
+        // Filter inputs (no auto-apply)
+        // Name search will be used only when Filter is clicked
 
         // Date range filter
         const dateRange = document.getElementById('dateRange');
@@ -56,80 +50,34 @@ class SensorAnalyticsConnector {
 
         // Week picker
         const weekPicker = document.getElementById('analyticsWeekPicker');
-        if (weekPicker) {
-            weekPicker.addEventListener('change', async () => {
-                if (document.getElementById('dateRange').value === 'weekly') {
-                    await this.applyFilters();
-                }
-            });
-        }
+        // Do not auto-apply on week change
 
         // Month picker
         const monthPicker = document.getElementById('analyticsMonthPicker');
-        if (monthPicker) {
-            monthPicker.addEventListener('change', async () => {
-                if (document.getElementById('dateRange').value === 'monthly') {
-                    await this.applyFilters();
-                }
-            });
-        }
+        // Do not auto-apply on month change
 
         // Year picker
         const yearPicker = document.getElementById('analyticsYearPicker');
-        if (yearPicker) {
-            yearPicker.addEventListener('change', async () => {
-                if (document.getElementById('dateRange').value === 'yearly') {
-                    await this.applyFilters();
-                }
-            });
-        }
+        // Do not auto-apply on year change
 
         // Custom date inputs
         const startDate = document.getElementById('startDate');
-        if (startDate) {
-            startDate.addEventListener('change', async () => {
-                if (document.getElementById('dateRange').value === 'custom') {
-                    await this.applyFilters();
-                }
-            });
-        }
+        // Do not auto-apply on custom start date
 
         const endDate = document.getElementById('endDate');
-        if (endDate) {
-            endDate.addEventListener('change', async () => {
-                if (document.getElementById('dateRange').value === 'custom') {
-                    await this.applyFilters();
-                }
-            });
-        }
+        // Do not auto-apply on custom end date
 
         const testerType = document.getElementById('testerType');
-        if (testerType) {
-            testerType.addEventListener('change', async (e) => {
-                await this.handleFilterChange('testerType', e.target.value);
-            });
-        }
+        // Do not auto-apply on tester type change
 
         const sensorType = document.getElementById('sensorType');
-        if (sensorType) {
-            sensorType.addEventListener('change', async (e) => {
-                await this.handleFilterChange('sensorType', e.target.value);
-            });
-        }
+        // sensorType removed
 
         const foodType = document.getElementById('foodType');
-        if (foodType) {
-            foodType.addEventListener('change', async (e) => {
-                await this.handleFilterChange('foodType', e.target.value);
-            });
-        }
+        // foodType removed
 
         const status = document.getElementById('status');
-        if (status) {
-            status.addEventListener('change', async (e) => {
-                await this.handleFilterChange('status', e.target.value);
-            });
-        }
+        // Do not auto-apply on status change
 
         // Records per page selector (optional if present in DOM)
         const rpp = document.getElementById('recordsPerPage');
@@ -439,8 +387,12 @@ class SensorAnalyticsConnector {
         // Clear existing content
         tableBody.innerHTML = '';
 
-        // Empty state with icon when there's no data
+        // Empty state: show the container with an empty message; hide pagination
         if (!data || data.length === 0) {
+            const tableCard = document.querySelector('.detailed-report-table-card');
+            if (tableCard) tableCard.style.display = '';
+            const paginationWrap = document.getElementById('analyticsPagination');
+            if (paginationWrap) paginationWrap.style.display = 'none';
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="6" class="empty-state">
@@ -452,10 +404,15 @@ class SensorAnalyticsConnector {
                     </td>
                 </tr>
             `;
-            // Update pagination UI
+            // Update pagination total and controls
             this.pagination.total = 0;
             this.renderPagination();
             return;
+        } else {
+            const tableCard = document.querySelector('.detailed-report-table-card');
+            if (tableCard) tableCard.style.display = '';
+            const paginationWrap = document.getElementById('analyticsPagination');
+            if (paginationWrap) paginationWrap.style.display = '';
         }
 
         // Update pagination total
@@ -474,11 +431,12 @@ class SensorAnalyticsConnector {
         
         // Format last ping time
             const lastPing = item.lastPing ? new Date(item.lastPing) : null;
-            const timeAgo = lastPing ? this.getTimeAgo(lastPing) : 'Never';
+            const timeAgo = lastPing ? this.getTimeAgo(lastPing) : 'No activity yet';
             const pingClass = this.getPingClass(lastPing);
             
-            // Status represents sensor activity only (Active/Inactive). Alerts are separate.
-            const statusText = (item.status === 'Inactive') ? 'Inactive' : 'Active';
+            // Status is derived from reading presence: Active if has reading, else Inactive
+            const hasReading = !!(item.lastReading && /[0-9]/.test(String(item.lastReading)));
+            const statusText = hasReading ? 'Active' : 'Inactive';
             let statusModifier = statusText.toLowerCase(); // active | inactive
             
             // Format alerts badge
@@ -811,7 +769,7 @@ class SensorAnalyticsConnector {
 
     // Utility functions
     getTimeAgo(date) {
-        if (!date) return 'Never';
+        if (!date) return 'No activity yet';
 
         const now = new Date();
         const diffMs = now - date;
@@ -839,7 +797,7 @@ class SensorAnalyticsConnector {
     }
 
     formatDate(date) {
-        if (!date) return 'Unknown';
+        if (!date) return 'No ping yet';
         
         const d = new Date(date);
         return d.toLocaleDateString('en-US', {
@@ -1033,37 +991,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('mlSamplesTableBody not found in DOM');
                         return;
                     }
-                    tbody.innerHTML = '';
-                    const rows = json.success ? (Array.isArray(json.data) ? json.data : []) : [];
-                    if (countSpan) countSpan.textContent = rows.length;
-                    
-                    if (rows.length === 0) {
-                        const tr = document.createElement('tr');
-                        const td = document.createElement('td');
-                        td.colSpan = 6; 
-                        td.innerHTML = `
-                            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:28px 0;color:#bfc9da;">
-                                <div style="font-size:46px;line-height:1;opacity:0.8;">📊</div>
-                                <div>No training data</div>
-                            </div>
-                        `;
-                        tr.appendChild(td); tbody.appendChild(tr); 
-                        return;
-                    }
-                    
-                    rows.forEach(r => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${r.food_name || ''}<div style="color:#9fb2e6;font-size:12px;">${r.food_category||''}</div></td>
-                            <td>🌡️ ${r.temperature}°C &nbsp; 💧 ${r.humidity}% &nbsp; 🧪 ${r.gas_level} ppm</td>
-                            <td><span class="ml-badge ${String(r.actual_spoilage_status).toLowerCase()}">${String(r.actual_spoilage_status).toUpperCase()}</span></td>
-                            <td><div class="ml-progress"><span style="width:${Math.round((r.quality_score||0)*100)}%"></span></div></td>
-                            <td>${(r.data_source||'').toUpperCase()}</td>
-                            <td>${new Date(r.created_at).toLocaleDateString()}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                    console.log(`Loaded ${rows.length} training samples`);
+                    // Store and render with pagination
+                    const allRows = json.success ? (Array.isArray(json.data) ? json.data : []) : [];
+                    this._samplesAll = allRows;
+                    this._samplesPage = this._samplesPage || 1;
+                    this._samplesPageSize = this._samplesPageSize || 10;
+                    if (countSpan) countSpan.textContent = allRows.length;
+                    this._renderSamplesPage();
+                    console.log(`Loaded ${allRows.length} training samples`);
                 } catch (e) { 
                     console.error('ML samples load failed', e);
                     const tbody = document.getElementById('mlSamplesTableBody');
@@ -1076,6 +1011,62 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             },
+            _renderSamplesPage(){
+                const tbody = document.getElementById('mlSamplesTableBody');
+                const pag = document.getElementById('mlSamplesPagination');
+                const info = document.getElementById('mlSamplesPageInfo');
+                const ctrls = document.getElementById('mlSamplesPageControls');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const rows = Array.isArray(this._samplesAll) ? this._samplesAll : [];
+                const total = rows.length;
+                if (total === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 6; 
+                    td.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:28px 0;color:#bfc9da;"><div style="font-size:46px;line-height:1;opacity:0.8;">📊</div><div>No training data</div></div>`;
+                    tr.appendChild(td); tbody.appendChild(tr);
+                    if (pag) pag.style.display = 'none';
+                    return;
+                }
+                const size = this._samplesPageSize || 10;
+                const page = Math.max(1, Math.min(this._samplesPage || 1, Math.ceil(total/size)));
+                const start = (page-1)*size;
+                const end = Math.min(start+size, total);
+                const slice = rows.slice(start, end);
+                slice.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.food_name || ''}<div style="color:#9fb2e6;font-size:12px;">${r.food_category||''}</div></td>
+                        <td>🌡️ ${r.temperature}°C &nbsp; 💧 ${r.humidity}% &nbsp; 🧪 ${r.gas_level} ppm</td>
+                        <td><span class="ml-badge ${String(r.actual_spoilage_status).toLowerCase()}">${String(r.actual_spoilage_status).toUpperCase()}</span></td>
+                        <td><div class="ml-progress"><span style="width:${Math.round((r.quality_score||0)*100)}%"></span></div></td>
+                        <td>${(r.data_source||'').toUpperCase()}</td>
+                        <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                if (pag && info && ctrls) {
+                    pag.style.display = '';
+                    info.textContent = `Showing ${start+1} to ${end} of ${total} records`;
+                    ctrls.innerHTML = '';
+                    const totalPages = Math.max(1, Math.ceil(total/size));
+                    const makeBtn = (label, p, disabled=false, active=false) => {
+                        const b = document.createElement('button');
+                        b.className = 'pagination-btn' + (active?' active':'');
+                        b.textContent = label;
+                        b.disabled = disabled;
+                        b.onclick = () => { if (p!==page){ this._samplesPage=p; this._renderSamplesPage(); }};
+                        return b;
+                    };
+                    if (page>1) ctrls.appendChild(makeBtn('‹ Prev', page-1));
+                    for (let i=1;i<=totalPages;i++){
+                        if (i===1 || i===totalPages || (i>=page-2 && i<=page+2)) ctrls.appendChild(makeBtn(String(i), i, false, i===page));
+                        else if (i===page-3 || i===page+3){ const s=document.createElement('span'); s.className='pagination-ellipsis'; s.textContent='...'; ctrls.appendChild(s);} 
+                    }
+                    if (page<totalPages) ctrls.appendChild(makeBtn('Next ›', page+1));
+                }
+            },
             _authHeaders(){
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
                 return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -1085,8 +1076,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (retrain) retrain.addEventListener('click', ()=> alert('Retrain endpoint to be wired'));
                 const exportBtn = document.getElementById('mlExport');
                 if (exportBtn) exportBtn.addEventListener('click', ()=> alert('Export coming soon'));
+
+                // Normalize text inputs to Sample Case (Title Case) on blur
+                const toSampleCase = (s) => {
+                    if (!s) return '';
+                    return String(s).replace(/[A-Za-zÀ-ÖØ-öø-ÿ]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+                };
+                const foodName = document.getElementById('mlFoodName');
+                if (foodName) {
+                    foodName.addEventListener('blur', () => { foodName.value = toSampleCase(foodName.value.trim()); });
+                }
+                const category = document.getElementById('mlCategory');
+                if (category) {
+                    category.addEventListener('blur', () => { category.value = toSampleCase(category.value.trim()); });
+                }
             },
             loadDetail(){ /* placeholder */ }
+        };
+    }
+    // Global helper to refresh ML tables/kpis after adding data
+    if (!window.refreshMlData) {
+        window.refreshMlData = async function() {
+            try {
+                if (window.mlPredictionsManager && window.mlPredictionsManager._loadSamples) {
+                    await window.mlPredictionsManager._loadSamples();
+                }
+                if (window.mlPredictionsManager && window.mlPredictionsManager.loadOverview) {
+                    // Reload KPIs
+                    await window.mlPredictionsManager.loadOverview();
+                }
+            } catch (e) { console.error('refreshMlData failed:', e); }
         };
     }
 })();

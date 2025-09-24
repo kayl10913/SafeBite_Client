@@ -1,46 +1,340 @@
 /* css/ad-chart.css - Styles for the Device Activity chart card */
 
 .activity-card {
-  background: linear-gradient(135deg, #16213a 0%, #22336a 100%);
-  border-radius: 16px;
-  padding: 24px 24px 0 24px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  background: #0a1a36;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.15);
   position: relative;
   min-height: 240px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  color: #fff;
 }
 
 #activityChart {
   width: 100% !important;
   height: 200px !important;
   display: block;
+  background: transparent;
+  border-radius: 8px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 .activity-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 18px 0 18px 0;
-  padding: 0 16px 0 16px;
+  margin: 0 0 20px 0;
+  padding: 0;
 }
 
 .activity-title {
   color: #fff;
-  font-size: 1.2em;
+  font-size: 1.4em;
   font-weight: 600;
   letter-spacing: 0.5px;
-  padding-left: 8px;
+  margin: 0;
 }
 
 .activity-filter {
   background: #14224a;
   color: #fff;
   border: 1px solid #2a3b6d;
-  border-radius: 6px;
-  padding: 4px 18px 4px 12px;
-  font-size: 1em;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9em;
+  font-weight: 500;
   outline: none;
-  margin-right: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activity-filter:hover {
+  background: #1a2a5a;
+  border-color: #3a4b7d;
+}
+
+.activity-filter:focus {
+  border-color: #4a5b8d;
+  box-shadow: 0 0 0 2px rgba(74, 91, 141, 0.2);
+}
+
+.activity-counters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #14224a;
+  border: 1px solid #2a3b6d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 0 20px 0;
+  color: #e0e6f6;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.activity-counters div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.activity-counters div:not(:last-child) {
+  border-bottom: 1px solid rgba(42, 59, 109, 0.3);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+/* Recent Reviews Styling */
+.recent-reviews-container {
+  margin-top: 20px;
+  height: calc(100% - 60px); /* Full height minus header space */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px; /* Space for scrollbar */
+}
+
+/* Custom scrollbar for recent reviews */
+.recent-reviews-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-reviews-container::-webkit-scrollbar-track {
+  background: rgba(42, 59, 109, 0.3);
+  border-radius: 3px;
+}
+
+.recent-reviews-container::-webkit-scrollbar-thumb {
+  background: rgba(74, 91, 141, 0.6);
+  border-radius: 3px;
+}
+
+.recent-reviews-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 91, 141, 0.8);
+}
+
+.loading-reviews {
+  color: #e0e6f6;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.review-item {
+  background: #14224a;
+  border: 1px solid #2a3b6d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  color: #e0e6f6;
+  transition: all 0.2s ease;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.review-item:hover {
+  background: #1a2a5a;
+  border-color: #3a4b7d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.review-customer {
+  font-weight: 600;
+  color: #fff;
+  font-size: 14px;
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  color: #ffd700;
+  font-size: 14px;
+}
+
+.review-text {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  color: #bfc9da;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+}
+
+.review-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #8a9bb5;
+}
+
+.review-sentiment {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.sentiment-positive {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.sentiment-negative {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.sentiment-neutral {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.no-reviews {
+  text-align: center;
+  color: #8a9bb5;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+/* Recent Reviews Card Styling */
+.recent-reviews-card {
+  min-height: 400px; /* Match chart card height */
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-reviews-card h4 {
+  margin: 0 0 20px 0;
+  color: #fff;
+  font-size: 1.4em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Unified input design for Admin Account modal */
+.sb-label {
+	display: block;
+	margin-bottom: 6px;
+	color: #bfc9da;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.sb-input {
+	width: 100%;
+	padding: 10px;
+	background: #14224a;
+	border: 1px solid #2a3b6d;
+	border-radius: 6px;
+	color: #ffffff;
+	font-size: 13px;
+	transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.sb-input::placeholder {
+	color: #7f8bad;
+}
+
+.sb-input:focus {
+	outline: none;
+	border-color: #5b7fff;
+	box-shadow: 0 0 0 2px rgba(91,127,255,0.2);
+}
+
+.sb-input-readonly {
+	background: #181f36;
+	color: #bfc9da;
+}
+
+/* Form wrapper for consistent spacing */
+.sb-form .form-row { margin-bottom: 12px; }
+.sb-form .form-group { margin-bottom: 12px; }
+
+/* Buttons align with site palette */
+.sb-form .filter-btn {
+	background: #4a5b8d;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	padding: 10px 20px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background .15s ease, box-shadow .15s ease;
+}
+
+.sb-form .filter-btn:hover { background: #5a6bad; }
+.sb-form .filter-btn.export { background: #2a3b6d; }
+.sb-form .filter-btn.export:hover { background: #35497f; }
+
+/* Ensure Admin Account modal inputs match page palette even without sb-input class */
+#adminAccountModal input[type="text"],
+#adminAccountModal input[type="email"],
+#adminAccountModal input[type="tel"],
+#adminAccountModal input[type="password"],
+#adminAccountModal select {
+	padding: 10px;
+	border: 1px solid #2a3b6d;
+	border-radius: 6px;
+	color: #ffffff;
+	font-size: 13px;
+	transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+#adminAccountModal input::placeholder { color: #7f8bad; }
+
+#adminAccountModal input[readonly],
+#adminAccountModal select[readonly] {
+	background: #181f36;
+	color: #bfc9da;
+}
+
+#adminAccountModal input:focus,
+#adminAccountModal select:focus {
+	outline: none;
+	border-color: #4a5b8d;
+	box-shadow: 0 0 0 2px rgba(74, 91, 141, 0.2);
+}
+
+#adminAccountModal label { 
+	display: block; 
+	margin-bottom: 6px; 
+	color: #bfc9da; 
+	font-size: 13px; 
+	font-weight: 500; 
+}
+
+/* Override browser autofill white background (Account/Password fields) */
+#adminAccountModal input:-webkit-autofill,
+#adminAccountModal input:-webkit-autofill:hover,
+#adminAccountModal input:-webkit-autofill:focus,
+#adminAccountModal input:-internal-autofill-selected {
+	-webkit-text-fill-color: #ffffff !important;
+	box-shadow: 0 0 0px 1000px #14224a inset !important;
+	background-color: #14224a !important;
+	caret-color: #ffffff !important;
+	transition: background-color 5000s ease-in-out 0s;
 }

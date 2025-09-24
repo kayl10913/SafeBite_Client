@@ -218,7 +218,14 @@ function renderUserActivityLogTable() {
 function renderUserActivityLogPagination(totalRecords) {
   const paginationDiv = document.getElementById('activityLogPagination');
   if (!paginationDiv) return;
-  
+  // Show/hide like other sections
+  if (!totalRecords || totalRecords <= 0) {
+    paginationDiv.style.display = 'none';
+    paginationDiv.innerHTML = '';
+    return;
+  }
+
+  paginationDiv.style.display = '';
   const totalPages = Math.ceil(totalRecords / activityLogRecordsPerPage);
   
   let paginationHTML = '<div class="pagination-info">';
@@ -395,9 +402,9 @@ function initializeUserActivityLog() {
     pdfBtn.addEventListener('click', exportUserActivityLogPDF);
   }
   
-  // Add event listeners for filter inputs to make them work automatically
+  // Filters apply only when clicking Filter button; no auto-fetch on change
   if (activityTypeFilter) {
-    activityTypeFilter.addEventListener('change', handleUserActivityLogFilters);
+    activityTypeFilter.addEventListener('change', () => {});
   }
   
   if (dateRangeFilter) {
@@ -405,42 +412,30 @@ function initializeUserActivityLog() {
   }
   
   if (startDateFilter) {
-    startDateFilter.addEventListener('change', handleUserActivityLogFilters);
+    startDateFilter.addEventListener('change', () => {});
   }
   
   if (endDateFilter) {
-    endDateFilter.addEventListener('change', handleUserActivityLogFilters);
+    endDateFilter.addEventListener('change', () => {});
   }
   
   // Add event listeners for new date pickers
   const weekPicker = document.getElementById('activityWeekPicker');
   if (weekPicker) {
-    weekPicker.addEventListener('change', () => {
-      if (document.getElementById('activityDateRange').value === 'weekly') {
-        handleUserActivityLogFilters();
-      }
-    });
+    weekPicker.addEventListener('change', () => {});
   }
 
   const monthPicker = document.getElementById('activityMonthPicker');
   if (monthPicker) {
-    monthPicker.addEventListener('change', () => {
-      if (document.getElementById('activityDateRange').value === 'monthly') {
-        handleUserActivityLogFilters();
-      }
-    });
+    monthPicker.addEventListener('change', () => {});
   }
 
   const yearPicker = document.getElementById('activityYearPicker');
   if (yearPicker) {
-    yearPicker.addEventListener('change', () => {
-      if (document.getElementById('activityDateRange').value === 'yearly') {
-        handleUserActivityLogFilters();
-      }
-    });
+    yearPicker.addEventListener('change', () => {});
   }
   
-  // Initial fetch from API
+  // Initial fetch from API (all time default)
   fetchUserActivityLogs(1, activityLogRecordsPerPage);
 }
 

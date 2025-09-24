@@ -175,11 +175,14 @@ function renderReportTable() {
       break;
       
     case 'most_used_sensor':
-      headers = ['Sensor Type', 'Used', 'Spoiled'];
-      rows = reportData.map(sensor => [
-        sensor['Sensor Type'],
-        sensor['Used'],
-        sensor['Spoiled']
+      headers = ['Device', 'User', 'Used (Active)', 'Safe', 'At Risk', 'Spoiled'];
+      rows = reportData.map(item => [
+        item['Device'] || '3-in-1 Device',
+        item['User'] || 'Unknown',
+        item['Used'] ?? 0,
+        item['Safe'] ?? 0,
+        item['At Risk'] ?? 0,
+        item['Spoiled'] ?? 0
       ]);
       break;
   }
@@ -236,7 +239,7 @@ function renderReportPagination(totalRecords) {
 // Function to change report page (matching admin-log.js style)
 function changeReportPage(page) {
   currentReportPage = page;
-  generateReport(currentReportType, currentDateRange);
+  generateReport(currentReportType, currentDateRange, true);
 }
 
 // Function to change records per page (matching admin-log.js style)
@@ -247,7 +250,7 @@ function changeReportRecordsPerPage(recordsPerPage) {
 }
 
 // Function to generate report (matching admin-log.js structure)
-async function generateReport(reportType, dateRange) {
+async function generateReport(reportType, dateRange, isPagination = false) {
   const reportContent = document.getElementById('report-preview-content');
   const reportTypeSelect = document.getElementById('reportType');
   const dateRangeSelect = document.getElementById('reportDateRange');
@@ -256,7 +259,10 @@ async function generateReport(reportType, dateRange) {
   // Store current report type and date range for pagination
   currentReportType = reportType;
   currentDateRange = dateRange;
-  currentReportPage = 1; // Reset to first page when generating new report
+  // Reset to first page only when not a pagination-triggered call
+  if (!isPagination) {
+    currentReportPage = 1;
+  }
 
       let dates;
       if (dateRange === 'Custom') {
@@ -442,97 +448,7 @@ async function generateReport(reportType, dateRange) {
       }
             break;
 
-        case 'most_used_sensor':
-      headers = ['Sensor Type', 'Usage Count', 'Last Used'];
-      
-      // Show loading message
-      reportContent.innerHTML = `<div class="empty-state">
-        <div class="empty-state-content">
-          <div class="empty-state-icon">⏳</div>
-          <div class="empty-state-title">Loading Most Used Sensor Data</div>
-          <div class="empty-state-desc">Please wait while we analyze sensor usage patterns...</div>
-        </div>
-      </div>`;
-      
-      try {
-        // Check if AdminAPI is available
-        if (typeof AdminAPI === 'undefined') {
-          throw new Error('API configuration not loaded');
-        }
-        
-        // Get date parameters for filtering
-        let startDate = null;
-        let endDate = null;
-        
-        if (dateRange === 'Custom') {
-          startDate = document.getElementById('reportStartDate').value;
-          endDate = document.getElementById('reportEndDate').value;
-        }
-        // For predefined ranges (Daily, Weekly, Monthly, Yearly), we don't need start/end dates
-        // The backend will use CURDATE() and other functions
-        
-        console.log('Fetching most used sensor data with params:', {
-          page: currentReportPage,
-          limit: reportRecordsPerPage,
-          startDate,
-          endDate,
-          dateRange
-        });
-        
-        const data = await AdminAPI.getMostUsedSensorReport(startDate, endDate, dateRange, currentReportPage, reportRecordsPerPage);
-        
-        console.log('Most used sensor API response:', data);
-        
-        if (!data || !data.success) {
-          throw new Error(data?.message || 'Failed to fetch most used sensor data');
-        }
-        
-        if (!data.sensors || data.sensors.length === 0) {
-          reportData = [];
-          reportContent.innerHTML = `<div class="empty-state">
-            <div class="empty-state-content">
-              <div class="empty-state-icon">📡</div>
-              <div class="empty-state-title">No Sensor Data Found</div>
-              <div class="empty-state-desc">No sensor usage data found. Try checking if sensors are properly connected and have readings.</div>
-            </div>
-          </div>`;
-          document.getElementById('reportPagination').style.display = 'none';
-        } else {
-          reportData = data.sensors;
-          totalReportRecords = data.total_count || data.sensors.length;
-          renderReportTable();
-          renderReportPagination(data.total_count || data.sensors.length);
-        }
-      } catch (error) {
-        console.error('Error generating most used sensor report:', error);
-        reportData = [];
-        
-        let errorMessage = 'Error loading data. Please try again.';
-        
-        if (error.message === 'API configuration not loaded') {
-          errorMessage = 'API configuration not loaded. Please refresh the page.';
-        } else if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.includes('401')) {
-          errorMessage = 'Authentication error. Please log in again.';
-        } else if (error.message.includes('403')) {
-          errorMessage = 'Access denied. You do not have permission to view this data.';
-        } else if (error.message.includes('500')) {
-          errorMessage = 'Server error. Please try again later.';
-        } else if (error.message.includes('Failed to fetch most used sensor data')) {
-          errorMessage = 'Unable to fetch sensor data. Please check if the backend server is running.';
-        }
-        
-        reportContent.innerHTML = `<div class="empty-state">
-          <div class="empty-state-content">
-            <div class="empty-state-icon">⚠️</div>
-            <div class="empty-state-title">Error Loading Data</div>
-            <div class="empty-state-desc">${errorMessage}</div>
-          </div>
-        </div>`;
-        document.getElementById('reportPagination').style.display = 'none';
-      }
-            break;
+    // removed: most_used_sensor
       }
       
   // Add date range info to the report
@@ -690,11 +606,14 @@ function exportReportPDF() {
       tableData = reportData.map(item => [item['Food Item'], item['Spoilage Reports'], item['Risk Level']]);
       break;
     case 'most_used_sensor':
-      headers = ['Sensor Type', 'Used', 'Spoiled'];
-      tableData = reportData.map(sensor => [
-        sensor['Sensor Type'],
-        sensor['Used'],
-        sensor['Spoiled']
+      headers = ['Device', 'User', 'Used (Active)', 'Safe', 'At Risk', 'Spoiled'];
+      tableData = reportData.map(item => [
+        item['Device'] || '3-in-1 Device',
+        item['User'] || 'Unknown',
+        item['Used'] ?? 0,
+        item['Safe'] ?? 0,
+        item['At Risk'] ?? 0,
+        item['Spoiled'] ?? 0
       ]);
       break;
   }

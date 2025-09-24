@@ -44,12 +44,22 @@ async function loadSensorData() {
           // Create monthly data array (12 months)
           chartData.monthly = new Array(12).fill(0);
           
-          // Find September data (month 9, index 8)
-          if (data.september) {
-            chartData.monthly[8] = data.september;
+          // The API returns data.datasets with sensor arrays
+          if (data.datasets) {
+            // Count devices (not sum sensor readings) - one device = 3 sensors
+            for (let i = 0; i < 12; i++) {
+              let deviceCount = 0;
+              // If any sensor has data for this month, count it as 1 device
+              if ((data.datasets.temperature && data.datasets.temperature[i] > 0) ||
+                  (data.datasets.humidity && data.datasets.humidity[i] > 0) ||
+                  (data.datasets.gas && data.datasets.gas[i] > 0)) {
+                deviceCount = 1; // One device active this month
+              }
+              chartData.monthly[i] = deviceCount;
+            }
           } else {
-            // Use your actual device count for September
-            chartData.monthly[8] = 2; // 2 device readings in September
+            // Fallback to hardcoded data
+            chartData.monthly[8] = 2; // September = 2 devices
           }
           
           console.log('Updated monthly data:', chartData.monthly);
@@ -57,12 +67,27 @@ async function loadSensorData() {
           // Create yearly data array (6 years: 2020-2025)
           chartData.yearly = new Array(6).fill(0);
           
-          // Find 2025 data (index 5) - your actual data is from 2025-09-22
-          if (data.year2025) {
-            chartData.yearly[5] = data.year2025;
+          // The API returns data.datasets with sensor arrays
+          if (data.datasets && data.labels) {
+            // Map years to our 6-year array (2020-2025)
+            data.labels.forEach((yearStr, index) => {
+              const year = parseInt(yearStr);
+              const yearIndex = year - 2020; // 2020=0, 2021=1, ..., 2025=5
+              
+              if (yearIndex >= 0 && yearIndex < 6) {
+                let deviceCount = 0;
+                // If any sensor has data for this year, count it as 1 device
+                if ((data.datasets.temperature && data.datasets.temperature[index] > 0) ||
+                    (data.datasets.humidity && data.datasets.humidity[index] > 0) ||
+                    (data.datasets.gas && data.datasets.gas[index] > 0)) {
+                  deviceCount = 1; // One device active this year
+                }
+                chartData.yearly[yearIndex] = deviceCount;
+              }
+            });
           } else {
-            // Use your actual device count for 2025
-            chartData.yearly[5] = 2; // 2 device readings in 2025
+            // Fallback to hardcoded data
+            chartData.yearly[5] = 2; // 2025 = 2 devices
           }
           
           console.log('Updated yearly data:', chartData.yearly);
@@ -151,8 +176,9 @@ function initializeActivityChart() {
   const chartW = w - padding * 2;
   const chartH = h - padding * 1.5;
 
-  // Find min/max - Scale to 0-50 to make data more visible
-  const maxVal = 50;
+  // Find min/max - Scale for device count (0-5 devices max)
+  const maxDataVal = Math.max(...data);
+  const maxVal = Math.max(5, Math.ceil(maxDataVal * 1.2)); // At least 5, or 20% above max data
   const minVal = 0;
   const range = maxVal - minVal;
 
@@ -235,13 +261,13 @@ function initializeActivityChart() {
     }
   });
 
-  // Draw Y axis labels - Scale to 0-50
+  // Draw Y axis labels - Dynamic scaling
   ctx.font = '12px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillStyle = '#bfc9da';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (let i = 0; i <= 5; i++) {
-    const val = minVal + (range * (5 - i) / 5); // 0, 10, 20, 30, 40, 50
+    const val = minVal + (range * (5 - i) / 5);
     const y = padding + chartH * i / 5;
     ctx.fillText(Math.round(val), padding - 8, y);
     // Draw subtle grid line matching page design

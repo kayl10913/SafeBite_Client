@@ -1,672 +1,495 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>SafeBite - Food Safety Platform</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-<link rel="stylesheet" href="frontend/assets/css/index.css">
-  <!--Laptop L 1440px-->
-<link rel="stylesheet" href="frontend/assets/css/responsive-sizes/Laptop-L.css">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <title>SafeBite</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBite - Smart Food Safety System</title>
+    <link rel="stylesheet" href="frontend/assets/css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<section class="header">
-  <div class="floating-nav">
-    <nav class="navbar navbar-expand-lg">
-      <div class="nav-pill">
-        <a href="index.html" class="navbar-brand logo">
-          <img src="frontend/assets/images/logo.png" alt="SafeBite Logo" class="d-inline-block align-top">
-          <span>Safe</span><span class="font-logo">Bite</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse nav-links" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="#page1">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#page2">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="#page3">Features</a></li>
-            <li class="nav-item"><a class="nav-link" href="#page4">Feedback</a></li>
-            <li class="nav-item"><a class="nav-link" href="#page5">Contact Us</a></li>
-          </ul>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="frontend/assets/images/logo.png" alt="SafeBite Logo" class="logo-img">
+                <span class="logo-text">SafeBite</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#feedback" class="nav-link">Feedback</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact Us</a>
+                </li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="frontend/pages/Login.html" class="btn btn-outline">Sign Up</a>
+                <a href="frontend/pages/Login.html" class="btn btn-primary">Log In</a>
+            </div>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
         </div>
-      </div>
     </nav>
-  </div>
 
-  <!--page1-->
-  <div id="page1" class="page-container container-fluid">
-    <div class="row align-items-center">
-      <div class="col-lg-6 text-container">
-        <div class="text">
-          <h1>Protect Your Plate!<br>Perfect Your Bite!</h1>
-          <p>Smart Monitoring Platform for Food Spoilage</p>
-        </div>
-        <div class="button-container">
-          <button class="btn1" onclick="handleNavigation('signup')">Sign Up</button> 
-          <button class="btn2" onclick="handleNavigation('login')">Log In</button>
-        </div>
-      </div>
-      <div class="col-lg-6 image">
-        <img src="frontend/assets/images/Plate.png" alt="SafeBite Logo" class="img-fluid">
-      </div>
-    </div>
-    <!-- Keep your existing background elements -->
-    <div class="grass2-image">
-      <img src="frontend/assets/images/leaf.png" alt="Background leaf">
-    </div>
-    <div class="blob-image">
-      <img src="frontend/assets/images/BLOB.png" alt="Background Blob">
-    </div>
-    <div class="lemon-image">
-      <img src="frontend/assets/images/lemon.png" alt="Background lemon">
-    </div>
-    <div class="grass-image">
-      <img src="frontend/assets/images/leaf.png" alt="Background leaf">
-    </div>
-    <div class="grass1-image">
-      <img src="frontend/assets/images/leaf.png" alt="Background leaf">
-    </div>
-  </div>
-
-  </div>
-<!--page2-->
-<div id="page2" class="page-container container-fluid reverse">
-
-  <!-- Keep your existing background elements and slider -->
-  <div class="blob1-image">
-    <img src="frontend/assets/images/BLOB.png" alt="Background Blob">
-  </div>
-  <div class="cabbage-image">
-    <img src="frontend/assets/images/cabbage.png" alt="Background cabbage">
-  </div>
-  <!-- Navigation Arrows -->
-  <button class="slider-arrow" id="prevSlide"><i class="fas fa-chevron-left"></i></button>
-  <span class="center-dots">
-    <i class="fas fa-circle dot" data-slide="0"></i>
-    <i class="fas fa-circle dot" data-slide="1"></i>
-  </span>
-  <button class="slider-arrow" id="nextSlide"><i class='fas fa-chevron-right'></i>
-  </button>
-
-  <!-- SLIDER CONTAINER -->
-  <div class="slider-wrapper">
-
-    <!-- SLIDE 1 -->
-    <div class="slide">
-
-  <!--CONTENT 1-->>
-      <div class="text-container">
-        <div class="text">
-          <h1> Eat Smart. <span class="font-color">Live Safe</span></h1><br>
-          <p>The SafeBite: Smart Monitoring Platform for Food aims to bridge this gap through the use of smart technology to track food conditions in real time and give alerts when spoilage is about to happen.</p>
-        </div>
-      </div>
-           <!-- lemon  -->
-  <div class="lemon1-image">
-    <img src="frontend/assets/images/lemon.png" alt="Background lemon">
-  </div>
-      <div class="image">
-        <img src="frontend/assets/images/PAGE2.png" alt="Food Monitoring">
-      </div>
-    </div>
-
-    <!-- SLIDE 2 -->
-    <div class="slide">
-      <div class="slide2-content">
-               <!-- lemon  -->
-  <div class="M1-image">
-    <img src="frontend/assets/images/M1.png" alt="Background lemon">
-  </div>
-    <div class="M3-image">
-    <img src="frontend/assets/images/M3.png" alt="Background lemon">
-  </div>
-    <div class="image2">
-      <img src="frontend/assets/images/M2.png" alt="Slide 2 Image">
-    </div>
-
-    <div class="text-container">
-      <div class="text">
-        <h1>Why SafeBite?</h1><br>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque diam pellentesque bibendum non dui volutpat fringilla bibendum. Urna, elit augue urna, vitae feugiat pretium donec id elementum. Ultrices mattis  vitae mus risus. Lacus nisi, et ac dapibus sit eu velit in consequat.</p>
-      </div>
-      <div class="button-container">
-        <button class="btn5">Explore More</button>
-        <button class="btn6">Contact Us</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-  </div> <!-- End .slider-wrapper -->
-
-</div> <!-- End #page2 -->
-
-<!--page3-->
-    <div id="page3" class="page-container container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="text-container text-center">
-                    <h1>Core Features</h1>
-                    <p class="subtitle">Interactive technology solutions with real-time monitoring and intuitive interfaces</p>
-                    
-                    <div class="Features">
-                        <!-- Flip box 1 -->
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-microchip"></i>
-                                    </div>
-                                    <h3>Sensor Integration</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Sensor Integration</h3>
-                                    <ul>
-                                        <li>Real-time data from sensors</li>
-                                        <li>Live sensor status indicators</li>
-                                        <li>Multi-sensor compatibility</li>
-                                    </ul>
-                                </div>
-                            </div>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">Protect Your Plate!</h1>
+                    <span class="gradient-text">Perfect Your Bite!</span>
+                    <p class="hero-description">
+                        Smart Monitoring Platform for Food Spoilage
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="frontend/pages/Login.html" class="btn btn-outline btn-large">
+                            Sign Up
+                        </a>
+                        <a href="frontend/pages/Login.html" class="btn btn-primary btn-large">
+                            Log In
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">99.9%</span>
+                            <span class="stat-label">Accuracy</span>
                         </div>
-
-                        <!-- Flip box 2 -->
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-tachometer-alt"></i>
-                                    </div>
-                                    <h3>Web Dashboard</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Web Dashboard</h3>
-                                    <ul>
-                                        <li>Real-time data visualization</li>
-                                        <li>Mobile-responsive design</li>
-                                        <li>Role-based access control</li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Monitoring</span>
                         </div>
-
-                        <!-- Flip box 3 -->
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-bell"></i>
-                                    </div>
-                                    <h3>Alert System</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Alert System</h3>
-                                    <ul>
-                                        <li>Multi-channel notifications</li>
-                                        <li>Smart escalation procedures</li>
-                                        <li>Historical alert tracking</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Flip box 4 -->
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-database"></i>
-                                    </div>
-                                    <h3>Data Analytics</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Data Analytics</h3>
-                                    <ul>
-                                        <li>Advanced pattern recognition</li>
-                                        <li>Predictive analysis algorithms</li>
-                                        <li>Automated report generation</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                           <!-- Flip box5 -->
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-robot"></i>
-                                    </div>
-                                    <h3>Machine Learning Analysis</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                
-                                <div class="flip-box-back">
-                                    <h3>Machine Learning Analysis</h3>
-                                    <ul>
-                                      <li>AI model detects spoilage patterns</li>
-                                      <li>Adaptive learning from ongoing data</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                    <i class="fa fa-user"></i>                                   
-                                   </div>
-                                    <h3>Account Management</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Account Management</h3>
-                                    <ul>
-                                    <li>User login, preferences, and password reset</li>
-                                    <li>Secure profile and device linking</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                                                   <!-- Flip box6 -->
-
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="	fas fa-drumstick-bite"></i>
-                                    </div>
-                                    <h3>Food Profiles</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Food Profiles</h3>
-                                    <ul>
-                                    <li>Pre-set conditions per food type</li>
-                                    <li>Customizable spoilage thresholds</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                        <i class="fas fa-database"></i>
-                                    </div>
-                                    <h3>Data Logging</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>Data Logging</h3>
-                                    <ul>
-                                        <li>Every sensor action is recorded</li>
-                                        <li>Filterable logs with export options</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flip-box">
-                            <div class="flip-box-inner">
-                                <div class="flip-box-front">
-                                    <div class="flip-icon">
-                                    <i class="material-icons" style="font-size:66px">settings_cell</i>
-                                    </div>
-                                    <h3>User Interface</h3>
-                                    <p class="flip-hint">Click to see details</p>
-                                </div>
-                                <div class="flip-box-back">
-                                    <h3>User Interface</h3>
-                                    <ul>
-                                    <li>Interactive dashboard for all devices</li>
-                                    <li>Mobile-friendly and easy to navigate</li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="stat">
+                            <span class="stat-number">1000+</span>
+                            <span class="stat-label">Users</span>
                         </div>
                     </div>
-                    
-                    <div class="footer-note">
-                        Click to Explore Features
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-card">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Healthy Food Bowl" class="food-image">
                     </div>
                 </div>
             </div>
-    <div class="slide2-content">
-               <!-- lemon  -->
-  <div class="M3-image">
-    <img src="frontend/assets/images/M1.png" alt="Background lemon">
-  </div>
-    <div class="M4-image">
-    <img src="frontend/assets/images/M3.png" alt="Background lemon">
-  </div>
-    <div class="image2">
-      <img src="frontend/assets/images/M2.png" alt="Slide 2 Image">
-    </div>
-
-<div class="text5-container">
-  <div class="text">
-    <h1>Specification</h1>
-    <ul>
-      <li><strong>Category:</strong> Requirement</li>
-      <li><strong>Operating System:</strong> Windows 10/11, macOS, or Linux</li>
-      <li><strong>Device:</strong> PC/Laptop</li>
-      <li><strong>Processor:</strong> Minimum Intel i3 or equivalent AMD processor or higher</li>
-      <li><strong>RAM:</strong> Minimum 4GB RAM</li>
-      <li><strong>Storage:</strong> Minimum 256GB SSD or HDD</li>
-      <li><strong>Web Browser:</strong> Chrome, Microsoft Edge, Brave, etc.</li>
-      <li><strong>Internet:</strong> At least 25mbps</li>
-    </ul>      
-  </div>
-</div>
-  </div>
-
-
-
-      <div class="device-content">
-        <h1>Devices</h1>
-        <hr><!-- divider -->
-
-        <div class="image-container">
-          <div class="image-box">
-            <img src="frontend/assets/images/BAttery_Clip.png" alt="Device 1">
-            <p>Battery Clip</p>
-          </div>
-
-          <div class="image-box">
-            <img src="frontend/assets/images/Breadboard.png" alt="Device 2">
-            <p>Breadboard</p>
-          </div>
-
-          <div class="image-box">
-            <img src="frontend/assets/images/MUlti_Meter.png" alt="Device 3">
-            <p>MUlti Meter</p>
-          </div>
-
-          <div class="image-box">
-            <img src="frontend/assets/images/Prototyping_Board.png" alt="Device 4">
-            <p>Prototyping Board</p>
-          </div>
-
-          <div class="image-box">
-            <img src="frontend/assets/images/Resistors.png" alt="Device 5">
-            <p>Resistors</p>
-          </div>
-                    <div class="image-box">
-            <img src="frontend/assets/images/PSU.png" alt="Device 6">
-            <p>PSU"</p>
-          </div>
-                    <div class="image-box">
-            <img src="frontend/assets/images/Soldering_iron.png" alt="Device 7">
-            <p>Soldering Iron</p>
-          </div>
-                    <div class="image-box">
-            <img src="frontend/assets/images/Microcontroller.png" alt="Device 8">
-            <p>Microcontroller</p>
-          </div>
-                    <div class="image-box">
-            <img src="frontend/assets/images/Capacitor.png" alt="Device 9">
-            <p>Capacitor</p>
-          </div>
-        </div><!-- .image-container -->
-      </div><!-- .device-content -->
-
-
-
-
-
-
-
         </div>
-    </div>
-    </div>
-
-
-
-
-</div> <!-- End #page3 -->
-
-<div id="page4" class="page-container container">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="text-container text-center">
-        <div class="text">
-          <h1 class="display-4">Feedback</h1>
-        </div>
-        <div class="feedback-card">
-          <img src="frontend/assets/images/onion.png" alt="User Feedback" class="feedback-image" />
-          <div class="feedback-content">
-            <textarea class="feedback-text" placeholder="Your feedback..."></textarea>
-            <div class="stars">
-              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+        <div class="hero-background">
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+    </section>
 
-    </div>
-  </div>
-
-  <div id="page4" class="page-container container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 text-container">
-        <div class="text">
-          <h1 class="display-4">Join the Food Safety Revolution<br>Today!</h1>
-          <p class="lead">Contact our team to learn more about SafeBite solutions</p>
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">About SafeBite</h2>
+                    <p class="about-description">
+                        SafeBite is a revolutionary food safety monitoring system that combines cutting-edge AI technology 
+                        with practical solutions to ensure food safety in homes, restaurants, and commercial kitchens.
+                    </p>
+                    <p class="about-description">
+                        Our mission is to reduce food waste, prevent foodborne illnesses, and provide peace of mind 
+                        through intelligent monitoring and predictive analytics.
+                    </p>
+                    <div class="about-features">
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>FDA Compliant Technology</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Industry-Leading Accuracy</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>24/7 Customer Support</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="about-image">
+                        <img src="frontend/assets/images/M1.png" alt="SafeBite System" class="system-image">
+                        <div class="floating-elements">
+                            <div class="floating-element element-1">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                            <div class="floating-element element-2">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                            <div class="floating-element element-3">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="button-container">
-          <button class="btn btn-primary">Request Demo</button> 
-          <button class="btn btn-outline-primary">Contact Sales</button>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Powerful Features</h2>
+                <p class="section-description">
+                    Advanced technology meets food safety to protect what matters most
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="feature-title">AI-Powered Analysis</h3>
+                    <p class="feature-description">
+                        Machine learning algorithms analyze food conditions in real-time to predict spoilage and ensure optimal freshness.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Real-time Analytics</h3>
+                    <p class="feature-description">
+                        Comprehensive dashboards with detailed insights into temperature, humidity, and food safety metrics.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 class="feature-title">Smart Alerts</h3>
+                    <p class="feature-description">
+                        Instant notifications when conditions change or potential issues are detected, keeping you informed 24/7.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Mobile Access</h3>
+                    <p class="feature-description">
+                        Monitor your food safety from anywhere with our responsive mobile interface and push notifications.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Data Security</h3>
+                    <p class="feature-description">
+                        Enterprise-grade security ensures your data is protected with encryption and secure cloud storage.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="feature-title">Easy Integration</h3>
+                    <p class="feature-description">
+                        Seamlessly integrate with existing systems and sensors for a complete food safety solution.
+                    </p>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="image-contact">
-          <img src="frontend/assets/images/contact.png" alt="Contact Us" class="img-fluid">
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="feedback" class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">What Our Users Say</h2>
+                <p class="section-description">
+                    Discover how SafeBite is transforming food safety and reducing waste for businesses and individuals worldwide
+                </p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="quote-icon">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        SafeBite has revolutionized how we manage food safety in our restaurant. The real-time alerts have helped us prevent food waste and ensure our customers always get the freshest meals.
+                    </p>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80" alt="Sarah Johnson">
+                        </div>
+                        <div class="user-details">
+                            <h4 class="user-name">Sarah Johnson</h4>
+                            <p class="user-role">Restaurant Owner</p>
+                            <p class="user-company">Green Leaf Bistro</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote-icon">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        The analytics dashboard provides incredible insights into our food storage patterns. We've reduced spoilage by 40% since implementing SafeBite's monitoring system.
+                    </p>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80" alt="Michael Chen">
+                        </div>
+                        <div class="user-details">
+                            <h4 class="user-name">Michael Chen</h4>
+                            <p class="user-role">Food Safety Manager</p>
+                            <p class="user-company">Fresh Market Co.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote-icon">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        As someone who loves cooking and hates wasting food, SafeBite is a game-changer. I now know exactly when to use ingredients for optimal freshness and taste.
+                    </p>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80" alt="Emma Williams">
+                        </div>
+                        <div class="user-details">
+                            <h4 class="user-name">Emma Williams</h4>
+                            <p class="user-role">Home Cook</p>
+                            <p class="user-company">Food Enthusiast</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote-icon">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        The machine learning predictions are spot-on. SafeBite helps us plan our inventory better and ensures we never serve anything that's not at its peak quality.
+                    </p>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80" alt="David Rodriguez">
+                        </div>
+                        <div class="user-details">
+                            <h4 class="user-name">David Rodriguez</h4>
+                            <p class="user-role">Catering Director</p>
+                            <p class="user-company">Premier Events Catering</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-section">
+                <div class="stat-item">
+                    <div class="stat-number stat-1">5000+</div>
+                    <div class="stat-label">Happy Users</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number stat-2">40%</div>
+                    <div class="stat-label">Food Waste Reduced</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number stat-3">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number stat-4">24/7</div>
+                    <div class="stat-label">Monitoring</div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-    <div id="page5" class="page-container container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 text-container">
-        <div class="text">
-          <h1 class="display-4">Join the Food Safety Revolution<br>Today!</h1>
-          <p class="lead">Contact our team to learn more about SafeBite solutions</p>
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-description">
+                    Ready to revolutionize your food safety? Contact us today!
+                </p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <p>info@safebite.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Phone</h4>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Address</h4>
+                            <p>123 Tech Street, Innovation City, IC 12345</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form class="form">
+                        <div class="form-group">
+                            <input type="text" class="form-input" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" class="form-input" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-input form-textarea" placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-paper-plane"></i>
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="button-container">
-          <button class="btn btn-primary">Request Demo</button> 
-          <button class="btn btn-outline-primary">Contact Sales</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section brand-section">
+                    <div class="footer-logo">
+                        <div class="logo-shield">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <span class="logo-text">SafeBite</span>
+                    </div>
+                    <p class="footer-description">
+                        Smart Monitoring Platform for Food Spoilage.<br>
+                        Protect your plate, perfect your bite with advanced IoT technology.
+                    </p>
+                    <div class="contact-icons">
+                        <div class="contact-icon-item">
+                            <div class="icon-square email-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                        </div>
+                        <div class="contact-icon-item">
+                            <div class="icon-square phone-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                        </div>
+                        <div class="contact-icon-item">
+                            <div class="icon-square location-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#feedback">Feedback</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Services</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Real-time Monitoring</a></li>
+                        <li><a href="#">Smart Alerts</a></li>
+                        <li><a href="#">Data Analytics</a></li>
+                        <li><a href="#">Machine Learning</a></li>
+                        <li><a href="#">IoT Integration</a></li>
+                        <li><a href="#">24/7 Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Contact Info</h4>
+                    <div class="contact-details">
+                        <div class="contact-detail-item">
+                            <i class="fas fa-envelope contact-detail-icon"></i>
+                            <span>info@safebite.com</span>
+                        </div>
+                        <div class="contact-detail-item">
+                            <i class="fas fa-phone contact-detail-icon"></i>
+                            <span>+1 (555) 123-4567</span>
+                        </div>
+                        <div class="contact-detail-item">
+                            <i class="fas fa-map-marker-alt contact-detail-icon"></i>
+                            <span>123 Innovation Drive, Tech Valley, CA 94000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-left">
+                    <p>&copy; 2024 SafeBite. All rights reserved. Smart food monitoring for a safer tomorrow.</p>
+                </div>
+                <div class="footer-bottom-right">
+                    <a href="#" class="legal-link">Privacy Policy</a>
+                    <a href="#" class="legal-link">Terms of Service</a>
+                    <a href="#" class="legal-link">Cookie Policy</a>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="image-contact">
-          <img src="frontend/assets/images/contact.png" alt="Contact Us" class="img-fluid">
-        </div>
-      </div>
-    </div>
-  </div>
+    </footer>
 
-
-
-  <!--slider js-->
-<script>
-  const sliderWrapper = document.querySelector('.slider-wrapper');
-const slides = document.querySelectorAll('.slide');
-const dots = document.querySelectorAll('.dot');
-let currentSlide = 0;
-
-function updateSlider() {
-  sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
-  updateDotColor();
-}
-
-function updateDotColor() {
-  dots.forEach((dot, index) => {
-    dot.style.color = index === currentSlide ? '#0b08c5' : '#ccc';
-  });
-}
-
-document.getElementById('nextSlide').addEventListener('click', () => {
-  if (currentSlide < slides.length - 1) {
-    currentSlide++;
-    updateSlider();
-  }
-});
-
-document.getElementById('prevSlide').addEventListener('click', () => {
-  if (currentSlide > 0) {
-    currentSlide--;
-    updateSlider();
-  }
-});
-
-// Optional: allow dot click to jump to slide
-dots.forEach((dot, index) => {
-  dot.addEventListener('click', () => {
-    currentSlide = index;
-    updateSlider();
-  });
-});
-
-// Initialize color on load
-updateDotColor();
-
-<!--page3-->
-const sliderWrapper1 = document.querySelector('.slider-wrapper1');
-const slides1 = document.querySelectorAll('.slide1');
-const dots1 = document.querySelectorAll('.dot1');
-let currentSlide1 = 0;
-
-function updateSlider1() {
-  sliderWrapper1.style.transform = `translateX(-${currentSlide1 * 100}%)`;
-  updateDotColor1();
-}
-
-function updateDotColor1() {
-  dots1.forEach((dot, index) => {
-    dot.style.color = index === currentSlide1 ? '#0b08c5' : '#ccc';
-  });
-}
-
-document.getElementById('nextSlide1').addEventListener('click', () => {
-  if (currentSlide1 < slides1.length - 1) {
-    currentSlide1++;
-    updateSlider1();
-  }
-});
-
-document.getElementById('prevSlide1').addEventListener('click', () => {
-  if (currentSlide1 > 0) {
-    currentSlide1--;
-    updateSlider1();
-  }
-});
-
-// Optional: click on dot to jump to slide
-dots1.forEach((dot, index) => {
-  dot.addEventListener('click', () => {
-    currentSlide1 = index;
-    updateSlider1();
-  });
-});
-
-// Initialize on page load
-updateDotColor1();
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- SafeBite Navigation Helper -->
-  <script src="frontend/assets/js/config/navigation.js"></script>
-  
-  <!-- SafeBite Navigation Functions -->
-  <script>
-    // Navigation function for login/signup buttons
-    function handleNavigation(page) {
-      if (page === 'login') {
-        window.location.href = '/login';
-      } else if (page === 'signup') {
-        window.location.href = '/login';
-      } else if (page === 'admin') {
-        window.location.href = '/admin-login';
-      } else if (page === 'dashboard') {
-        window.location.href = '/user-dashboard';
-      } else if (page === 'admin-dashboard') {
-        window.location.href = '/admin-dashboard';
-      }
-    }
-    
-    // Add click event listeners to buttons and enhance navigation
-    document.addEventListener('DOMContentLoaded', function() {
-      // Get the main navigation buttons
-      const signUpBtn = document.querySelector('.btn1');
-      const logInBtn = document.querySelector('.btn2');
-      
-      // Add click event listeners as backup
-      if (signUpBtn) {
-        signUpBtn.addEventListener('click', function() {
-          handleNavigation('signup');
-        });
-      }
-      
-      if (logInBtn) {
-        logInBtn.addEventListener('click', function() {
-          handleNavigation('login');
-        });
-      }
-      
-      // Add navigation to any other buttons or links that might need it
-      const allButtons = document.querySelectorAll('button, a');
-      allButtons.forEach(button => {
-        const text = button.textContent.toLowerCase();
-        
-        if (text.includes('login') || text.includes('sign in')) {
-          button.addEventListener('click', function(e) {
-            if (!button.hasAttribute('href') && !button.hasAttribute('onclick')) {
-              e.preventDefault();
-              handleNavigation('login');
-            }
-          });
-        }
-        
-        if (text.includes('sign up') || text.includes('register')) {
-          button.addEventListener('click', function(e) {
-            if (!button.hasAttribute('href') && !button.hasAttribute('onclick')) {
-              e.preventDefault();
-              handleNavigation('signup');
-            }
-          });
-        }
-        
-        if (text.includes('admin')) {
-          button.addEventListener('click', function(e) {
-            if (!button.hasAttribute('href') && !button.hasAttribute('onclick')) {
-              e.preventDefault();
-              handleNavigation('admin');
-            }
-          });
-        }
-      });
-      
-      console.log('SafeBite enhanced navigation functions loaded!');
-    });
-  </script>
+    <script src="frontend/assets/js/Pages/index.js"></script>
 </body>
 </html>

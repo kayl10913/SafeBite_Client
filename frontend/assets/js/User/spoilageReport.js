@@ -1239,11 +1239,32 @@ function exportSpoilageReportCSV() {
 }
 
 // Export detailed report to PDF
-function exportDetailedReportPDF() {
+async function exportDetailedReportPDF() {
   try {
-    // Check if jsPDF is available
-    if (typeof window.jspdf === 'undefined') {
-      showNotification('PDF export requires jsPDF library. Please refresh the page and try again.', 'error');
+    // Ensure jsPDF and autoTable are loaded
+    const ensurePdfLibs = async () => {
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        // Avoid duplicate loads
+        if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return resolve();
+        const s = document.createElement('script');
+        s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('Failed to load '+src));
+        document.head.appendChild(s);
+      });
+
+      if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      }
+      // After jsPDF, ensure autotable
+      const hasAutoTable = !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+      if (!hasAutoTable) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js');
+      }
+      return (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+    };
+
+    const libsOk = await ensurePdfLibs();
+    if (!libsOk) {
+      showNotification('PDF export libraries not available. Please check your internet connection and try again.', 'error');
       return;
     }
 
@@ -1386,7 +1407,38 @@ function exportDetailedReportPDF() {
     };
     
     // Add professional table
-    doc.autoTable({
+    if (typeof doc.autoTable !== 'function') {
+      // Fallback if plugin attached to prototype
+      if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && typeof window.jspdf.jsPDF.API.autoTable === 'function') {
+        window.jspdf.jsPDF.API.autoTable.apply(doc, [{
+          head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts', 'Recommendations']],
+          body: tableData,
+          startY: 180,
+          margin: { left: marginLeft, right: marginRight },
+          tableWidth: 'wrap',
+          styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', halign: 'left', valign: 'top', lineColor: [200,200,200], lineWidth: 0.5, textColor: [0,0,0] },
+          headStyles: { fillColor: [74,158,255], textColor: [255,255,255], fontStyle: 'bold', fontSize: 9, halign: 'center', valign: 'middle' },
+          alternateRowStyles: { fillColor: [248,249,250] },
+          columnStyles: {
+            0: { cellWidth: columnWidths[0], halign: 'left' },
+            1: { cellWidth: columnWidths[1], halign: 'center' },
+            2: { cellWidth: columnWidths[2], halign: 'center' },
+            3: { cellWidth: columnWidths[3], halign: 'center' },
+            4: { cellWidth: columnWidths[4], halign: 'center' },
+            5: { cellWidth: columnWidths[5], halign: 'left' },
+            6: { cellWidth: columnWidths[6], halign: 'center' },
+            7: { cellWidth: columnWidths[7], halign: 'left' }
+          },
+          didDrawPage: function (data) {
+            doc.setFontSize(8); doc.setTextColor(128,128,128);
+            doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, doc.internal.pageSize.width - 100, doc.internal.pageSize.height - 20);
+          }
+        }]);
+      } else {
+        throw new Error('autoTable plugin not available');
+      }
+    } else {
+      doc.autoTable({
       head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts', 'Recommendations']],
       body: tableData,
       startY: 180,
@@ -1431,7 +1483,8 @@ function exportDetailedReportPDF() {
                  doc.internal.pageSize.width - 100, 
                  doc.internal.pageSize.height - 20);
       }
-    });
+      });
+    }
     
     // Save the PDF
     const fileName = `SafeBite_Detailed_Report_${new Date().toISOString().split('T')[0]}.pdf`;

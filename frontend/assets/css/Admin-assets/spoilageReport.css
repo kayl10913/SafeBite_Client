@@ -360,6 +360,24 @@ body {
   background: #ffe066;
   color: #bfa100;
 }
+.status-badge.active {
+  background: #4be18a;
+  color: #fff;
+}
+
+.sensor-count {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 400;
+  margin-top: 2px;
+  display: block;
+}
+
+.per-sensor-status {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #7a8699;
+}
 .risk-score {
   font-weight: 700;
   color: #ffe066;

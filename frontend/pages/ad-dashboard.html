@@ -96,10 +96,10 @@
       </li>
   </ul>
 </nav>
-  <div class="sidebar-account" id="sidebarAccountBtn">
+  <div class="sidebar-account" id="sidebarAccountBtn" onclick="openAdminAccountModal()" style="cursor: pointer;">
     <span class="account-icon">&#128100;</span>
     <span class="account-text">Account</span>
-    <button class="logout-btn" id="logoutBtn" type="button" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
+    <button class="logout-btn" id="logoutBtn" type="button" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;" onclick="event.stopPropagation();">Logout</button>
   </div>
 </aside>
 <main id="main-content">
@@ -112,19 +112,6 @@
           <div class="dashboard-card sensors-card">
             <div class="sensors-header">
               <h4>Dashboard</h4>
-              <div class="sensors-select">
-                <label for="calendar-input">Select Date:</label>
-                <div class="calendar-container">
-                  <input type="date" id="calendar-input" class="dashboard-date-input" placeholder="Select a date">
-                </div>
-                <button id="refreshDashboardBtn" class="refresh-btn" title="Refresh Dashboard Data">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M23 4v6h-6"></path>
-                    <path d="M1 20v-6h6"></path>
-                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
-                  </svg>
-                </button>
-              </div>
             </div>
             <div class="stat-cards-container">
               <div class="stat-card">
@@ -158,11 +145,11 @@
               <div class="stat-card">
                 <div class="stat-card-header">
                   <div class="stat-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                   </div>
                   <div class="stat-info">
                     <div class="stat-value">31</div>
-                    <div class="stat-label">Spoilage alerts triggered</div>
+                  <div class="stat-label">Active Devices</div>
                   </div>
                 </div>
                 <div class="stat-chart">
@@ -175,18 +162,24 @@
         <div class="dashboard-row">
           <div class="dashboard-card tall activity-card" style="flex:2;">
             <div class="activity-header">
-              <span class="activity-title">Device Activity</span>
+              <span class="activity-title">Device Used Count</span>
               <select class="activity-filter">
-                <option>N/A</option>
-                <option>Daily</option>
-                <option>Weekly</option>
-                <option>Monthly</option>
+                <option selected>Monthly</option>
+                <option>Yearly</option>
               </select>
+            </div>
+            <div class="activity-counters" style="display:flex;flex-direction:column;gap:6px;background:#162449;border:1px solid #243760;border-radius:8px;padding:10px 12px;margin:6px 0 10px 0;color:#bfc9da;">
+              <div id="count-today">Today: 0</div>
+              <div id="count-7d">Last 7d: 0</div>
+              <div id="count-30d">Last 30d: 0</div>
             </div>
             <canvas id="activityChart"></canvas>
           </div>
-          <div class="dashboard-card tall" style="flex:1;">
-            <h4>Recent Reviews</h4>
+          <div class="dashboard-card tall recent-reviews-card" style="flex:1;display:flex;flex-direction:column;">
+            <h4 style="margin:0 0 20px 0;color:#fff;font-size:1.4em;font-weight:600;">Recent Reviews</h4>
+            <div id="recent-reviews-container" class="recent-reviews-container">
+              <div class="loading-reviews">Loading reviews...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -206,7 +199,7 @@
     <div class="ml-kpi-row">
       <div class="ml-kpi-card"><div class="ml-kpi-title">Total Predictions</div><div class="ml-kpi-value" id="mlKpiTotal">0</div><div class="ml-kpi-sub" id="mlKpiTotalSub">+0 today</div></div>
       <div class="ml-kpi-card"><div class="ml-kpi-title">Average Confidence</div><div class="ml-kpi-value" id="mlKpiConfidence">--%</div><div class="ml-kpi-sub" id="mlKpiConfidenceSub">+0% this week</div></div>
-      <div class="ml-kpi-card"><div class="ml-kpi-title">Training Samples</div><div class="ml-kpi-value" id="mlKpiSamples">0</div><div class="ml-kpi-sub" id="mlKpiSamplesSub">+0 added</div></div>
+      <div class="ml-kpi-card"><div class="ml-kpi-title">Training Data</div><div class="ml-kpi-value" id="mlKpiSamples">0</div><div class="ml-kpi-sub" id="mlKpiSamplesSub">+0 added</div></div>
       <div class="ml-kpi-card"><div class="ml-kpi-title">Model Accuracy</div><div class="ml-kpi-value" id="mlKpiAccuracy">--%</div><div class="ml-kpi-sub" id="mlKpiAccuracySub">+0% improved</div></div>
     </div>
 
@@ -232,6 +225,10 @@
         </thead>
         <tbody id="mlSamplesTableBody"></tbody>
       </table>
+        <div id="mlSamplesPagination" class="pagination-container" style="display:none;margin-top:10px;">
+          <div id="mlSamplesPageInfo" class="pagination-info"></div>
+          <div id="mlSamplesPageControls" class="pagination-controls"></div>
+        </div>
     </div>
   </div>
 </template>
@@ -287,7 +284,7 @@
       <div class="report-actions">
         <button id="mlApplyFilters" class="report-btn report-btn-primary"><span>🔎</span>Filter</button>
         <button id="mlExportCSV" class="report-btn report-btn-secondary"><span>📥</span>Download CSV</button>
-        <button id="mlExportPDF" class="report-btn report-btn-secondary"><span>📄</span>Download PDF</button>
+        <button id="mlExportPDF" class="filter-btn export"><span>📄</span>Download PDF</button>
       </div>
     </div>
     <div class="report-preview">
@@ -372,9 +369,25 @@
     <div class="detailed-report-card">
       <div class="detailed-report-filters">
         <div class="filter-row">
-          <div class="filter-group">
+          <div class="filter-group" style="min-width:240px;">
             <label>Name Search</label>
             <input type="text" id="nameSearch" placeholder="Search food tester name..." />
+          </div>
+          <div class="filter-group">
+            <label>Tester Type</label>
+            <select id="testerType">
+              <option value="all">All Types</option>
+              <!-- Will be populated dynamically from database -->
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="status">
+              <option value="all">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="No Device">No Device</option>
+            </select>
           </div>
           <div class="filter-group">
             <label>Date Range</label>
@@ -387,50 +400,17 @@
               <option value="custom">Custom</option>
             </select>
           </div>
-          
           <div class="filter-group" id="analyticsWeekGroup" style="display:none;min-width:200px;">
             <label for="analyticsWeekPicker">Select Week</label>
             <input type="week" id="analyticsWeekPicker" />
           </div>
-          
           <div class="filter-group" id="analyticsMonthGroup" style="display:none;min-width:200px;">
             <label for="analyticsMonthPicker">Select Month</label>
             <input type="month" id="analyticsMonthPicker" />
           </div>
-          
           <div class="filter-group" id="analyticsYearGroup" style="display:none;min-width:160px;">
             <label for="analyticsYearPicker">Select Year</label>
             <input type="number" id="analyticsYearPicker" min="1970" max="2100" step="1" placeholder="2025" />
-          </div>
-          <div class="filter-group">
-            <label>Tester Type</label>
-            <select id="testerType">
-              <option value="all">All Types</option>
-              <!-- Will be populated dynamically from database -->
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Sensor Type</label>
-            <select id="sensorType">
-              <option value="all">All Types</option>
-              <!-- Will be populated dynamically from database -->
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Food Type</label>
-            <select id="foodType">
-              <option value="all">All Food Types</option>
-              <!-- Will be populated dynamically from ML prediction data -->
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Status</label>
-            <select id="status">
-              <option value="all">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Spoilage Alert">Spoilage Alert</option>
-              <option value="Inactive">Inactive</option>
-            </select>
           </div>
           <div class="filter-group">
             <label>Records per Page</label>
@@ -442,6 +422,7 @@
             </select>
           </div>
         </div>
+        <div class="filter-row"></div>
         <div class="filter-row custom-date-row" id="analyticsCustomDateGroup" style="display: none;">
           <div class="filter-group">
             <label>Start Date</label>
@@ -455,11 +436,11 @@
         <div class="filter-actions">
           <button class="filter-btn" type="button" id="applyFilters" title="Apply filters" aria-label="Apply filters">🔎 Filter</button>
           <button class="filter-btn export" id="exportCSV">Export CSV</button>
-          <button class="filter-btn export" id="exportPDF">Export PDF</button>
+          <button class="filter-btn export" id="exportPDF">Download PDF</button>
         </div>
       </div>
       <div class="detailed-report-table-card">
-        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">156</span> sensors)</div>
+        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">156</span> devices)</div>
         <div class="report-table-container">
         <table class="detailed-report-table admin-log-table">
           <thead>
@@ -469,7 +450,7 @@
               <th>STATUS</th>
               <th>LAST PING</th>
               <th>LAST READING</th>
-              <th>ALERTS TODAY</th>
+              <th>ALERTS</th>
             </tr>
           </thead>
           <tbody id="sensorTableBody">
@@ -492,7 +473,7 @@
             <tr>
               <td>School Canteen #3<br><span class="created-date">Registered: 6/25/2025</span></td>
               <td><span class="cat-badge">Canteen Auditor</span></td>
-              <td><span class="status-badge">Active</span></td>
+              <td><span class="status-badge active">Active</span></td>
               <td>6/26/2025<br><span class="expiry-today">5 mins ago</span></td>
               <td>Temp: -1.8°C</td>
               <td><span class="alert-badge">1 alert</span></td>
@@ -500,7 +481,7 @@
             <tr>
               <td>Carlos BBQ Cart<br><span class="created-date">Registered: 6/25/2025</span></td>
               <td><span class="cat-badge">Street Food Tester</span></td>
-              <td><span class="status-badge">Active</span></td>
+              <td><span class="status-badge active">Active</span></td>
               <td>6/30/2025<br><span class="expiry-days">1 min ago</span></td>
               <td>Gas: 220 ppm</td>
               <td><span class="alert-badge">2 alerts</span></td>
@@ -516,10 +497,10 @@
             <tr>
               <td>Beach Food Truck #2<br><span class="created-date">Registered: 6/23/2025</span></td>
               <td><span class="cat-badge">Food Truck Inspector</span></td>
-              <td><span class="status-badge">Active</span></td>
+              <td><span class="status-badge active">Active</span></td>
               <td>6/26/2025<br><span class="expiry-today">1 min ago</span></td>
               <td>Temp: 3.8°C</td>
-              <td><span class="alert-badge">0 alerts</span></td>
+              <td><span class="alert-badge none">0 alerts</span></td>
             </tr>
           </tbody>
         </table>
@@ -591,7 +572,6 @@
             <select id="reportType" class="report-select">
               <option value="new_users">New User Count</option>
               <option value="top_spoiling_food">Top Spoiling Foods</option>
-              <option value="most_used_sensor">Most Used Sensors</option>
             </select>
           </div>
           
@@ -710,12 +690,37 @@
             </select>
           </div>
           <div class="filter-group">
+            <label for="userDateRangeFilter">Date Range</label>
+            <select id="userDateRangeFilter" class="user-filter-select">
+              <option value="alltime">All Time</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="filter-group" id="userWeekPickerGroup" style="display:none;min-width:180px;">
+            <label for="userWeekPicker" style="display:block;margin-bottom:6px;">Select Week</label>
+            <input type="week" id="userWeekPicker" />
+          </div>
+          <div class="filter-group" id="userMonthPickerGroup" style="display:none;min-width:180px;">
+            <label for="userMonthPicker" style="display:block;margin-bottom:6px;">Select Month</label>
+            <input type="month" id="userMonthPicker" />
+          </div>
+          <div class="filter-group" id="userYearPickerGroup" style="display:none;min-width:140px;">
+            <label for="userYearPicker" style="display:block;margin-bottom:6px;">Select Year</label>
+            <input type="number" id="userYearPicker" min="1970" max="2100" step="1" placeholder="2025" />
+          </div>
+          <div id="userCustomDateGroup" style="display:none;">
+          <div class="filter-group">
             <label for="userDateStart">Start Date</label>
             <input type="date" id="userDateStart" class="user-filter-date" />
           </div>
           <div class="filter-group">
             <label for="userDateEnd">End Date</label>
             <input type="date" id="userDateEnd" class="user-filter-date" />
+            </div>
           </div>
           <div class="filter-group">
             <label for="userRecordsPerPage">Records per Page</label>
@@ -728,6 +733,7 @@
           </div>
         </div>
         <div class="filter-actions">
+          <button class="filter-btn" id="userFilterBtn">Filter</button>
           <button class="filter-btn" id="addUserBtn">+ Add User</button>
         </div>
       </div>
@@ -753,64 +759,67 @@
         </div>
       </div>
     </div>
-    <!-- User Modal -->
-    <div class="user-modal" id="userModal" style="display:none;">
-      <div class="user-modal-content">
-        <h2 id="userModalTitle">Add User</h2>
-        <form id="userForm">
-          <input type="hidden" id="userId" />
-          <div class="form-group">
-            <label for="userName">Name</label>
-            <input type="text" id="userName" required />
-          </div>
-          <div class="form-group">
-            <label for="userEmail">Email</label>
-            <input type="email" id="userEmail" required />
-          </div>
-          <div class="form-group">
-            <label for="userStatus">Status</label>
-            <select id="userStatus">
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Date Created</label>
-            <input type="text" id="userDateCreated" readonly style="background:#181f36;color:#bfc9da;" />
-          </div>
-
-          <div class="form-group password-group" style="display:none;">
-            <label for="userPassword">New Password</label>
-            <div style="position:relative;display:flex;align-items:center;">
-              <input type="password" id="userPassword" autocomplete="new-password" minlength="6" placeholder="Enter new password... (leave blank to keep current)" style="flex:1;" />
-              <button type="button" id="toggleUserPassword" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;padding:0 6px;color:#bfc9da;" tabindex="-1" aria-label="Show password">
-                <span id="toggleUserPasswordIcon">&#128065;</span>
-              </button>
+      <!-- User Modal -->
+      <div class="user-modal" id="userModal" style="display:none;">
+        <div class="user-modal-content" style="max-width: 500px; width: 90%;">
+          <h2 id="userModalTitle">Add User</h2>
+          <form id="userForm">
+            <input type="hidden" id="userId" />
+            
+            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+              <div class="form-group" style="flex: 1;">
+                <label for="userName">Name *</label>
+                <input type="text" id="userName" required placeholder="Enter full name" />
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="userEmail">Email *</label>
+                <input type="email" id="userEmail" required placeholder="Enter email" />
+              </div>
             </div>
-          </div>
-          <div class="modal-actions">
-            <button type="submit" class="filter-btn">Save</button>
-            <button type="button" class="filter-btn export" id="cancelUserBtn">Cancel</button>
-          </div>
-        </form>
+
+            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+              <div class="form-group" style="flex: 1;">
+                <label for="userCategory">Category *</label>
+                <select id="userCategory" required>
+                  <option value="">Select Category</option>
+                  <option value="1">Personal Tester</option>
+                  <option value="2">Canteen Tester</option>
+                  <option value="3">Restaurant Tester</option>
+                  <option value="4">Cafeteria Tester</option>
+                  <option value="5">Catering Tester</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="userStatus">Status *</label>
+                <select id="userStatus" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label>Date Created</label>
+              <input type="text" id="userDateCreated" readonly style="background:#181f36;color:#bfc9da;width:100%;" />
+            </div>
+
+            <div class="form-group password-group" style="display:none; margin-bottom: 15px;">
+              <label for="userPassword">New Password</label>
+              <div style="position:relative;display:flex;align-items:center;">
+                <input type="password" id="userPassword" autocomplete="new-password" minlength="6" placeholder="Enter new password... (leave blank to keep current)" style="flex:1;width:100%;" />
+                <button type="button" id="toggleUserPassword" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;padding:0 6px;color:#bfc9da;" tabindex="-1" aria-label="Show password">
+                    <span id="toggleUserPasswordIcon">&#128065;</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+              <button type="submit" class="filter-btn" style="background: #4a5b8d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+              <button type="button" class="filter-btn export" id="cancelUserBtn" style="background: #2a3b6d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
-    <!-- Admin Password Modal -->
-    <div class="user-modal" id="adminPassModal" style="display:none;z-index:2000;">
-      <div class="user-modal-content">
-        <h2>Admin Password Required</h2>
-        <form id="adminPassForm">
-          <div class="form-group">
-            <label for="adminPassInput">Enter Admin Password</label>
-            <input type="password" id="adminPassInput" required autocomplete="current-password" />
-          </div>
-          <div class="modal-actions">
-            <button type="submit" class="filter-btn">Confirm</button>
-            <button type="button" class="filter-btn export" id="cancelAdminPassBtn">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -826,7 +835,7 @@
     <div class="report-generator-card">
       <div class="report-controls">
         <div class="report-control-group">
-          <label for="activityTypeFilter">Activity Type</label>
+          <label for="activityTypeFilter" style="display:block;margin-bottom:6px;">Activity Type</label>
           <select id="activityTypeFilter" class="report-select">
             <option value="all">All User Activities</option>
             <option value="logged in">User Login</option>
@@ -839,7 +848,7 @@
           </select>
         </div>
         <div class="report-control-group">
-          <label for="activityDateRange">Date Range</label>
+          <label for="activityDateRange" style="display:block;margin-bottom:6px;">Date Range</label>
           <select id="activityDateRange" class="report-select">
             <option value="all">All Time</option>
             <option value="daily">Daily</option>
@@ -851,22 +860,22 @@
         </div>
         
         <div class="report-control-group" id="activityWeekGroup" style="display:none;min-width:200px;">
-          <label for="activityWeekPicker">Select Week</label>
-          <input type="week" id="activityWeekPicker" />
+          <label for="activityWeekPicker" style="display:block;margin-bottom:6px;">Select Week</label>
+          <input type="week" id="activityWeekPicker" class="report-select" />
         </div>
         
         <div class="report-control-group" id="activityMonthGroup" style="display:none;min-width:200px;">
-          <label for="activityMonthPicker">Select Month</label>
-          <input type="month" id="activityMonthPicker" />
+          <label for="activityMonthPicker" style="display:block;margin-bottom:6px;">Select Month</label>
+          <input type="month" id="activityMonthPicker" class="report-select" />
         </div>
         
         <div class="report-control-group" id="activityYearGroup" style="display:none;min-width:160px;">
-          <label for="activityYearPicker">Select Year</label>
-          <input type="number" id="activityYearPicker" min="1970" max="2100" step="1" placeholder="2025" />
+          <label for="activityYearPicker" style="display:block;margin-bottom:6px;">Select Year</label>
+          <input type="number" id="activityYearPicker" class="report-select" min="1970" max="2100" step="1" placeholder="2025" />
         </div>
         
         <div class="report-control-group">
-          <label for="activityRecordsPerPage">Records per Page</label>
+          <label for="activityRecordsPerPage" style="display:block;margin-bottom:6px;">Records per Page</label>
           <select id="activityRecordsPerPage" class="report-select" onchange="changeActivityLogRecordsPerPage(this.value)">
             <option value="10" selected>10</option>
             <option value="25">25</option>
@@ -877,12 +886,12 @@
         
         <div id="activityCustomDateGroup" style="display:none;">
           <div class="report-control-group">
-            <label for="activityDateStart">Start Date</label>
-            <input type="date" id="activityDateStart" class="report-date-input" />
+              <label for="activityDateStart" style="display:block;margin-bottom:6px;">Start Date</label>
+              <input type="date" id="activityDateStart" class="report-select" />
           </div>
           <div class="report-control-group">
-            <label for="activityDateEnd">End Date</label>
-            <input type="date" id="activityDateEnd" class="report-date-input" />
+              <label for="activityDateEnd" style="display:block;margin-bottom:6px;">End Date</label>
+              <input type="date" id="activityDateEnd" class="report-select" />
           </div>
         </div>
         
@@ -891,11 +900,11 @@
             <span>🔍</span>
             Filter
           </button>
-          <button id="exportActivityLogExcel" class="report-btn report-btn-secondary">
+          <button id="exportActivityLogExcel" class="filter-btn export">
             <span>📥</span>
             Download Excel
           </button>
-          <button id="exportActivityLogPDF" class="report-btn report-btn-secondary">
+          <button id="exportActivityLogPDF" class="filter-btn export">
             <span>📄</span>
             Download PDF
           </button>
@@ -952,7 +961,7 @@
                   </div>
           <div class="filter-group">
             <label for="adminLogDateRange">Date Range</label>
-            <select id="adminLogDateRange">
+            <select id="adminLogDateRange" class="report-select">
               <option value="all">All Time</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
@@ -961,17 +970,29 @@
               <option value="custom">Custom</option>
             </select>
           </div>
-          <div class="filter-group custom-date-inputs" style="display: none;">
-            <label for="adminLogStartDate">Start Date</label>
-            <input type="date" id="adminLogStartDate" />
+          <div class="filter-group" id="activityWeekGroup" style="display:none;min-width:200px;">
+            <label for="activityWeekPicker" style="display:block;margin-bottom:6px;">Select Week</label>
+            <input type="week" id="activityWeekPicker" class="report-select" />
+          </div>
+          <div class="filter-group" id="activityMonthGroup" style="display:none;min-width:200px;">
+            <label for="activityMonthPicker" style="display:block;margin-bottom:6px;">Select Month</label>
+            <input type="month" id="activityMonthPicker" class="report-select" />
+          </div>
+          <div class="filter-group" id="activityYearGroup" style="display:none;min-width:160px;">
+            <label for="activityYearPicker" style="display:block;margin-bottom:6px;">Select Year</label>
+            <input type="number" id="activityYearPicker" class="report-select" min="1970" max="2100" step="1" placeholder="2025" />
           </div>
           <div class="filter-group custom-date-inputs" style="display: none;">
-            <label for="adminLogEndDate">End Date</label>
-            <input type="date" id="adminLogEndDate" />
+            <label for="adminLogStartDate" style="display:block;margin-bottom:6px;">Start Date</label>
+            <input type="date" id="adminLogStartDate" class="report-select" />
+          </div>
+          <div class="filter-group custom-date-inputs" style="display: none;">
+            <label for="adminLogEndDate" style="display:block;margin-bottom:6px;">End Date</label>
+            <input type="date" id="adminLogEndDate" class="report-select" />
           </div>
           <div class="filter-group">
             <label for="adminLogRecordsPerPage">Records per Page</label>
-            <select id="adminLogRecordsPerPage" onchange="changeAdminLogRecordsPerPage(this.value)">
+            <select id="adminLogRecordsPerPage" class="report-select" onchange="changeAdminLogRecordsPerPage(this.value)">
               <option value="10">10</option>
               <option value="25" selected>25</option>
               <option value="50">50</option>
@@ -1119,8 +1140,8 @@
         </div>
         <div class="filter-actions" style="gap:10px; display:flex; align-items:flex-end; justify-content:flex-end; margin-left:auto;">
           <button class="filter-btn" id="applyFeedbackFilters" type="button">🔎 Filter</button>
-          <button class="feedbacks-export-btn" id="export-feedbacks-excel" type="button">Export to Excel</button>
-          <button class="feedbacks-export-btn" id="export-feedbacks-pdf" type="button">Export to PDF</button>
+          <button class="filter-btn export" id="export-feedbacks-excel" type="button">Download Excel</button>
+          <button class="filter-btn export" id="export-feedbacks-pdf" type="button">Download PDF</button>
         </div>
       </div>
     </div>
@@ -1223,20 +1244,7 @@
               <option value="OFFLINE">OFFLINE</option>
             </select>
           </div>
-          <div class="df-item">
-            <label>Date Range</label>
-            <select id="dfDateRange">
-              <option value="all">All Time</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-          <div class="df-item" id="dfDateValueWrap">
-            <label>&nbsp;</label>
-            <input id="dfDateValue" placeholder="Pick period" />
-          </div>
+          
           <div class="df-item">
             <label>Records per Page</label>
             <select id="dfPageSize">
@@ -1249,9 +1257,9 @@
           <div class="df-item df-actions">
             <label>&nbsp;</label>
             <div class="df-action-buttons">
-              <button type="button" class="device-management-btn-primary" id="inlineApplyFilters">Filter</button>
-              <button type="button" class="device-management-btn-primary" id="downloadCsvBtn">Download CSV</button>
-              <button type="button" class="device-management-btn-primary" id="downloadPdfBtn">Download PDF</button>
+              <button type="button" class="filter-btn" id="inlineApplyFilters">Filter</button>
+              <button type="button" class="filter-btn export" id="downloadCsvBtn">Download CSV</button>
+              <button type="button" class="filter-btn export" id="downloadPdfBtn">Download PDF</button>
             </div>
           </div>
         </div>
@@ -1383,37 +1391,38 @@
       <span class="close" id="addDeviceClose" style="cursor:pointer;">&times;</span>
     </div>
     <div class="modal-body">
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group"><label>Type</label>
-          <select id="adType" style="width:100%;background:#181f36;color:#fff;border:1px solid #2a3b6d;border-radius:8px;padding:10px 12px;">
-            <option value="Temperature">Temperature</option>
-            <option value="Humidity">Humidity</option>
-            <option value="Gas">Gas</option>
-          </select>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px;">
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
+            <span style="color:#ff6b6b;">🌡️</span>
+            <span>Temperature Sensor ID</span>
+          </label>
+          <input id="tempSensorId" placeholder="Enter temperature sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
         </div>
-        <div class="form-group"><label>Status</label>
-          <select id="adStatus" style="width:100%;background:#181f36;color:#fff;border:1px solid #2a3b6d;border-radius:8px;padding:10px 12px;">
-            <option value="ONLINE">ONLINE</option>
-            <option value="OFFLINE">OFFLINE</option>
-          </select>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
+            <span style="color:#6bc1ff;">💧</span>
+            <span>Humidity Sensor ID</span>
+          </label>
+          <input id="humSensorId" placeholder="Enter humidity sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
         </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
+            <span style="color:#ffd166;">⚡</span>
+            <span>Gas Sensor ID</span>
+          </label>
+          <input id="gasSensorId" placeholder="Enter gas sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
       </div>
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group"><label>User (ID or username)</label>
-          <input id="adUserRef" placeholder="e.g., 12 or johndoe" style="width:100%;background:#181f36;color:#fff;border:1px solid #2a3b6d;border-radius:8px;padding:10px 12px;">
         </div>
-        <div class="form-group"><label>Device ID <span style="color:#6b7280;">optional</span></label>
-          <div class="input-row" style="display:flex;gap:8px;align-items:center;">
-            <input id="adDeviceId" placeholder="Auto-generate if left blank" style="flex:1;background:#181f36;color:#fff;border:1px solid #2a3b6d;border-radius:8px;padding:10px 12px;">
-            <button id="adGenerateId" class="btn btn-secondary" type="button">Generate</button>
-          </div>
-          <div id="adDeviceIdHint" style="margin-top:6px;color:#9fb2e6;font-size:12px;">ID must be unique. Leave blank to auto-generate.</div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:8px;">
+        <div class="form-group"><label style="color:#cfe0ff;font-weight:600;margin-bottom:6px;">Account</label>
+          <input id="adAccount" placeholder="Enter account" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;">
         </div>
       </div>
     </div>
     <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
       <button type="button" class="btn btn-secondary" id="addDeviceCancel">Cancel</button>
-      <button type="button" class="btn btn-primary" id="addDeviceSave">Save</button>
+      <button type="button" class="btn btn-primary" id="addDeviceSave">Add Device</button>
     </div>
   </div>
 </div>
@@ -1433,11 +1442,11 @@
         <div class="ml-form-row">
           <div class="ml-form-group">
             <label for="mlFoodName">Food Name</label>
-            <input type="text" id="mlFoodName" name="foodName" placeholder="e.g., VEGETABLE" required>
+            <input type="text" id="mlFoodName" name="foodName" placeholder="e.g., CARROT" required>
           </div>
           <div class="ml-form-group">
             <label for="mlCategory">Category</label>
-            <input type="text" id="mlCategory" name="category" placeholder="e.g., CARROT" required>
+            <input type="text" id="mlCategory" name="category" placeholder="e.g., VEGETABLE" required>
           </div>
         </div>
         
@@ -1463,20 +1472,19 @@
             <label for="mlActualStatus">Actual Status</label>
             <select id="mlActualStatus" name="actualStatus" required>
               <option value="">Select status</option>
-              <option value="Fresh">Fresh</option>
-              <option value="Spoiled">Spoiled</option>
-              <option value="Expired">Expired</option>
-              <option value="Contaminated">Contaminated</option>
+              <option value="safe">safe</option>
+              <option value="caution">caution</option>
+              <option value="unsafe">unsafe</option>
             </select>
           </div>
           <div class="ml-form-group">
-            <label for="mlSource">Source</label>
+            <label for="mlSource">Data Source</label>
             <select id="mlSource" name="source" required>
               <option value="">Select source</option>
-              <option value="Sensor Reading">Sensor Reading</option>
-              <option value="Manual Entry">Manual Entry</option>
-              <option value="Lab Test">Lab Test</option>
-              <option value="User Report">User Report</option>
+              <option value="manual">manual</option>
+              <option value="sensor">sensor</option>
+              <option value="user_feedback">user_feedback</option>
+              <option value="expert">expert</option>
             </select>
           </div>
         </div>
@@ -1539,6 +1547,65 @@
   </div>
 </div>
 
+<!-- Admin Account Details Modal -->
+<div class="user-modal" id="adminAccountModal" style="display:none;z-index:2000;">
+  <div class="user-modal-content" style="max-width: 500px; width: 90%;">
+    <h2>Admin Account Details</h2>
+    <form id="adminAccountForm">
+      <div id="adminUpdateNotice" class="sb-notice" style="display:none; margin-bottom:10px;"></div>
+      <input type="hidden" id="adminAccountId" />
+      
+      <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="adminEmail">Account (Email) *</label>
+          <input type="email" id="adminEmail" required placeholder="admin@example.com" />
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="adminUsername">Username</label>
+          <input type="text" id="adminUsername" placeholder="Enter username" />
+        </div>
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="adminFirstName">First Name *</label>
+          <input type="text" id="adminFirstName" required placeholder="First name" />
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="adminLastName">Last Name *</label>
+          <input type="text" id="adminLastName" required placeholder="Last name" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label for="adminPassword">Create New Password</label>
+        <input type="text" id="adminPassword" placeholder="Create new password (optional)" />
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="adminRole">Role</label>
+          <input type="text" id="adminRole" value="Admin" readonly />
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="adminPhone">Phone</label>
+          <input type="tel" id="adminPhone" placeholder="+1 555-123-4567" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="adminCreated">Created At</label>
+        <input type="text" id="adminCreated" readonly />
+      </div>
+
+      <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button type="submit" class="filter-btn" style="background: #4a5b8d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">Save</button>
+        <button type="button" class="filter-btn export" id="cancelAdminAccountBtn" style="background: #2a3b6d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="../assets/js/config/api-config.js"></script>
 <script src="../assets/js/Admin/sidebarexpand.js"></script>
 <script src="../assets/js/Admin/analyticstat.js"></script>
@@ -1550,7 +1617,7 @@
 <script src="../assets/js/Admin/user.js"></script>
 <script src="../assets/js/Admin/user-activity-log.js"></script>
 <script src="../assets/js/Admin/admin-log.js"></script>
-<script src="../assets/js/Admin/account-modal.js"></script>
+<!-- <script src="../assets/js/Admin/account-modal.js"></script> --> <!-- Replaced with new admin account modal -->
 <!-- Initialize all dashboard charts -->
 
 <script>
@@ -1592,7 +1659,8 @@ function handleAdminPassFormSubmit(e) {
 }
 </script>
 
-<!-- Admin Account Modal -->
+<!-- Old Admin Account Modal - Replaced with new one in template -->
+<!--
 <div id="accountModal" class="account-modal" style="display:none;">
   <div class="account-modal-content">
     <span class="account-modal-close" id="accountModalClose">&times;</span>
@@ -1629,6 +1697,7 @@ function handleAdminPassFormSubmit(e) {
     </form>
   </div>
 </div>
+-->
 
 <!-- Admin Logout Logic -->
 <script>

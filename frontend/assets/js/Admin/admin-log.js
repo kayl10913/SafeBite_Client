@@ -72,20 +72,50 @@ async function fetchAdminLogs(page = 1, limit = 25) {
           calculatedEndDate = today.toISOString().split('T')[0];
           break;
         case 'weekly':
-          const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay());
-          calculatedStartDate = weekStart.toISOString().split('T')[0];
-          calculatedEndDate = today.toISOString().split('T')[0];
+          const weekPicker = document.getElementById('activityWeekPicker');
+          if (weekPicker && weekPicker.value) {
+            const [year, week] = weekPicker.value.split('-W');
+            const s = getWeekStartDate(parseInt(year), parseInt(week));
+            const e = getWeekEndDate(parseInt(year), parseInt(week));
+            calculatedStartDate = s.toISOString().split('T')[0];
+            calculatedEndDate = e.toISOString().split('T')[0];
+          } else {
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1);
+            const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+            calculatedStartDate = weekStart.toISOString().split('T')[0];
+            calculatedEndDate = weekEnd.toISOString().split('T')[0];
+          }
           break;
         case 'monthly':
-          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-          calculatedStartDate = monthStart.toISOString().split('T')[0];
-          calculatedEndDate = today.toISOString().split('T')[0];
+          const monthPicker = document.getElementById('activityMonthPicker');
+          if (monthPicker && monthPicker.value) {
+            const [year, month] = monthPicker.value.split('-');
+            const ms = new Date(parseInt(year), parseInt(month) - 1, 1);
+            const me = new Date(parseInt(year), parseInt(month), 0);
+            calculatedStartDate = ms.toISOString().split('T')[0];
+            calculatedEndDate = me.toISOString().split('T')[0];
+          } else {
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const monthEnd = new Date(today.getFullYear(), today.getMonth()+1, 0);
+            calculatedStartDate = monthStart.toISOString().split('T')[0];
+            calculatedEndDate = monthEnd.toISOString().split('T')[0];
+          }
           break;
         case 'yearly':
-          const yearStart = new Date(today.getFullYear(), 0, 1);
-          calculatedStartDate = yearStart.toISOString().split('T')[0];
-          calculatedEndDate = today.toISOString().split('T')[0];
+          const yearPicker = document.getElementById('activityYearPicker');
+          if (yearPicker && yearPicker.value) {
+            const y = parseInt(yearPicker.value);
+            const ys = new Date(y, 0, 1);
+            const ye = new Date(y, 11, 31);
+            calculatedStartDate = ys.toISOString().split('T')[0];
+            calculatedEndDate = ye.toISOString().split('T')[0];
+          } else {
+            const ys = new Date(today.getFullYear(), 0, 1);
+            const ye = new Date(today.getFullYear(), 11, 31);
+            calculatedStartDate = ys.toISOString().split('T')[0];
+            calculatedEndDate = ye.toISOString().split('T')[0];
+          }
           break;
       }
     }
@@ -196,7 +226,12 @@ function renderAdminLogTable() {
 function renderAdminLogPagination(totalRecords) {
   const paginationDiv = document.getElementById('adminLogPagination');
   if (!paginationDiv) return;
-  
+  if (!totalRecords || totalRecords <= 0) {
+    paginationDiv.style.display = 'none';
+    paginationDiv.innerHTML = '';
+    return;
+  }
+  paginationDiv.style.display = '';
   const totalPages = Math.ceil(totalRecords / adminLogRecordsPerPage);
   
   let paginationHTML = '<div class="pagination-info">';
@@ -275,21 +310,34 @@ function exportAdminLogExcel() {
 }
 
 function exportAdminLogPDF() {
-  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
+  // Header bar
+  doc.setFillColor(74, 158, 255);
+  doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.text('Generated Report', doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+  doc.setFontSize(24);
+  doc.text('SafeBite', 40, 35);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.text('Report: Admin Logs', doc.internal.pageSize.getWidth() / 2, 90, { align: 'center' });
-  doc.setFontSize(12);
+  doc.setFontSize(18);
+  doc.text('Generated Report', 40, 55);
+
+  // Meta box
+  doc.setTextColor(0, 0, 0);
+  doc.setFillColor(248, 249, 250);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-  doc.text(`Generated on: ${dateStr}`, doc.internal.pageSize.getWidth() / 2, 110, { align: 'center' });
-  
-  // Prepare table data
-  const tableData = adminLogData.map(row => {
-    // Determine activity type from action text
+  doc.text(`Report: ADMIN LOGS`, 50, 120);
+  doc.text(`Generated on: ${dateStr}`, 50, 135);
+  doc.text(`Total Records: ${adminLogData.length}`, 300, 135);
+
+  // Table data
+  const body = adminLogData.map(row => {
     let activityType = 'Update';
     const action = row.Activity.toLowerCase();
     if (action.includes('login') || action.includes('logged in')) activityType = 'Login';
@@ -297,21 +345,39 @@ function exportAdminLogPDF() {
     else if (action.includes('add') || action.includes('created')) activityType = 'Add';
     else if (action.includes('edit') || action.includes('updated')) activityType = 'Edit';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'Delete';
-    
-    // Format timestamp to relative time for export
     const relativeTime = formatRelativeTime(row['Date/Time']);
-    
     return [row.Admin, activityType, relativeTime, row.Activity];
   });
-  
+
+  const pageWidth = doc.internal.pageSize.width;
+  const marginLeft = 40;
+  const marginRight = 40;
+  const availableWidth = pageWidth - marginLeft - marginRight;
+  const colWidths = {
+    0: Math.floor(availableWidth * 0.25),
+    1: Math.floor(availableWidth * 0.15),
+    2: Math.floor(availableWidth * 0.20),
+    3: Math.floor(availableWidth * 0.40)
+  };
+
   doc.autoTable({
-    startY: 130,
+    startY: 180,
     head: [['Admin', 'Activity', 'Date/Time', 'Details']],
-    body: tableData,
-    styles: { fontSize: 12, cellPadding: 8 },
-    headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-    margin: { left: 40, right: 40 }
+    body,
+    margin: { left: marginLeft, right: marginRight },
+    styles: { fontSize: 10, cellPadding: 6, overflow: 'linebreak', valign: 'middle', lineColor: [200,200,200], lineWidth: 0.5 },
+    headStyles: { fillColor: [74,158,255], textColor: 255, fontStyle: 'bold', halign: 'center' },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: {
+      0: { cellWidth: colWidths[0] },
+      1: { cellWidth: colWidths[1], halign: 'center' },
+      2: { cellWidth: colWidths[2], halign: 'center' },
+      3: { cellWidth: colWidths[3] }
+    },
+    didDrawPage: function (dataHook) {
+      doc.setFontSize(9); doc.setTextColor(120);
+      doc.text(`Page ${dataHook.pageNumber}`, pageWidth - 80, doc.internal.pageSize.height - 20);
+    }
   });
   doc.save('admin-log.pdf');
 }
@@ -344,10 +410,8 @@ function initializeAdminLog() {
   
   // Add event listeners for filter inputs to make them work automatically
   if (activityTypeFilter) {
-    activityTypeFilter.addEventListener('change', () => {
-      currentAdminLogPage = 1;
-      fetchAdminLogs(1, adminLogRecordsPerPage);
-    });
+    // Apply only on Filter button
+    activityTypeFilter.addEventListener('change', () => {});
   }
   
   if (dateRangeFilter) {
@@ -355,17 +419,11 @@ function initializeAdminLog() {
   }
   
   if (startDateFilter) {
-    startDateFilter.addEventListener('change', () => {
-      currentAdminLogPage = 1;
-      fetchAdminLogs(1, adminLogRecordsPerPage);
-    });
+    startDateFilter.addEventListener('change', () => {});
   }
   
   if (endDateFilter) {
-    endDateFilter.addEventListener('change', () => {
-      currentAdminLogPage = 1;
-      fetchAdminLogs(1, adminLogRecordsPerPage);
-    });
+    endDateFilter.addEventListener('change', () => {});
   }
   
   // Initial fetch from API
@@ -375,21 +433,19 @@ function initializeAdminLog() {
 function handleAdminLogDateRangeChange() {
   const dateRange = document.getElementById('adminLogDateRange')?.value || 'all';
   const customDateInputs = document.querySelectorAll('.custom-date-inputs');
+  const weekGroup = document.getElementById('activityWeekGroup');
+  const monthGroup = document.getElementById('activityMonthGroup');
+  const yearGroup = document.getElementById('activityYearGroup');
   
-  // Show/hide custom date inputs based on selection
-  if (dateRange === 'custom') {
-    customDateInputs.forEach(input => {
-      input.style.display = 'block';
-    });
-  } else {
-    customDateInputs.forEach(input => {
-      input.style.display = 'none';
-    });
-  }
-  
-  // Trigger filter update
-  currentAdminLogPage = 1;
-  fetchAdminLogs(1, adminLogRecordsPerPage);
+  // Show/hide pickers like other pages
+  if (weekGroup) weekGroup.style.display = (dateRange === 'weekly') ? 'flex' : 'none';
+  if (monthGroup) monthGroup.style.display = (dateRange === 'monthly') ? 'flex' : 'none';
+  if (yearGroup) yearGroup.style.display = (dateRange === 'yearly') ? 'flex' : 'none';
+
+  // Custom date inputs visibility
+  customDateInputs.forEach(input => { input.style.display = (dateRange === 'custom') ? 'block' : 'none'; });
+
+  // Do not auto-apply; wait for Filter button
 }
 
 // Debounce function to limit API calls

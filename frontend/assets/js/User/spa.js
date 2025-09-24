@@ -313,6 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Initialize sidebar date range controls (persisted across pages)
+    try { initSidebarDateRangeControls(); } catch (e) { console.error('Sidebar date range init failed', e); }
+
     // Load the initial page
     switchPage('dashboard');
     
@@ -394,4 +397,129 @@ function switchDashboardTab(tabName) {
 
 // Make switchDashboardTab globally available
 window.switchDashboardTab = switchDashboardTab; 
+
+// ---- Sidebar Date Range Controls ----
+function initSidebarDateRangeControls() {
+  const rangeSel = document.getElementById('sidebarDateRange');
+  const weekGrp = document.getElementById('sidebarWeekPickerGroup');
+  const monthGrp = document.getElementById('sidebarMonthPickerGroup');
+  const yearGrp = document.getElementById('sidebarYearPickerGroup');
+  const weekInput = document.getElementById('sidebarWeekPicker');
+  const monthInput = document.getElementById('sidebarMonthPicker');
+  const yearInput = document.getElementById('sidebarYearPicker');
+  if (!rangeSel) return;
+
+  const saved = safeParseJSON(localStorage.getItem('userSidebarDateRange')) || {};
+  if (saved.range) rangeSel.value = saved.range;
+  togglePickers(rangeSel.value);
+  if (saved.week && weekInput) weekInput.value = saved.week;
+  if (saved.month && monthInput) monthInput.value = saved.month;
+  if (saved.year && yearInput) yearInput.value = saved.year;
+
+  rangeSel.addEventListener('change', () => {
+    togglePickers(rangeSel.value);
+    emitChange();
+  });
+  if (weekInput) weekInput.addEventListener('change', emitChange);
+  if (monthInput) monthInput.addEventListener('change', emitChange);
+  if (yearInput) yearInput.addEventListener('change', emitChange);
+
+  // Emit initial selection
+  emitChange();
+
+  function togglePickers(range) {
+    if (weekGrp) weekGrp.style.display = 'none';
+    if (monthGrp) monthGrp.style.display = 'none';
+    if (yearGrp) yearGrp.style.display = 'none';
+    if (range === 'weekly' && weekGrp) weekGrp.style.display = 'block';
+    if (range === 'monthly' && monthGrp) monthGrp.style.display = 'block';
+    if (range === 'yearly' && yearGrp) yearGrp.style.display = 'block';
+    if (range === 'weekly' && weekInput && !weekInput.value) weekInput.value = getCurrentISOWeekString();
+    if (range === 'monthly' && monthInput && !monthInput.value) monthInput.value = getCurrentMonthString();
+    if (range === 'yearly' && yearInput && !yearInput.value) yearInput.value = String(new Date().getFullYear());
+  }
+
+  function emitChange() {
+    const selection = { range: rangeSel.value };
+    if (selection.range === 'weekly' && weekInput && weekInput.value) selection.week = weekInput.value;
+    if (selection.range === 'monthly' && monthInput && monthInput.value) selection.month = monthInput.value;
+    if (selection.range === 'yearly' && yearInput && yearInput.value) selection.year = yearInput.value;
+    localStorage.setItem('userSidebarDateRange', JSON.stringify(selection));
+    const period = computeSidebarPeriod(selection);
+    document.dispatchEvent(new CustomEvent('userDateRangeChanged', { detail: { selection, period } }));
+  }
+}
+
+function computeSidebarPeriod(selection) {
+  const today = new Date();
+  switch (selection.range) {
+    case 'alltime':
+      return { startDate: null, endDate: null, type: 'alltime' };
+    case 'daily':
+      return { startDate: toDateStr(today), endDate: toDateStr(today), type: 'daily' };
+    case 'weekly': {
+      const val = selection.week || getCurrentISOWeekString();
+      const parts = val.split('-W');
+      const y = parseInt(parts[0]);
+      const w = parseInt(parts[1]);
+      const start = getWeekStartFromWeekNumber(y, w);
+      const end = getWeekEndFromWeekNumber(y, w);
+      return { startDate: toDateStr(start), endDate: toDateStr(end), type: 'weekly' };
+    }
+    case 'monthly': {
+      const val = selection.month || getCurrentMonthString();
+      const ms = val.split('-');
+      const y = parseInt(ms[0]);
+      const m = parseInt(ms[1]);
+      const start = new Date(y, m - 1, 1);
+      const end = new Date(y, m, 0);
+      return { startDate: toDateStr(start), endDate: toDateStr(end), type: 'monthly' };
+    }
+    case 'yearly': {
+      const y = parseInt(selection.year || String(today.getFullYear()));
+      const start = new Date(y, 0, 1);
+      const end = new Date(y, 11, 31);
+      return { startDate: toDateStr(start), endDate: toDateStr(end), type: 'yearly' };
+    }
+    default:
+      return { startDate: toDateStr(today), endDate: toDateStr(today), type: 'daily' };
+  }
+}
+
+function safeParseJSON(str) {
+  try { return JSON.parse(str); } catch (_) { return null; }
+}
+
+function toDateStr(d) { return d.toISOString().split('T')[0]; }
+function getCurrentISOWeekString() {
+  const today = new Date();
+  const week = getISOWeekNumber(today);
+  return `${today.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+function getCurrentMonthString() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`;
+}
+function getISOWeekNumber(date) {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const diff = target - firstThursday;
+  return 1 + Math.round(diff / 604800000);
+}
+function getWeekStartFromWeekNumber(year, week) {
+  const simple = new Date(year, 0, 1 + (week - 1) * 7);
+  const dow = simple.getDay();
+  const ISOweekStart = new Date(simple);
+  const diff = (dow <= 4 ? 1 : 8) - dow;
+  ISOweekStart.setDate(simple.getDate() + diff);
+  return ISOweekStart;
+}
+function getWeekEndFromWeekNumber(year, week) {
+  const start = getWeekStartFromWeekNumber(year, week);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return end;
+}
 

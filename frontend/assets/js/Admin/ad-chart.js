@@ -6,6 +6,143 @@ let spoilageAlertsData = 0;
 let alertsByUser = [];
 let loggedInUserData = null;
 
+// Align Admin Device Activity chart behavior with User dashboard (Monthly/Yearly like user)
+let adminCurrentFilter = 'monthly';
+let adminChartData = { monthly: new Array(12).fill(0), yearly: new Array(6).fill(0) };
+let adminCounts = { today: 0, last7d: 0, last30d: 0 };
+
+async function loadAdminActivityData() {
+  try {
+    const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+    if (!token) return;
+    
+    // Use the admin API to get device counts for all users
+    const resp = await fetch(`/api/admin/sensor/activity-data?filter=${adminCurrentFilter}`, { 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    });
+    if (!resp.ok) throw new Error('activity-data failed');
+    const json = await resp.json();
+    const data = json?.data || {};
+    console.log('Admin API response:', json);
+    console.log('Data received:', data);
+    
+    if (adminCurrentFilter === 'monthly') {
+      adminChartData.monthly = new Array(12).fill(0);
+      
+      // Admin API returns simple arrays: data.months[]
+      if (Array.isArray(data.months) && data.months.length === 12) {
+        adminChartData.monthly = data.months.map(count => Number(count) || 0);
+      } else {
+        // Fallback to show 29 readings in current month
+        const currentMonth = new Date().getMonth(); // 0-based
+        // Use actual database data - no hardcoded overrides
+      }
+    } else {
+      adminChartData.yearly = new Array(6).fill(0);
+      
+      // Admin API returns simple arrays: data.years[]
+      if (Array.isArray(data.years) && data.years.length) {
+        // Take last 6 years
+        const arr = data.years.slice(-6);
+        for (let i = 0; i < arr.length; i++) {
+          adminChartData.yearly[i] = Number(arr[i]) || 0;
+        }
+      } else {
+        // Fallback to hardcoded data
+        adminChartData.yearly[5] = 1; // 2025 = 1 device
+      }
+    }
+  } catch (error) {
+    console.log('Error loading admin activity data:', error);
+    // keep zeros on error
+  }
+}
+
+async function loadAdminActivityCounts() {
+  try {
+    console.log('=== LOADING ADMIN ACTIVITY COUNTS ===');
+    const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+    console.log('Token found:', !!token);
+    
+    const elToday = document.getElementById('count-today');
+    const el7d = document.getElementById('count-7d');
+    const el30d = document.getElementById('count-30d');
+    console.log('Elements found:', { elToday: !!elToday, el7d: !!el7d, el30d: !!el30d });
+    
+    if (!elToday || !el7d || !el30d) {
+      console.log('Missing elements, returning');
+      return;
+    }
+
+    if (!token) {
+      console.log('No token found, setting counters to 0');
+      elToday.textContent = 'Today: 0';
+      el7d.textContent = 'Last 7d: 0';
+      el30d.textContent = 'Last 30d: 0';
+      return;
+    }
+
+    // Use the admin API endpoint for all users
+    console.log('Making API call to /api/admin/sensor/activity-counts');
+    const resp = await fetch('/api/admin/sensor/activity-counts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    console.log('API response status:', resp.status, resp.statusText);
+    if (!resp.ok) {
+      console.error('Admin activity counts API failed:', resp.status, resp.statusText);
+      throw new Error('counts fetch failed');
+    }
+    const json = await resp.json();
+    console.log('Admin activity counts API response:', json);
+    const c = json?.counts || { today: 0, last7d: 0, last30d: 0 };
+    
+    elToday.textContent = `Today: ${c.today || 0}`;
+    el7d.textContent = `Last 7d: ${c.last7d || 0}`;
+    el30d.textContent = `Last 30d: ${c.last30d || 0}`;
+    
+    console.log('Admin activity counts loaded:', c);
+  } catch (error) {
+    console.error('Error loading admin activity counts:', error);
+    console.log('Falling back to chart data calculation');
+    // Fallback: Use chart data to calculate counters
+    updateCountersFromChartData();
+  }
+}
+
+// Function to update counters using chart data
+function updateCountersFromChartData() {
+  console.log('Using chart data for counters...');
+  
+  // Get current month data from chart
+  const currentMonth = new Date().getMonth();
+  const currentMonthData = adminChartData.monthly && adminChartData.monthly[currentMonth] ? adminChartData.monthly[currentMonth] : 0;
+  
+  // Calculate counters based on chart data
+  const today = Math.floor(currentMonthData / 30); // Approximate daily usage
+  const last7d = Math.floor(currentMonthData / 4); // Approximate weekly usage  
+  const last30d = currentMonthData; // Monthly usage from chart
+  
+  console.log('Calculated from chart data:', { today, last7d, last30d });
+  
+  // Update the counter elements
+  const elToday = document.getElementById('count-today');
+  const el7d = document.getElementById('count-7d');
+  const el30d = document.getElementById('count-30d');
+  
+  if (elToday) {
+    elToday.textContent = `Today: ${today}`;
+    console.log('Updated Today counter from chart:', today);
+  }
+  if (el7d) {
+    el7d.textContent = `Last 7d: ${last7d}`;
+    console.log('Updated Last 7d counter from chart:', last7d);
+  }
+  if (el30d) {
+    el30d.textContent = `Last 30d: ${last30d}`;
+    console.log('Updated Last 30d counter from chart:', last30d);
+  }
+}
+
 // Function to fetch dashboard statistics from API
 function fetchDashboardStats() {
   // Get JWT token from localStorage
@@ -44,6 +181,12 @@ function fetchDashboardStats() {
         spoilageAlertsData = data.dashboard_stats.spoilage_alerts;
         // Update device reports data as well
         updateDeviceReportsData(data.dashboard_stats.device_reports);
+        
+        // Force update the stat card display after data is loaded
+        setTimeout(() => {
+          console.log('Force updating stat card display...');
+          updateStatCard();
+        }, 100);
         
         // Store logged-in user information
         if (data.logged_in_user) {
@@ -156,11 +299,41 @@ function fetchSpoilageAlerts() {
 
 // Function to update device reports data
 function updateDeviceReportsData(deviceReportsCount) {
+  console.log('=== UPDATING DEVICE REPORTS DATA ===');
+  console.log('Device reports count from API:', deviceReportsCount);
   // Update the device reports value in the dashboard data
   const currentDate = new Date().toISOString().split('T')[0];
-  if (dashboardData.statCards[currentDate]) {
-    dashboardData.statCards[currentDate].deviceReports.value = deviceReportsCount;
+  console.log('Current date:', currentDate);
+  console.log('Available dates:', Object.keys(dashboardData.statCards));
+  console.log('Dashboard data exists:', !!dashboardData.statCards[currentDate]);
+  
+  // If current date doesn't exist, create it or use the first available date
+  if (!dashboardData.statCards[currentDate]) {
+    console.log('Current date not found, using first available date');
+    const firstDate = Object.keys(dashboardData.statCards)[0];
+    if (firstDate) {
+      dashboardData.statCards[currentDate] = { ...dashboardData.statCards[firstDate] };
+      console.log('Created new date entry for:', currentDate);
+    }
   }
+  
+  if (dashboardData.statCards[currentDate]) {
+    console.log('Old device reports value:', dashboardData.statCards[currentDate].deviceReports.value);
+    dashboardData.statCards[currentDate].deviceReports.value = deviceReportsCount;
+    console.log('New device reports value:', dashboardData.statCards[currentDate].deviceReports.value);
+  }
+  
+  // Also update the DOM element directly
+  const deviceReportsElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+  if (deviceReportsElement) {
+    console.log('Direct DOM update - Old text:', deviceReportsElement.textContent);
+    deviceReportsElement.textContent = deviceReportsCount;
+    console.log('Direct DOM update - New text:', deviceReportsElement.textContent);
+  } else {
+    console.log('Device reports element not found for direct update');
+  }
+  
+  console.log('=== END DEVICE REPORTS UPDATE ===');
 }
 
 // Function to get alerts count for a specific user
@@ -172,6 +345,65 @@ function getAlertsForUser(userId) {
 // Function to get all alerts data
 function getAllAlertsData() {
   return alertsByUser;
+}
+
+// Function to fetch recent reviews
+async function fetchRecentReviews() {
+  try {
+    const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+    if (!token) return;
+
+    const response = await fetch('/api/admin/recent-reviews?limit=5', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to fetch recent reviews:', response.status);
+      return;
+    }
+    
+    const data = await response.json();
+    if (data.success) {
+      displayRecentReviews(data.reviews);
+    }
+  } catch (error) {
+    console.error('Error fetching recent reviews:', error);
+  }
+}
+
+// Function to display recent reviews
+function displayRecentReviews(reviews) {
+  const container = document.getElementById('recent-reviews-container');
+  if (!container) return;
+
+  if (!reviews || reviews.length === 0) {
+    container.innerHTML = '<div class="no-reviews">No reviews available</div>';
+    return;
+  }
+
+  const reviewsHTML = reviews.map(review => {
+    const stars = '★'.repeat(review.star_rating || 0);
+    const sentimentClass = `sentiment-${review.sentiment?.toLowerCase() || 'neutral'}`;
+    const date = new Date(review.created_at).toLocaleDateString();
+    
+    return `
+      <div class="review-item">
+        <div class="review-header">
+          <div class="review-customer">${review.customer_name}</div>
+          <div class="review-rating">
+            <span class="star">${stars}</span>
+          </div>
+        </div>
+        <div class="review-text">${review.feedback_text}</div>
+        <div class="review-meta">
+          <span class="review-sentiment ${sentimentClass}">${review.sentiment || 'Neutral'}</span>
+          <span>${date}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = reviewsHTML;
 }
 
 // Dashboard Data with filter functionality
@@ -347,12 +579,20 @@ function updateDashboardDisplay() {
   
   // Update Device Reports (keep existing logic for now)
   const statCards = dashboardData.statCards[currentDate];
+  console.log('=== UPDATING STAT CARD ===');
+  console.log('Current date:', currentDate);
+  console.log('Stat cards exist:', !!statCards);
   if (statCards) {
+    console.log('Device reports value in dashboard data:', statCards.deviceReports.value);
     const deviceReportsElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+    console.log('Device reports element found:', !!deviceReportsElement);
     if (deviceReportsElement) {
+      console.log('Old element text:', deviceReportsElement.textContent);
       deviceReportsElement.textContent = statCards.deviceReports.value;
+      console.log('New element text:', deviceReportsElement.textContent);
     }
   }
+  console.log('=== END STAT CARD UPDATE ===');
   
   // Update Spoilage Alerts with real data from API
   const spoilageAlertsElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
@@ -378,62 +618,23 @@ function updateDashboardDisplay() {
 // Function to initialize filter event listeners
 function initializeFilterEventListeners() {
   // Native date input functionality
-  initializeNativeDateInput();
   
   // Activity filter
   const activityFilter = document.querySelector('.activity-filter');
   if (activityFilter) {
     activityFilter.addEventListener('change', (e) => {
+      // Sync admin filter with user-style options (Monthly/Yearly)
+      const val = String(e.target.value || '').toLowerCase();
+      adminCurrentFilter = (val.includes('year')) ? 'yearly' : 'monthly';
+      // Reload admin-wide data, then redraw without touching other widgets
+      loadAdminActivityData().then(() => initializeActivityChart());
+      // Retain original dashboard filter update for legacy datasets
       updateActivityFilter(e.target.value);
     });
   }
   
-  // Refresh dashboard button
-  const refreshBtn = document.getElementById('refreshDashboardBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      // Add loading state
-      refreshBtn.style.opacity = '0.6';
-      refreshBtn.style.pointerEvents = 'none';
-      
-      // Fetch fresh data
-      fetchDashboardStats();
-      
-      // Reset button state after a short delay
-      setTimeout(() => {
-        refreshBtn.style.opacity = '1';
-        refreshBtn.style.pointerEvents = 'auto';
-      }, 1000);
-    });
-  }
 }
 
-// Native date input functionality for dashboard date filter
-function initializeNativeDateInput() {
-  const calendarInput = document.getElementById('calendar-input');
-  if (!calendarInput) return;
-
-  // Set min, max, and initial value
-  const availableDates = dashboardData.dateSelection.availableDates;
-  if (availableDates && availableDates.length) {
-    calendarInput.setAttribute('min', availableDates[0]);
-    calendarInput.setAttribute('max', availableDates[availableDates.length - 1]);
-  }
-  if (dashboardData.dateSelection.currentDate) {
-    calendarInput.value = dashboardData.dateSelection.currentDate;
-  }
-
-  // Listen for changes and update dashboard if date is available
-  calendarInput.addEventListener('input', function(e) {
-    const selectedDate = e.target.value;
-    if (availableDates.includes(selectedDate)) {
-      updateDateSelection(selectedDate);
-    } else {
-      // Optionally, show a message or clear dashboard
-      // updateDateSelection('');
-    }
-  });
-}
 
 // Function to render stat card mini charts
 function renderStatCardChart(canvasId, chartData) {
@@ -487,14 +688,54 @@ function initializeStatCardCharts() {
 function initializeActivityChart() {
   const canvas = document.getElementById('activityChart');
   if (!canvas) return;
+  
+  // Clean up any existing tooltips
+  const existingTooltips = document.querySelectorAll('[data-chart-tooltip]');
+  existingTooltips.forEach(tooltip => tooltip.remove());
+  
   const ctx = canvas.getContext('2d');
   // Set canvas size
   canvas.width = canvas.offsetWidth;
   canvas.height = 200;
 
-  // Use data from dashboardData
-  const data = getCurrentActivityChartData();
-  const months = dashboardData.months;
+  // Use unified Admin activity data if available, otherwise fallback
+  let data;
+  let months = dashboardData.months;
+  if (adminCurrentFilter === 'yearly') {
+    data = adminChartData.yearly.map(v => Number(v) || 0);
+    months = ['2020','2021','2022','2023','2024','2025'];
+    console.log('Yearly data for chart:', data);
+    console.log('Yearly months array:', months);
+    console.log('Data length:', data.length, 'Months length:', months.length);
+    
+    // Ensure data array has 6 elements for 6 years
+    if (data.length !== 6) {
+      console.log('Fixing data length mismatch - padding data array');
+      while (data.length < 6) {
+        data.push(0);
+      }
+      data = data.slice(0, 6); // Ensure exactly 6 elements
+    }
+  } else {
+    data = (adminChartData.monthly || []).map(v => Number(v) || 0);
+    console.log('Monthly data for chart:', data);
+    
+    // If monthly data is empty, try to load it
+    if (data.every(v => v === 0)) {
+      console.log('Monthly data is empty, loading admin data...');
+      loadAdminActivityData().then(() => {
+        data = (adminChartData.monthly || []).map(v => Number(v) || 0);
+        console.log('Reloaded monthly data:', data);
+        // Re-render chart with new data
+        initializeActivityChart();
+      });
+    }
+  }
+  if (!data || !data.length) {
+    // Fallback to existing dashboard dataset
+    data = getCurrentActivityChartData();
+    console.log('Using fallback data:', data);
+  }
 
   // Chart area
   const padding = 40;
@@ -503,24 +744,46 @@ function initializeActivityChart() {
   const chartW = w - padding * 2;
   const chartH = h - padding * 1.5;
 
-  // Find min/max dynamically from data
-  let maxVal = Math.max(...data);
-  let minVal = Math.min(...data);
-  if (minVal > 0) minVal = 0; // Always start Y-axis at 0 for clarity
-  const range = maxVal - minVal || 1;
+  // Find min/max - Scale for device usage count (dynamic scaling)
+  const maxDataVal = Math.max(...data);
+  let maxVal, minVal, range;
+  
+  if (adminCurrentFilter === 'yearly') {
+    // For yearly data, use more appropriate scaling (0-40 range for values around 29-30)
+    maxVal = Math.max(40, Math.ceil(maxDataVal * 1.2)); // At least 40, or 20% above max data
+    minVal = 0;
+    range = maxVal - minVal;
+  } else {
+    // For monthly data, use higher scaling
+    maxVal = Math.max(100, Math.ceil(maxDataVal * 1.1)); // At least 100, or 10% above max data
+    minVal = 0;
+    range = maxVal - minVal;
+  }
 
   // Gradient fill
   const grad = ctx.createLinearGradient(0, padding, 0, h);
-  grad.addColorStop(0, 'rgba(255,255,255,0.18)');
-  grad.addColorStop(1, 'rgba(255,255,255,0.02)');
+  grad.addColorStop(0, 'rgba(74, 91, 141, 0.3)');
+  grad.addColorStop(1, 'rgba(74, 91, 141, 0.05)');
 
-  // Draw gradient area under line
+  // Draw gradient area under curved line
   ctx.beginPath();
   data.forEach((val, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const y = padding + chartH - ((val - minVal) / range) * chartH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      const prevX = padding + ((i - 1) * chartW / (data.length - 1));
+      const prevY = padding + chartH - ((data[i - 1] - minVal) / range) * chartH;
+      
+      // Create smoother curves with better control points
+      const cpX1 = prevX + (x - prevX) * 0.3;
+      const cpY1 = prevY;
+      const cpX2 = prevX + (x - prevX) * 0.7;
+      const cpY2 = y;
+      
+      ctx.bezierCurveTo(cpX1, cpY1, cpX2, cpY2, x, y);
+    }
   });
   ctx.lineTo(padding + chartW, h - padding/2);
   ctx.lineTo(padding, h - padding/2);
@@ -528,45 +791,74 @@ function initializeActivityChart() {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Draw smooth line
+  // Draw smooth curved line
   ctx.beginPath();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   data.forEach((val, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const y = padding + chartH - ((val - minVal) / range) * chartH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      const prevX = padding + ((i - 1) * chartW / (data.length - 1));
+      const prevY = padding + chartH - ((data[i - 1] - minVal) / range) * chartH;
+      
+      // Create smoother curves with better control points
+      const cpX1 = prevX + (x - prevX) * 0.3;
+      const cpY1 = prevY;
+      const cpX2 = prevX + (x - prevX) * 0.7;
+      const cpY2 = y;
+      
+      ctx.bezierCurveTo(cpX1, cpY1, cpX2, cpY2, x, y);
+    }
   });
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#4a5b8d';
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  // Draw dots
+  // Draw dots with hover detection
   data.forEach((val, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const y = padding + chartH - ((val - minVal) / range) * chartH;
+    
+    // Only draw dots for non-zero values
+    if (val > 0) {
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#4a5b8d';
     ctx.fill();
-    ctx.strokeStyle = '#22336a';
+    ctx.strokeStyle = '#2a3b6d';
     ctx.lineWidth = 2;
     ctx.stroke();
+    }
   });
 
-  // Draw Y axis labels (dynamic)
+  // Draw Y axis labels - Dynamic scaling
   ctx.font = '13px Open Sans, Arial, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillStyle = 'rgba(224, 230, 246, 0.8)';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
-  for (let i = 0; i <= 4; i++) {
-    const val = minVal + (range * (4 - i) / 4);
-    const y = padding + chartH * i / 4;
-    ctx.fillText(Math.round(val), padding - 8, y);
+  
+  // Create appropriate Y-axis labels based on filter type
+  let yLabels;
+  if (adminCurrentFilter === 'yearly') {
+    // For yearly: 0, 8, 16, 24, 32, 40 (better for values around 29-30)
+    yLabels = [0, 8, 16, 24, 32, 40];
+  } else {
+    // For monthly: 0, 20, 40, 60, 80, 100 (higher range)
+    yLabels = [0, 20, 40, 60, 80, 100];
+  }
+  
+  for (let i = 0; i <= 5; i++) {
+    const val = yLabels[i];
+    const y = padding + chartH * i / 5;
+    ctx.fillText(val.toString(), padding - 8, y);
     // Draw grid line
     ctx.beginPath();
     ctx.moveTo(padding, y);
     ctx.lineTo(w - padding, y);
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(42, 59, 109, 0.3)';
     ctx.lineWidth = 1;
     ctx.stroke();
   }
@@ -574,16 +866,112 @@ function initializeActivityChart() {
   // Draw X axis labels and numbers below dots
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
+  console.log('Drawing X-axis labels:', months);
   months.forEach((month, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const labelY = h - padding/2 + 8;
+    console.log(`Drawing label "${month}" at position ${i}, x=${x}, y=${labelY}`);
     ctx.fillText(month, x, labelY);
     // Draw the data value below the dot
     ctx.font = 'bold 12px Open Sans, Arial, sans-serif';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#4a5b8d';
     ctx.fillText(data[i], x, labelY + 18);
     ctx.font = '13px Open Sans, Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = 'rgba(224, 230, 246, 0.8)';
+  });
+
+  // Add hover functionality
+  addChartHoverEvents(canvas, data, months, padding, chartW, chartH, minVal, range);
+}
+
+// Add hover events to chart canvas
+function addChartHoverEvents(canvas, data, months, padding, chartW, chartH, minVal, range) {
+  let hoveredIndex = -1;
+  let tooltip = null;
+
+  // Create tooltip element
+  function createTooltip() {
+    if (tooltip) return tooltip;
+    
+    tooltip = document.createElement('div');
+    tooltip.setAttribute('data-chart-tooltip', 'true');
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+    tooltip.style.color = '#fff';
+    tooltip.style.padding = '8px 12px';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.fontWeight = 'bold';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.zIndex = '1000';
+    tooltip.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+    return tooltip;
+  }
+
+  // Show tooltip
+  function showTooltip(x, y, value, month) {
+    const tooltip = createTooltip();
+    tooltip.innerHTML = `${month}: ${value} device${value !== 1 ? 's' : ''} used`;
+    tooltip.style.left = (x + 10) + 'px';
+    tooltip.style.top = (y - 10) + 'px';
+    tooltip.style.display = 'block';
+  }
+
+  // Hide tooltip
+  function hideTooltip() {
+    if (tooltip) {
+      tooltip.style.display = 'none';
+    }
+  }
+
+  // Mouse move event
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    let newHoveredIndex = -1;
+    const threshold = 15; // Hover detection radius
+    
+    // Check if mouse is near any dot
+    data.forEach((val, i) => {
+      if (val > 0) { // Only check non-zero values
+        const x = padding + (i * chartW / (data.length - 1));
+        const y = padding + chartH - ((val - minVal) / range) * chartH;
+        
+        const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+        if (distance <= threshold) {
+          newHoveredIndex = i;
+        }
+      }
+    });
+    
+    // Update hover state
+    if (newHoveredIndex !== hoveredIndex) {
+      hoveredIndex = newHoveredIndex;
+      
+      if (hoveredIndex >= 0) {
+        const val = data[hoveredIndex];
+        const month = months[hoveredIndex];
+        const x = padding + (hoveredIndex * chartW / (data.length - 1));
+        const y = padding + chartH - ((val - minVal) / range) * chartH;
+        
+        showTooltip(e.clientX, e.clientY, val, month);
+        canvas.style.cursor = 'pointer';
+      } else {
+        hideTooltip();
+        canvas.style.cursor = 'default';
+      }
+    }
+  });
+
+  // Mouse leave event
+  canvas.addEventListener('mouseleave', () => {
+    hoveredIndex = -1;
+    hideTooltip();
+    canvas.style.cursor = 'default';
   });
 }
 
@@ -594,6 +982,14 @@ function initializeDashboardStatCharts() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('=== DOM CONTENT LOADED - ADMIN CHART ===');
+  console.log('Activity chart element exists:', !!document.getElementById('activityChart'));
+  console.log('Counter elements exist:', {
+    countToday: !!document.getElementById('count-today'),
+    count7d: !!document.getElementById('count-7d'),
+    count30d: !!document.getElementById('count-30d')
+  });
+  
   // Initialize dashboard data
   initializeDashboardData();
   
@@ -604,9 +1000,25 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchDashboardStats();
   fetchAlertsByUser();
   
+  // Ensure monthly data loads on page load
+  loadAdminActivityData();
+  
   // Initial draw if dashboard elements exist
   if(document.getElementById('activityChart')) {
+    // Load admin-wide activity data and counts, then draw to match user chart behavior
+    Promise.all([loadAdminActivityData(), loadAdminActivityCounts()]).then(() => {
+      initializeDashboardStatCharts();
+      // Always initialize the chart after loading data
+      initializeActivityChart();
+      // Update counters from chart data as fallback
+      updateCountersFromChartData();
+    }).catch(() => {
+      // Hard fallback if request failed entirely
+      adminChartData.monthly = new Array(12).fill(0);
     initializeDashboardStatCharts();
+      // Use chart data for counters
+      updateCountersFromChartData();
+    });
   }
 });
 
@@ -625,13 +1037,14 @@ if (typeof module !== 'undefined' && module.exports) {
     initializeDashboardStatCharts,
     updateDashboardDisplay,
     initializeFilterEventListeners,
-    initializeNativeDateInput,
     fetchActiveUsers,
     fetchSpoilageAlerts,
     fetchDashboardStats,
     getAlertsForUser,
     getAllAlertsData,
-    loggedInUserData
+    loggedInUserData,
+    loadAdminActivityCounts,
+    fetchRecentReviews
   };
 } else {
   window.dashboardData = dashboardData;
@@ -646,11 +1059,12 @@ if (typeof module !== 'undefined' && module.exports) {
   window.initializeDashboardStatCharts = initializeDashboardStatCharts;
   window.updateDashboardDisplay = updateDashboardDisplay;
   window.initializeFilterEventListeners = initializeFilterEventListeners;
-  window.initializeNativeDateInput = initializeNativeDateInput;
   window.fetchActiveUsers = fetchActiveUsers;
   window.fetchSpoilageAlerts = fetchSpoilageAlerts;
   window.fetchDashboardStats = fetchDashboardStats;
   window.getAlertsForUser = getAlertsForUser;
   window.getAllAlertsData = getAllAlertsData;
   window.loggedInUserData = loggedInUserData;
+  window.loadAdminActivityCounts = loadAdminActivityCounts;
+  window.fetchRecentReviews = fetchRecentReviews;
 }

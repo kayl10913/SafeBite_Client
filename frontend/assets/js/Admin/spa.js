@@ -24,6 +24,30 @@ function showDashboard() {
     if (window.initializeActivityChart) {
       window.initializeActivityChart();
     }
+    
+    // Load admin activity counts after template is loaded
+    if (window.loadAdminActivityCounts) {
+      console.log('Loading admin activity counts after template load...');
+      window.loadAdminActivityCounts();
+    }
+    
+    // Update stat cards after template is loaded
+    if (window.updateStatCard) {
+      console.log('Updating stat cards after template load...');
+      window.updateStatCard();
+    }
+    
+    // Load recent reviews after template is loaded
+    if (window.fetchRecentReviews) {
+      console.log('Loading recent reviews after template load...');
+      window.fetchRecentReviews();
+    }
+    
+    // Re-bind admin account modal event listeners after SPA navigation
+    if (window.bindAdminAccountModalEvents) {
+      console.log('Re-binding admin account modal events...');
+      window.bindAdminAccountModalEvents();
+    }
   }
 }
 

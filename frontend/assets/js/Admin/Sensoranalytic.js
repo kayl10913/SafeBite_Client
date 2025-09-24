@@ -7,7 +7,6 @@ class SensorAnalyticsAPI {
             startDate: '',
             endDate: '',
             testerType: 'All Types',
-            sensorType: 'All Types',
             status: 'All Status'
         };
         this.data = {
@@ -350,55 +349,109 @@ class SensorAnalyticsAPI {
         }
 
         try {
-            // Simple PDF generation using jsPDF
-            if (typeof jsPDF === 'undefined') {
-                alert('PDF export requires jsPDF library. Please install it first.');
-                return;
-            }
-
-            const { jsPDF } = window.jsPDF;
-            const doc = new jsPDF();
-
-            // Add title
-            doc.setFontSize(18);
-            doc.text('Food Tester Analytics Report', 20, 20);
-
-            // Add date
-            doc.setFontSize(12);
-            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
-
-            // Add table headers
-            const headers = ['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading', 'Alerts'];
-            let yPosition = 50;
-
-            doc.setFontSize(10);
-            headers.forEach((header, index) => {
-                doc.text(header, 20 + (index * 30), yPosition);
-            });
-
-            // Add data rows
-            yPosition += 10;
-            data.forEach((item, rowIndex) => {
-                if (yPosition > 280) {
-                    doc.addPage();
-                    yPosition = 20;
-                }
-
-                const rowData = [
-                    item.foodTester || '',
-                    item.type || '',
-                    item.status || '',
-                    item.lastPing ? new Date(item.lastPing).toLocaleDateString() : '',
-                    item.lastReading || '',
-                    item.alertsToday || 0
-                ];
-
-                rowData.forEach((cellData, colIndex) => {
-                    const text = String(cellData).substring(0, 15); // Limit text length
-                    doc.text(text, 20 + (colIndex * 30), yPosition);
+            // Ensure jsPDF is available (handle UMD: window.jspdf.jsPDF)
+            const ensurePdfLib = async () => {
+                const loadScript = (src) => new Promise((resolve, reject) => {
+                    if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return resolve();
+                    const sc = document.createElement('script');
+                    sc.src = src; sc.async = true; sc.onload = resolve; sc.onerror = () => reject(new Error('Failed to load '+src));
+                    document.head.appendChild(sc);
                 });
+                if (!window.jspdf || !window.jspdf.jsPDF) {
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                }
+                return !!(window.jspdf && window.jspdf.jsPDF);
+            };
 
-                yPosition += 7;
+            const ok = await ensurePdfLib();
+            if (!ok) { alert('PDF export libraries not available. Please try again.'); return; }
+
+            // Ensure autotable for better table layout
+            const ensureAutoTable = async () => {
+                const has = !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+                if (!has) {
+                    await new Promise((resolve, reject) => {
+                        const src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js';
+                        if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return resolve();
+                        const sc = document.createElement('script'); sc.src = src; sc.async = true; sc.onload = resolve; sc.onerror = () => reject(new Error('Failed to load autotable'));
+                        document.head.appendChild(sc);
+                    });
+                }
+                return !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+            };
+            const autoOk = await ensureAutoTable();
+            if (!autoOk) { alert('PDF table plugin not available.'); return; }
+
+            const JsPDFCtor = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : (window.jsPDF && window.jsPDF.jsPDF);
+            if (!JsPDFCtor) { alert('jsPDF not initialized.'); return; }
+
+			const doc = new JsPDFCtor({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
+
+			// SafeBite-style header bar
+			doc.setFillColor(74, 158, 255);
+			doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+			doc.setTextColor(255, 255, 255);
+			doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+			doc.text('SafeBite', 40, 35);
+			doc.setFontSize(18); doc.setFont('helvetica', 'normal');
+			doc.text('Sensor Analytics Report', 40, 55);
+
+			// Metadata box
+			doc.setTextColor(0,0,0);
+			doc.setFillColor(248, 249, 250);
+			doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+			doc.setDrawColor(200, 200, 200);
+			doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+			doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+			const genDate = new Date();
+			doc.text(`Report Generated: ${genDate.toLocaleDateString()} at ${genDate.toLocaleTimeString()}`, 50, 120);
+			doc.text(`Total Records: ${data.length}`, 50, 135);
+
+            // Prepare table data
+            const head = [['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading', 'Alerts']];
+            const body = data.map(item => [
+                String(item.foodTester || ''),
+                String(item.type || ''),
+                String(item.status || ''),
+                item.lastPing ? new Date(item.lastPing).toLocaleDateString() : '—',
+                String(item.lastReading || '—'),
+                String(item.alertsToday || 0)
+            ]);
+
+			const pageWidth = doc.internal.pageSize.width;
+			const marginLeft = 40;
+			const marginRight = 40;
+			const availableWidth = pageWidth - marginLeft - marginRight;
+			const colWidths = {
+				0: Math.floor(availableWidth * 0.22), // Food Tester
+				1: Math.floor(availableWidth * 0.12), // Type
+				2: Math.floor(availableWidth * 0.12), // Status
+				3: Math.floor(availableWidth * 0.18), // Last Ping
+				4: Math.floor(availableWidth * 0.26), // Last Reading
+				5: Math.floor(availableWidth * 0.10)  // Alerts
+			};
+
+            // Render table with autotable
+            doc.autoTable({
+                head,
+                body,
+				startY: 180,
+                margin: { left: marginLeft, right: marginRight },
+				styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak', valign: 'middle', lineColor: [200,200,200], lineWidth: 0.5 },
+				headStyles: { fillColor: [74,158,255], textColor: 255, fontStyle: 'bold', halign: 'center' },
+				alternateRowStyles: { fillColor: [248, 249, 250] },
+                columnStyles: {
+                    0: { cellWidth: colWidths[0] },
+                    1: { cellWidth: colWidths[1], halign: 'center' },
+                    2: { cellWidth: colWidths[2], halign: 'center' },
+                    3: { cellWidth: colWidths[3], halign: 'center' },
+                    4: { cellWidth: colWidths[4] },
+                    5: { cellWidth: colWidths[5], halign: 'center' }
+                },
+                didDrawPage: function (dataHook) {
+                    doc.setFontSize(9); doc.setTextColor(120);
+                    doc.text(`Page ${dataHook.pageNumber}`, pageWidth - 80, doc.internal.pageSize.height - 20);
+                }
             });
 
             // Save the PDF

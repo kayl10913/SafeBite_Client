@@ -172,7 +172,27 @@
 .device-filters-row input#dfSearch:focus,
 .device-filters-row select:focus { outline:none; border-color:#3b7bfa; box-shadow:0 0 0 2px rgba(59,123,250,0.25); }
 .device-filters-row .df-wide { grid-column: span 1; }
-.df-action-buttons { display:flex; gap:8px; }
+.df-action-buttons { display:flex; gap:8px; align-items:flex-end; justify-content:flex-end; }
+
+/* Match Filter/Download buttons to unified style */
+.filter-btn {
+  background: #3b7bfa;
+  color: #fff;
+  border: 1px solid #3b7bfa;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 44px;
+  min-width: 130px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.filter-btn:hover { background:#2d5fd8; border-color:#2d5fd8; }
+.filter-btn.export { background:#3b7bfa; border-color:#3b7bfa; color:#fff; }
 
 /* Date range value input (week/month/year picker) */
 #dfDateValueWrap { display:none; }

@@ -90,6 +90,33 @@
       </li>
     </ul>
       
+    <!-- Date Range Controls -->
+    <div class="nav-section">
+      <div class="nav-section-title">Date Range</div>
+      <div class="form-group" style="padding:8px 12px;">
+        <label for="sidebarDateRange" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Range</label>
+        <select id="sidebarDateRange" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
+          <option value="alltime">All Time</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+      <div id="sidebarWeekPickerGroup" class="form-group" style="display:none;padding:0 12px 8px;">
+        <label for="sidebarWeekPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Week</label>
+        <input type="week" id="sidebarWeekPicker" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
+      </div>
+      <div id="sidebarMonthPickerGroup" class="form-group" style="display:none;padding:0 12px 8px;">
+        <label for="sidebarMonthPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Month</label>
+        <input type="month" id="sidebarMonthPicker" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
+      </div>
+      <div id="sidebarYearPickerGroup" class="form-group" style="display:none;padding:0 12px 12px;">
+        <label for="sidebarYearPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Year</label>
+        <input type="number" id="sidebarYearPicker" min="2000" max="2100" step="1" placeholder="YYYY" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
+      </div>
+    </div>
+
     <!-- Reports & Analysis Section -->
     <div class="nav-section">
       <div class="nav-section-title">Reports & Analysis</div>
@@ -137,7 +164,7 @@
   <div class="sidebar-account" id="sidebarAccount" style="cursor:pointer;" onclick="openEditAccountModal()">
     <span class="account-icon">&#128100;</span>
     <span class="account-text" id="accountText">Profile</span>
-    <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;" onclick="event.stopPropagation();">Logout</button>
+    <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
   </div>
 </aside>
 <main id="main-content">
@@ -905,11 +932,11 @@
             </button>
             <button class="report-btn report-btn-secondary" id="export-csv">
               <span>📥</span>
-              Export CSV
+              Download Excel
             </button>
             <button class="report-btn report-btn-secondary" id="export-pdf">
               <span>📄</span>
-              Export PDF
+              Download PDF
             </button>
           </div>
         </div>
@@ -1919,6 +1946,85 @@
   
   // Make openEditAccountModal globally available
   window.openEditAccountModal = openEditAccountModal;
+  
+  // Handle logout button click
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent parent click events
+        
+        // Get JWT token from multiple possible locations
+        const jwtToken = localStorage.getItem('jwt_token') || 
+                         localStorage.getItem('sessionToken') || 
+                         localStorage.getItem('session_token');
+        
+        if (jwtToken) {
+          // Call backend logout API to log the activity
+          fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${jwtToken}`
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Clear all session/user data regardless of API response
+            clearAllStorage();
+            
+            // Show logout message using existing function
+            if (typeof showLogoutMessage === 'function') {
+              showLogoutMessage();
+            }
+            
+            // Redirect to login page after a short delay
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1500);
+          })
+          .catch(error => {
+            console.error('Logout API error:', error);
+            // Still logout even if API fails
+            clearAllStorage();
+            
+            // Show logout message using existing function
+            if (typeof showLogoutMessage === 'function') {
+              showLogoutMessage();
+            }
+            
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1500);
+          });
+        } else {
+          // Fallback if no token
+          clearAllStorage();
+          
+          // Show logout message using existing function
+          if (typeof showLogoutMessage === 'function') {
+            showLogoutMessage();
+          }
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+        }
+      });
+    }
+    
+    // Helper function to clear all storage
+    function clearAllStorage() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('currentAdmin');
+      localStorage.removeItem('admin_data');
+      localStorage.removeItem('sessionToken');
+      localStorage.removeItem('sessionExpires');
+      sessionStorage.clear();
+    }
+  });
 </script>
 </body>
 </html>

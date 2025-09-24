@@ -11,70 +11,20 @@ class DeviceManagementManager {
         this.pageIndex = 0;
         this.pageSize = 25;
         this.listenersBound = false;
+        this.delegatedBound = false;
         this.init();
     }
 
     applyInlineFilters() {
         const type = (document.getElementById('dfType')?.value || '').trim();
         const status = (document.getElementById('dfStatus')?.value || '').trim();
-        const dateRange = (document.getElementById('dfDateRange')?.value || 'all');
-        const dateValue = (document.getElementById('dfDateValue')?.value || '').trim();
         const user = (document.getElementById('dfSearch')?.value || '').trim().toLowerCase();
         const filtered = this.deviceData.filter(d => {
             const matchType = !type || d.deviceType === type;
             const matchStatus = !status || (String(d.status || '').toUpperCase() === String(status).toUpperCase());
             const userField = `${d.userUsername || ''} ${d.userEmail || ''} ${d.name || ''}`.toLowerCase();
             const matchUser = !user || userField.includes(user);
-            const lastUpdate = d.lastUpdateMs ? new Date(d.lastUpdateMs) : null;
-            let matchDate = true;
-            if (lastUpdate) {
-                const now = new Date();
-                let start = null, end = null;
-                switch (dateRange) {
-                    case 'daily':
-                        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                        end = new Date(start); end.setDate(start.getDate()+1); end.setMilliseconds(end.getMilliseconds()-1);
-                        break;
-                    case 'weekly':
-                        if (dateValue) {
-                            const [yearStr, weekStr] = dateValue.split('-W');
-                            const year = parseInt(yearStr,10);
-                            const week = parseInt(weekStr,10);
-                            const firstThursday = new Date(year,0,1);
-                            while (firstThursday.getDay() !== 4) firstThursday.setDate(firstThursday.getDate()+1);
-                            start = new Date(firstThursday); start.setDate(firstThursday.getDate() + (week-1)*7 - 3);
-                            end = new Date(start); end.setDate(start.getDate()+6); end.setHours(23,59,59,999);
-                        } else {
-                            start = new Date(now); start.setDate(now.getDate()-7); start.setHours(0,0,0,0);
-                            end = now;
-                        }
-                        break;
-                    case 'monthly':
-                        if (dateValue) {
-                            const [y,m] = dateValue.split('-').map(n=>parseInt(n,10));
-                            start = new Date(y, m-1, 1);
-                            end = new Date(y, m, 0, 23,59,59,999);
-                        } else {
-                            start = new Date(now.getFullYear(), now.getMonth(), 1);
-                            end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
-                        }
-                        break;
-                    case 'yearly':
-                        if (dateValue) {
-                            const yy = parseInt(dateValue,10);
-                            start = new Date(yy,0,1);
-                            end = new Date(yy,11,31,23,59,59,999);
-                        } else {
-                            start = new Date(now.getFullYear(),0,1);
-                            end = new Date(now.getFullYear(),11,31,23,59,59,999);
-                        }
-                        break;
-                    default:
-                        start = null; end = null;
-                }
-                matchDate = !start || (lastUpdate >= start && lastUpdate <= end);
-            }
-            return matchType && matchStatus && matchUser && matchDate;
+            return matchType && matchStatus && matchUser; // Date range removed
         });
         this.filteredData = filtered;
         this.filtersActive = true;
@@ -219,8 +169,7 @@ class DeviceManagementManager {
         const addSave = document.getElementById('addDeviceSave');
         if (addSave) addSave.addEventListener('click', () => this.saveNewDevice());
 
-        const genBtn = document.getElementById('adGenerateId');
-        if (genBtn) genBtn.addEventListener('click', () => this.generateDeviceId());
+        // Removed Generate button; Sensor ID must be entered manually
 
         // Inline Filters
         const inlineBtn = document.getElementById('inlineApplyFilters');
@@ -241,30 +190,10 @@ class DeviceManagementManager {
         const dvWrap = document.getElementById('dfDateValueWrap');
         const dv = document.getElementById('dfDateValue');
         if (dr && dv && dvWrap) {
-            const updatePicker = () => {
-                const v = dr.value;
-                if (v === 'weekly') {
-                    dvWrap.style.display = 'block';
-                    dv.setAttribute('type', 'week');
-                    dv.placeholder = 'Select week';
-                } else if (v === 'monthly') {
-                    dvWrap.style.display = 'block';
-                    dv.setAttribute('type', 'month');
-                    dv.placeholder = 'Select month';
-                } else if (v === 'yearly') {
-                    dvWrap.style.display = 'block';
-                    dv.setAttribute('type', 'number');
-                    dv.setAttribute('min', '1900');
-                    dv.setAttribute('max', '2100');
-                    dv.placeholder = 'Enter year e.g. 2025';
-                } else {
-                    dvWrap.style.display = 'none';
-                    dv.removeAttribute('type');
-                    dv.value = '';
-                }
-            };
-            dr.addEventListener('change', updatePicker);
-            updatePicker();
+            // Hide date range controls (feature removed for device activities)
+            dvWrap.style.display = 'none';
+            dr.closest('.form-group') && (dr.closest('.form-group').style.display = 'none');
+            dv.value = '';
         }
 
         // Downloads
@@ -289,6 +218,67 @@ class DeviceManagementManager {
         });
 
         this.listenersBound = true;
+
+        // Global delegated handlers that survive SPA swaps
+        if (!this.delegatedBound) {
+            document.addEventListener('click', (e) => {
+                const target = e.target;
+
+                // Export button
+                const exportBtn = target.closest('.device-management-btn-secondary');
+                if (exportBtn) {
+                    e.preventDefault();
+                    this.exportDeviceData();
+                    return;
+                }
+
+                // Refresh button
+                const refreshBtn = target.closest('.device-management-btn-primary');
+                if (refreshBtn && /refresh/i.test((refreshBtn.textContent || '').trim())) {
+                    e.preventDefault();
+                    this.refreshData();
+                    return;
+                }
+
+                // Add Device open
+                if (target.closest('#addDeviceBtn')) {
+                    e.preventDefault();
+                    this.showAddDeviceModal();
+                    return;
+                }
+
+                // Add Device save
+                if (target.closest('#addDeviceSave')) {
+                    e.preventDefault();
+                    this.saveNewDevice();
+                    return;
+                }
+
+                // Add Device close/cancel
+                if (target.closest('#addDeviceClose') || target.closest('#addDeviceCancel')) {
+                    e.preventDefault();
+                    this.hideAddDeviceModal();
+                    return;
+                }
+
+                // Inline filter apply
+                if (target.closest('#inlineApplyFilters')) {
+                    e.preventDefault();
+                    this.applyInlineFilters();
+                    return;
+                }
+
+                // Header navigation buttons with data-page
+                const navBtn = target.closest('.device-management-btn[data-page]');
+                if (navBtn) {
+                    e.preventDefault();
+                    const page = navBtn.getAttribute('data-page');
+                    this.switchSubPage(page);
+                    return;
+                }
+            });
+            this.delegatedBound = true;
+        }
     }
 
     // Public helper to rebind UI listeners after SPA swaps the HTML
@@ -389,35 +379,100 @@ class DeviceManagementManager {
             const result = await response.json();
             console.log('📡 Stats API Response:', result);
             
-            if (result.success) {
-                const stats = result.data;
-                
-                // Update stat cards
-                const statCards = document.querySelectorAll('.device-management-stat-card');
-                console.log('📊 Found', statCards.length, 'stat cards');
-                
-                if (statCards.length >= 4) {
-                    statCards[0].querySelector('.stat-value').textContent = stats.total_devices || '0';
-                    statCards[1].querySelector('.stat-value').textContent = stats.active_devices || '0';
-                    statCards[2].querySelector('.stat-value').textContent = (stats.device_health || '0') + '%';
-                    statCards[3].querySelector('.stat-value').textContent = stats.alerts || '0';
-                    
-                    console.log('📈 Statistics updated:', {
-                        total_devices: stats.total_devices,
-                        active_devices: stats.active_devices,
-                        device_health: stats.device_health,
-                        alerts: stats.alerts
-                    });
-                } else {
-                    console.error('❌ Not enough stat cards found:', statCards.length);
-                }
-            } else {
+            if (!result.success) {
                 console.error('❌ Stats API returned error:', result.message);
                 this.showToast(`Error loading statistics: ${result.message}`);
+            }
+
+            // Regardless of backend response, derive device-level stats from sensors so 1 device = 3 sensors
+            const derived = this.computeDeviceStatsFromSensors();
+            const statCards = document.querySelectorAll('.device-management-stat-card');
+            if (statCards.length >= 4) {
+                statCards[0].querySelector('.stat-value').textContent = String(derived.totalDevices);
+                statCards[1].querySelector('.stat-value').textContent = String(derived.activeDevices);
+                statCards[2].querySelector('.stat-value').textContent = `${derived.healthPct.toFixed(2)}%`;
+                statCards[3].querySelector('.stat-value').textContent = String(derived.alerts);
+                const alertTrend = statCards[3].querySelector('.stat-trend');
+                if (alertTrend) alertTrend.textContent = derived.alerts > 1 ? 'device issues' : '↓ No issues';
+                // Trends under totals
+                const trend1 = statCards[0].querySelector('.stat-trend');
+                if (trend1) trend1.textContent = '↑ 3 sensors';
+                const trend2 = statCards[1].querySelector('.stat-trend');
+                const pctOnline = derived.totalDevices > 0 ? Math.round((derived.activeDevices/derived.totalDevices)*100) : 0;
+                if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
+                const trend3 = statCards[2].querySelector('.stat-trend');
+                if (trend3) trend3.textContent = derived.healthPct >= 99.5 ? '↑ All operational' : '↓ Needs attention';
+                console.log('📈 Derived Statistics applied:', derived);
+            } else {
+                console.error('❌ Not enough stat cards found:', statCards.length);
             }
         } catch (error) {
             console.error('❌ Error fetching statistics:', error);
             this.showToast(`Error loading statistics: ${error.message}`);
+        }
+    }
+
+    // Group sensors per user into devices (Temperature, Humidity, Gas)
+    computeDeviceStatsFromSensors() {
+        try {
+            const byUser = new Map();
+            (this.deviceData || []).forEach(s => {
+                const key = (s.userUsername || s.userEmail || 'unassigned').toLowerCase();
+                if (!byUser.has(key)) byUser.set(key, []);
+                byUser.get(key).push(s);
+            });
+
+            let totalDevices = 0;
+            let activeDevices = 0;
+            let deviceIssuesActive = 0;
+            byUser.forEach(list => {
+                // Track presence of each required type per user
+                const types = new Set();
+                const statusByType = {};
+                list.forEach(s => {
+                    const t = String(s.deviceType || '').trim();
+                    if (t) types.add(t);
+                    statusByType[t] = statusByType[t] || [];
+                    statusByType[t].push(String(s.status || '').toUpperCase());
+                });
+                const hasAll = ['Temperature','Humidity','Gas'].every(t => types.has(t));
+                if (hasAll) {
+                    totalDevices += 1;
+                    const allOnline = ['Temperature','Humidity','Gas'].every(t => (statusByType[t]||[]).every(st => st === 'ONLINE'));
+                    if (allOnline) activeDevices += 1;
+                }
+            });
+
+            // Fetch active device issues from feedbacks: type 'Device Issue' AND status 'Active'
+            // Note: keep this synchronous-looking via navigator.sendBeacon fallback when fetch fails
+            // but we will try to use fetch synchronously in this derived stat path.
+            // If the API call fails, default to 0 without breaking UI.
+            const updateAlertsFromFeedbacks = async () => {
+                try {
+                    const resp = await fetch('/api/feedbacks/type/Device%20Issue');
+                    if (!resp.ok) return 0;
+                    const json = await resp.json();
+                    const rows = Array.isArray(json?.data) ? json.data : [];
+                    return rows.filter(r => String(r.status || r.STATUS || '').toLowerCase() === 'active').length;
+                } catch { return 0; }
+            };
+
+            // Return placeholder first; caller updates stat card after promise resolves
+            updateAlertsFromFeedbacks().then(count => {
+                const statCards = document.querySelectorAll('.device-management-stat-card');
+                if (statCards.length >= 4) {
+                    const safeCount = Math.max(0, Number(count) || 0);
+                    statCards[3].querySelector('.stat-value').textContent = String(safeCount);
+                    const trend = statCards[3].querySelector('.stat-trend');
+                    if (trend) trend.textContent = safeCount > 1 ? 'device issues' : '↓ No issues';
+                }
+            });
+
+            const healthPct = totalDevices > 0 ? (activeDevices / totalDevices) * 100 : 0;
+            return { totalDevices, activeDevices, healthPct, alerts: deviceIssuesActive };
+        } catch (e) {
+            console.error('Failed to compute derived device stats:', e);
+            return { totalDevices: 0, activeDevices: 0, healthPct: 0, alerts: 0 };
         }
     }
 
@@ -600,9 +655,63 @@ class DeviceManagementManager {
     }
 
     downloadCurrentAsPDF() {
-        // Placeholder: without a PDF lib, provide CSV as fallback
-        this.showToast('Downloading CSV (PDF not available)');
-        this.downloadCurrentAsCSV();
+        const ensureLibs = async () => {
+            const load = (src) => new Promise((res, rej) => {
+                if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return res();
+                const sc = document.createElement('script'); sc.src = src; sc.async = true; sc.onload = res; sc.onerror = () => rej(new Error('load fail '+src));
+                document.head.appendChild(sc);
+            });
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                await load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+            }
+            if (!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable)) {
+                await load('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js');
+            }
+            return !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+        };
+
+        (async () => {
+            const ok = await ensureLibs().catch(() => false);
+            if (!ok) { this.showToast('PDF libraries unavailable'); return; }
+
+            const JsPDFCtor = window.jspdf.jsPDF;
+            const doc = new JsPDFCtor({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
+
+            // Header matching other reports
+            doc.setFillColor(74,158,255); doc.rect(0,0,doc.internal.pageSize.width,80,'F');
+            doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(24); doc.text('SafeBite',40,35);
+            doc.setFont('helvetica','normal'); doc.setFontSize(18); doc.text('Device Activities',40,55);
+
+            // Meta box
+            const data = (this.filteredData && this.filteredData.length) ? this.filteredData : this.deviceData;
+            doc.setTextColor(0,0,0); doc.setFillColor(248,249,250);
+            doc.rect(40,100,doc.internal.pageSize.width-80,60,'F');
+            doc.setDrawColor(200,200,200); doc.rect(40,100,doc.internal.pageSize.width-80,60,'S');
+            doc.setFont('helvetica','bold'); doc.setFontSize(10);
+            const now = new Date();
+            doc.text(`Report Generated: ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`,50,120);
+            doc.text(`Total Records: ${data.length}`,50,135);
+
+            // Table
+            const head = [['Device ID','Device Name','User','Type','Status','Last Update']];
+            const body = data.map(d => [d.id, d.name, d.location, d.deviceType, d.status, `${d.timestamp} ${d.time}`]);
+            const pageWidth = doc.internal.pageSize.width;
+            const ml=40,mr=40; const avail=pageWidth-ml-mr;
+            const colW={0:avail*0.12,1:avail*0.22,2:avail*0.22,3:avail*0.12,4:avail*0.12,5:avail*0.20};
+            doc.autoTable({
+                head, body, startY:180, margin:{left:ml,right:mr},
+                styles:{fontSize:9,cellPadding:5,overflow:'linebreak',valign:'middle',lineColor:[200,200,200],lineWidth:0.5},
+                headStyles:{fillColor:[74,158,255],textColor:255,fontStyle:'bold',halign:'center'},
+                alternateRowStyles:{fillColor:[248,249,250]},
+                columnStyles:{
+                    0:{cellWidth:colW[0]},1:{cellWidth:colW[1]},2:{cellWidth:colW[2]},
+                    3:{cellWidth:colW[3],halign:'center'},4:{cellWidth:colW[4],halign:'center'},5:{cellWidth:colW[5]}
+                },
+                didDrawPage:(h)=>{ doc.setFontSize(9); doc.setTextColor(120); doc.text(`Page ${h.pageNumber}`, pageWidth-80, doc.internal.pageSize.height-20); }
+            });
+
+            doc.save('device-activities.pdf');
+        })();
     }
 
     handleActionClick(button) {
@@ -661,19 +770,21 @@ class DeviceManagementManager {
 
     async saveNewDevice() {
         try {
-            const type = (document.getElementById('adType')?.value || '').trim();
-            const userRefRaw = (document.getElementById('adUserRef')?.value || '').trim();
-            const statusVal = (document.getElementById('adStatus')?.value || 'ONLINE').toUpperCase();
-            const customIdRaw = (document.getElementById('adDeviceId')?.value || '').trim();
-            if (!type) { this.showToast('Type is required'); return; }
-            if (!userRefRaw) { this.showToast('User (ID or username) is required'); return; }
+            const tempId = (document.getElementById('tempSensorId')?.value || '').trim();
+            const humId  = (document.getElementById('humSensorId')?.value || '').trim();
+            const gasId  = (document.getElementById('gasSensorId')?.value || '').trim();
+            const userRefRaw = (document.getElementById('adAccount')?.value || '').trim();
+            if (!tempId || !humId || !gasId) { this.showToast('All three sensor IDs are required'); return; }
+            if (!userRefRaw) { this.showToast('Account is required'); return; }
             const body = {
-                type,
                 user_ref: userRefRaw,
-                is_active: statusVal === 'ONLINE' ? 1 : 0,
-                custom_id: customIdRaw || null
+                sensors: [
+                    { type: 'Temperature', custom_id: tempId, is_active: 1 },
+                    { type: 'Humidity',    custom_id: humId,  is_active: 1 },
+                    { type: 'Gas',         custom_id: gasId,  is_active: 1 }
+                ]
             };
-            const res = await fetch('/api/device-management/devices', {
+            const res = await fetch('/api/device-management/devices/bulk', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -812,7 +923,17 @@ class DeviceManagementManager {
 
     showAddDeviceModal() {
         const modal = document.getElementById('addDeviceModal');
-        if (modal) modal.style.display = 'block';
+        if (modal) {
+            // Prefill 4-digit random IDs for each sensor input
+            const gen = () => String(Math.floor(1000 + Math.random() * 9000));
+            const temp = document.getElementById('tempSensorId');
+            const hum  = document.getElementById('humSensorId');
+            const gas  = document.getElementById('gasSensorId');
+            if (temp) temp.value = gen();
+            if (hum)  hum.value  = gen();
+            if (gas)  gas.value  = gen();
+            modal.style.display = 'block';
+        }
     }
 
     switchSubPage(page) {
