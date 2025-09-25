@@ -116,8 +116,11 @@ class FeedbackCenter {
       });
     }
 
-    // Action buttons
-    document.addEventListener('click', (e) => {
+    // Action buttons (de-duplicate across SPA inits)
+    if (window.__feedbackClickHandler) {
+      document.removeEventListener('click', window.__feedbackClickHandler);
+    }
+    const feedbackClickHandler = (e) => {
       if (e.target.classList.contains('action-btn') || e.target.classList.contains('feedback-card-action')) {
         let feedbackId;
         if (e.target.classList.contains('action-btn')) {
@@ -129,7 +132,9 @@ class FeedbackCenter {
         }
         this.showFeedbackDetails(feedbackId);
       }
-    });
+    };
+    window.__feedbackClickHandler = feedbackClickHandler;
+    document.addEventListener('click', feedbackClickHandler);
   }
 
   switchTab(tabName) {
@@ -693,15 +698,28 @@ class FeedbackCenter {
     document.body.appendChild(modal);
 
     // Close modal events
-    const closeBtn = modal.querySelector('.feedback-modal-close');
     const backdrop = modal.querySelector('.feedback-modal-backdrop');
+    const content = modal.querySelector('.feedback-modal-content');
 
     const closeModal = () => {
-      document.body.removeChild(modal);
+      if (modal && document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
+      document.removeEventListener('keydown', escHandler);
     };
 
-    closeBtn.addEventListener('click', closeModal);
-    backdrop.addEventListener('click', closeModal);
+    // Bind all close buttons (header X and footer Close)
+    modal.querySelectorAll('.feedback-modal-close').forEach((btn) => {
+      btn.addEventListener('click', closeModal);
+    });
+
+    // Click on backdrop closes; clicks inside content should not bubble
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (content) content.addEventListener('click', (e) => e.stopPropagation());
+
+    // Escape key to close
+    const escHandler = (e) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', escHandler);
   }
 
   showNotification(message, type = 'info') {

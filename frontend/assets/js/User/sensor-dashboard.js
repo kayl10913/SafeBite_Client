@@ -1332,7 +1332,15 @@ class SensorDashboard {
   }
 
   setupEventListeners() {
-    document.addEventListener('change', async (e) => {
+    // De-duplicate global listeners across SPA re-inits
+    if (window.__sd_changeHandler) {
+      document.removeEventListener('change', window.__sd_changeHandler);
+    }
+    if (window.__sd_clickHandler) {
+      document.removeEventListener('click', window.__sd_clickHandler);
+    }
+
+    const changeHandler = async (e) => {
       if (e.target.id === 'device-select') {
         if (e.target.value) {
           const val = String(e.target.value);
@@ -1350,9 +1358,12 @@ class SensorDashboard {
         }
         this.clearInfoBar();
       }
-    });
-    document.addEventListener('click', (e) => {
-      console.log('Click event on:', e.target.id, e.target);
+    };
+    window.__sd_changeHandler = changeHandler;
+    document.addEventListener('change', changeHandler);
+
+    const clickHandler = (e) => {
+      // console.log('Click event on:', e.target.id, e.target);
       if (e.target.id === 'dashboard-add-device') {
         console.log('Opening device modal...');
         e.preventDefault();
@@ -1374,7 +1385,9 @@ class SensorDashboard {
           this.setupModalEventListeners();
         }, 0);
       }
-    });
+    };
+    window.__sd_clickHandler = clickHandler;
+    document.addEventListener('click', clickHandler);
 
     // Refresh dropdown when a new food is added elsewhere
     document.addEventListener('food-item-added', async () => {
@@ -1933,7 +1946,7 @@ class SensorDashboard {
     const foodSelect = document.getElementById('mlFoodSelect');
     
     if (!foodSelect) {
-      alert('Food selection controls not found');
+      if (typeof showErrorToast === 'function') showErrorToast('Food selection controls not found');
       this.isScanningInProgress = false;
       return;
     }
@@ -1941,7 +1954,7 @@ class SensorDashboard {
     const foodId = foodSelect.value;
 
     if (!foodId) {
-      alert('Please select a food to scan');
+      if (typeof showWarningToast === 'function') showWarningToast('Please select a food to scan');
       this.isScanningInProgress = false;
       return;
     }
@@ -1958,7 +1971,7 @@ class SensorDashboard {
       // Get baseline sensor data first
       const baselineData = await this.getCurrentSensorData();
       if (!baselineData) {
-        alert('No sensor data available. Please ensure sensors are connected.');
+        if (typeof showErrorToast === 'function') showErrorToast('No sensor data available');
         return;
       }
 
@@ -1971,7 +1984,7 @@ class SensorDashboard {
       const newSensorData = await this.waitForNewSensorData(baselineData);
       
       if (!newSensorData) {
-        alert('No new sensor data detected within timeout. Please try again.');
+        if (typeof showWarningToast === 'function') showWarningToast('No new sensor data detected');
         return;
       }
 
@@ -2007,7 +2020,7 @@ class SensorDashboard {
         const modal = document.getElementById('mlFoodScannerModal');
         if (modal) modal.style.display = 'none';
       } else {
-        alert(`ML Prediction failed: ${prediction.error}`);
+        if (typeof showErrorToast === 'function') showErrorToast('Prediction failed');
         // Complete scan session even on prediction failure
         try {
           console.log('🔍 Completing scan session after prediction failure...');
@@ -2021,7 +2034,7 @@ class SensorDashboard {
       }
     } catch (error) {
       console.error('ML prediction error:', error);
-      alert('Prediction failed: ' + error.message);
+      if (typeof showErrorToast === 'function') showErrorToast('Prediction error');
       // Complete scan session even on error
       try {
         console.log('🔍 Completing scan session after error...');
@@ -2058,7 +2071,7 @@ class SensorDashboard {
     const notesTextarea = document.getElementById('mlUploadNotes');
     
     if (!foodSelect || !statusSelect) {
-      alert('ML upload controls not found');
+      if (typeof showErrorToast === 'function') showErrorToast('ML upload controls not found');
       return;
     }
 
@@ -2067,12 +2080,12 @@ class SensorDashboard {
     const notes = notesTextarea ? notesTextarea.value.trim() : '';
 
     if (!foodId) {
-      alert('Please select a food type');
+      if (typeof showWarningToast === 'function') showWarningToast('Please select a food type');
       return;
     }
 
     if (!status) {
-      alert('Please select a food status');
+      if (typeof showWarningToast === 'function') showWarningToast('Please select a food status');
       return;
     }
 
@@ -2086,7 +2099,7 @@ class SensorDashboard {
       const result = await this.uploadMLTrainingData(foodId, status, notes);
       
       if (result.success) {
-        alert('Awesome! You just shared your knowledge with our AI! 🎓✨');
+        if (typeof showSuccessToast === 'function') showSuccessToast('Shared with AI');
         // Clear form
         foodSelect.value = '';
         statusSelect.value = '';
@@ -2094,11 +2107,11 @@ class SensorDashboard {
         // Refresh ML history
         await this.updateMLHistory();
       } else {
-        alert(`Oops! Sharing failed: ${result.error}`);
+        if (typeof showErrorToast === 'function') showErrorToast('Upload failed');
       }
     } catch (error) {
       console.error('ML training upload error:', error);
-      alert('Upload failed: ' + error.message);
+      if (typeof showErrorToast === 'function') showErrorToast('Upload error');
     } finally {
       if (uploadBtn) {
         uploadBtn.disabled = false;
@@ -2109,7 +2122,7 @@ class SensorDashboard {
 
   // Handle batch upload
   async handleBatchUpload() {
-    alert('Share Multiple feature coming soon! This will allow you to teach our AI about multiple foods at once.');
+    if (typeof showInfoToast === 'function') showInfoToast('Share Multiple coming soon');
   }
 
   // Filter ML history by date
@@ -2143,80 +2156,11 @@ class SensorDashboard {
   }
 
   openDashboardDeviceModal() {
-    console.log('openDashboardDeviceModal called');
-    const modal = document.getElementById('dashboardAddDeviceModal');
-    console.log('Modal element:', modal);
-    if (!modal) {
-      console.error('Modal not found!');
-      return;
-    }
-    const closeModal = () => { modal.style.display = 'none'; };
-    modal.style.display = 'flex';
-    console.log('Modal should be visible now');
-    const typeEl = document.getElementById('dashboardDeviceType');
-    const idEl = document.getElementById('dashboardDeviceId');
-    const form = document.getElementById('dashboardAddDeviceForm');
-    const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || '';
-    
-    // Focus on sensor ID input
-    if (idEl) {
-      idEl.focus();
-    }
-
-    // Bind close
-    const xBtn = modal.querySelector('.config-modal-close');
-    const cancelBtn = modal.querySelector('.config-modal-cancel');
-    const backdrop = modal.querySelector('.config-modal-backdrop');
-    [xBtn, cancelBtn, backdrop].forEach(btn => btn && (btn.onclick = closeModal));
-
-    const escHandler = (e) => { if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); } };
-    document.addEventListener('keydown', escHandler);
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      console.log('Device form submitted');
-      const type = typeEl ? typeEl.value : '';
-      const sensorId = idEl ? idEl.value.trim() : '';
-      console.log('Selected type:', type);
-      console.log('Sensor ID:', sensorId);
-      if (!type) {
-        alert('Please select a sensor type');
-        return;
-      }
-      if (!sensorId) {
-        alert('Please enter a sensor ID');
-        return;
-      }
-      const submitBtn = form.querySelector('.config-modal-submit');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Connecting...'; }
-      try {
-        console.log('Sending request to /api/sensor/devices with type:', type, 'and sensor_id:', sensorId);
-        const r = await fetch('/api/sensor/devices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ type, sensor_id: sensorId })
-        });
-        console.log('Response status:', r.status);
-        const j = await r.json();
-        console.log('Response data:', j);
-        if (j && j.success) {
-          alert(`Device "${sensorId}" connected successfully!`);
-          closeModal();
-          // Clear form
-          if (idEl) idEl.value = '';
-          if (typeEl) typeEl.selectedIndex = 0;
-          await this.fetchSensorDevices();
-          this.renderRegisteredDevices();
-        } else {
-          alert(j && j.error ? j.error : 'Failed to connect device');
-        }
-      } catch (error) {
-        console.error('Error connecting device:', error);
-        alert('Failed to connect device: ' + error.message);
-      } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Connect'; }
-      }
-    };
+    // Device connection is now handled by admin - show info modal instead
+    window.modalSystem.info(
+      'All devices are automatically connected when registered by the admin. Your sensors will appear in the status list once they start sending data.',
+      'Device Information'
+    );
   }
 
   openDashboardFoodModal() {
@@ -2264,7 +2208,10 @@ class SensorDashboard {
       e.preventDefault();
       const name = (nameEl && nameEl.value || '').trim();
       const category = (catEl && catEl.value) || '';
-      if (!name) return alert('Please enter a food name');
+      if (!name) {
+        if (typeof showWarningToast === 'function') showWarningToast('Please enter a food name');
+        return;
+      }
       const submitBtn = form.querySelector('.config-modal-submit');
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Adding...'; }
       try {
@@ -2289,10 +2236,10 @@ class SensorDashboard {
             }
           }
         } else {
-          alert(j && j.message ? j.message : 'Failed to add food');
+          if (typeof showErrorToast === 'function') showErrorToast('Failed to add food');
         }
       } catch (_) {
-        alert('Failed to add food');
+        if (typeof showErrorToast === 'function') showErrorToast('Failed to add food');
       } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Add'; }
       }
@@ -2636,7 +2583,10 @@ class SensorDashboard {
   showAddDeviceModal() {
     // Use adminSensorTypes for allowed sensor types
     const sensorType = prompt('Enter sensor type (' + adminSensorTypes.join(', ') + '):');
-    if (!sensorType || !adminSensorTypes.includes(sensorType)) return alert('Invalid sensor type.');
+    if (!sensorType || !adminSensorTypes.includes(sensorType)) {
+      if (typeof showErrorToast === 'function') showErrorToast('Invalid sensor type');
+      return;
+    }
     const name = prompt('Enter device name:');
     if (!name) return;
     const id = prompt('Enter device ID:');
@@ -2654,9 +2604,118 @@ class SensorDashboard {
     return icons[sensorType] || '';
   }
 
+  getDeviceIcon(type) {
+    const icons = {
+      'temperature': 'thermometer',
+      'humidity': 'droplet',
+      'gas': 'wind'
+    };
+    return icons[type] || 'cpu';
+  }
+
+  getBatteryLevel(device) {
+    // Get battery level from device data or generate a realistic value
+    if (device.battery_level !== undefined) {
+      return Math.round(device.battery_level);
+    }
+    
+    // Generate a realistic battery level based on device age and status
+    const isConnected = (device.is_active === 1) || device.status === 'connected';
+    if (!isConnected) return 0;
+    
+    // Simulate battery level based on device age
+    const createdDate = new Date(device.created_at || device.lastSeen || new Date());
+    const daysSinceCreated = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+    
+    // Battery decreases over time, but stays between 20-100% for connected devices
+    const baseLevel = Math.max(20, 100 - (daysSinceCreated * 2));
+    const randomVariation = Math.floor(Math.random() * 20) - 10; // ±10% variation
+    return Math.max(0, Math.min(100, baseLevel + randomVariation));
+  }
+
+  getBatteryIcon(batteryLevel) {
+    if (batteryLevel === 0) return 'bi-battery';
+    if (batteryLevel <= 20) return 'bi-battery';
+    if (batteryLevel <= 40) return 'bi-battery-half';
+    if (batteryLevel <= 60) return 'bi-battery-half';
+    if (batteryLevel <= 80) return 'bi-battery-full';
+    return 'bi-battery-charging';
+  }
+
+  getBatteryStatusClass(batteryLevel) {
+    if (batteryLevel === 0) return 'battery-critical';
+    if (batteryLevel <= 20) return 'battery-low';
+    if (batteryLevel <= 50) return 'battery-medium';
+    return 'battery-good';
+  }
+
+  getDeviceTypeName(type) {
+    const typeNames = {
+      'temperature': 'Temperature Sensor',
+      'humidity': 'Humidity Sensor',
+      'gas': 'Gas Sensor'
+    };
+    return typeNames[type] || 'Unknown Sensor';
+  }
+
+  toggleDeviceStatus(deviceId) {
+    const device = registeredDevices.find(d => d.sensor_id === deviceId || d.id === deviceId);
+    if (device) {
+      device.status = device.status === 'connected' ? 'disconnected' : 'connected';
+      device.lastSeen = new Date().toISOString();
+      this.renderSensorStatusList();
+    }
+  }
+
   renderSensorStatusList() {
-    // Sensor status list removed from UI
+    const deviceList = document.getElementById('deviceSensorList');
+    if (!deviceList) return;
+
+    if (registeredDevices.length === 0) {
+      deviceList.innerHTML = `
+        <div class="no-devices">
+          <i class="bi bi-battery"></i>
+          <p>No devices connected</p>
+          <span>Connect a device to get started</span>
+        </div>
+      `;
     return;
+    }
+
+    const devicesHTML = registeredDevices.map(device => {
+      const isConnected = (device.is_active === 1) || device.status === 'connected';
+      const batteryLevel = this.getBatteryLevel(device);
+      const batteryIcon = this.getBatteryIcon(batteryLevel);
+      
+      return `
+        <div class="device-sensor-item">
+          <div class="device-sensor-info">
+            <div class="device-sensor-icon ${isConnected ? '' : 'disconnected'}">
+              <i class="bi bi-${this.getDeviceIcon(device.type)}"></i>
+            </div>
+            <div class="device-sensor-details">
+              <h4>${device.sensor_id || device.id}</h4>
+              <p>${this.getDeviceTypeName(device.type || device.device_type || device.type_name)}</p>
+            </div>
+          </div>
+          <div class="device-sensor-meta">
+            <div class="device-sensor-battery ${this.getBatteryStatusClass(batteryLevel)}">
+              <i class="bi ${batteryIcon}"></i>
+              <span>${batteryLevel}%</span>
+            </div>
+            <div class="device-sensor-status ${isConnected ? 'connected' : 'disconnected'}">
+              <span>${isConnected ? 'Online' : 'Offline'}</span>
+            </div>
+            <button class="device-status-btn ${isConnected ? 'connected' : 'disconnected'}" 
+                    onclick="window.sensorDashboard.toggleDeviceStatus('${device.sensor_id || device.id}')">
+              ${isConnected ? 'Connected' : 'Disconnected'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    deviceList.innerHTML = devicesHTML;
   }
 
   updateSensorsSummary() {

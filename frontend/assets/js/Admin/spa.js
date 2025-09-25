@@ -437,7 +437,7 @@ function addMlTrainingData() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken')}`
+      'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
     },
     body: JSON.stringify(formData)
   })
@@ -447,6 +447,13 @@ function addMlTrainingData() {
       // Success - close modal and refresh data
       closeMlTrainingModalFunc();
       showSuccessMessage('Training data added successfully!');
+      // Explicit admin activity log for ADD
+      try {
+        if (window.logAdminActivity) {
+          const food = (formData.foodName || '').toString().trim();
+          window.logAdminActivity('ADD', { page: 'ml', target: food ? `Training data (${food})` : 'Training data' });
+        }
+      } catch (_) {}
       
       // Refresh ML data if function exists
       if (typeof refreshMlData === 'function') {

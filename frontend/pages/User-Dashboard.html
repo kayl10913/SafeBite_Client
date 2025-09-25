@@ -90,32 +90,6 @@
       </li>
     </ul>
       
-    <!-- Date Range Controls -->
-    <div class="nav-section">
-      <div class="nav-section-title">Date Range</div>
-      <div class="form-group" style="padding:8px 12px;">
-        <label for="sidebarDateRange" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Range</label>
-        <select id="sidebarDateRange" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
-          <option value="alltime">All Time</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
-      </div>
-      <div id="sidebarWeekPickerGroup" class="form-group" style="display:none;padding:0 12px 8px;">
-        <label for="sidebarWeekPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Week</label>
-        <input type="week" id="sidebarWeekPicker" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
-      </div>
-      <div id="sidebarMonthPickerGroup" class="form-group" style="display:none;padding:0 12px 8px;">
-        <label for="sidebarMonthPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Month</label>
-        <input type="month" id="sidebarMonthPicker" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
-      </div>
-      <div id="sidebarYearPickerGroup" class="form-group" style="display:none;padding:0 12px 12px;">
-        <label for="sidebarYearPicker" style="display:block;font-size:12px;color:#8aa0c5;margin-bottom:6px;">Select Year</label>
-        <input type="number" id="sidebarYearPicker" min="2000" max="2100" step="1" placeholder="YYYY" style="width:100%;background:#1e2a4a;color:#dfe7ff;border:1px solid #2e3f6b;border-radius:8px;padding:8px;">
-      </div>
-    </div>
 
     <!-- Reports & Analysis Section -->
     <div class="nav-section">
@@ -343,26 +317,28 @@
         <!-- Devices Content -->
         <div id="devices-content" class="dashboard-content hidden">
           <div class="devices-layout">
-            <!-- Connect New Device Section -->
+            <!-- Device Information Section -->
             <div class="connect-device-container">
               <div class="connect-device-card">
                 <div class="connect-device-header">
-                  <i class="bi bi-plus-circle"></i>
-                  <h3>Connect New Device</h3>
+                  <i class="bi bi-info-circle"></i>
+                  <h3>Device Information</h3>
                 </div>
                 <div class="connect-device-form">
-                  <div class="form-group">
-                    <label for="deviceId">Device ID</label>
-                    <input type="text" id="deviceId" placeholder="Enter device ID (e.g., TEMP001)" />
+                  <div class="device-info-text">
+                    <p><strong>All devices are automatically connected when registered by the admin.</strong></p>
+                    <p>Your sensors are ready to use and will appear in the status list below once they start sending data.</p>
                   </div>
-                  <div class="form-group">
-                    <label for="deviceType">Device Type</label>
-                    <select id="deviceType"></select>
-                  </div>
-                  <button class="connect-device-btn" id="connectDeviceBtn">
-                    <i class="bi bi-plus"></i>
-                    Connect Device
+                  <div class="device-info-actions">
+                    <button class="refresh-device-btn" id="refreshDevicesBtn">
+                      <i class="bi bi-arrow-clockwise"></i>
+                      Refresh Device List
+                    </button>
+                    <button class="view-device-btn" id="viewAllDevicesBtn">
+                      <i class="bi bi-info-circle"></i>
+                      Device Overview
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -371,13 +347,13 @@
             <div class="device-status-container">
               <div class="device-status-card">
                 <div class="device-status-header">
-                  <i class="bi bi-wifi"></i>
+                  <i class="bi bi-battery-charging"></i>
                   <h3>Sensor Status</h3>
                 </div>
                 <div class="device-status-list" id="deviceSensorList">
                   <!-- Sensor status items will be rendered here by JavaScript -->
                   <div class="no-devices">
-                    <i class="bi bi-wifi-off"></i>
+                    <i class="bi bi-battery"></i>
                     <p>No devices connected</p>
                     <span>Connect a device to get started</span>
                   </div>
@@ -595,9 +571,179 @@
   </div>
 </div>
 
-<!-- Edit Account Modal Styles -->
+<!-- Modal System Styles -->
 <style>
-  /* Scoped styles for Edit Account modal */
+  /* Global Modal System */
+  .modal-system {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-system.show {
+    display: flex;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-content {
+    position: relative;
+    background: #212c4d;
+    border: 1px solid #2b3a66;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #2b3a66;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-icon {
+    font-size: 20px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #bfc9da;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .modal-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-body {
+    padding: 20px 24px;
+    color: #e0e6f6;
+    line-height: 1.5;
+  }
+
+  .modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #2b3a66;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .modal-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .modal-btn-primary {
+    background: #4a9eff;
+    color: #ffffff;
+  }
+
+  .modal-btn-primary:hover {
+    background: #3a8eef;
+    transform: translateY(-1px);
+  }
+
+  .modal-btn-secondary {
+    background: #2a3658;
+    color: #e0e6f6;
+    border: 1px solid #3a4a6b;
+  }
+
+  .modal-btn-secondary:hover {
+    background: #3a4a6b;
+    border-color: #4a5a7b;
+  }
+
+  .modal-btn-danger {
+    background: #dc3545;
+    color: #ffffff;
+  }
+
+  .modal-btn-danger:hover {
+    background: #c82333;
+  }
+
+  .modal-btn-success {
+    background: #28a745;
+    color: #ffffff;
+  }
+
+  .modal-btn-success:hover {
+    background: #218838;
+  }
+
+  .modal-btn-warning {
+    background: #ffc107;
+    color: #212529;
+  }
+
+  .modal-btn-warning:hover {
+    background: #e0a800;
+  }
+
+  /* Modal Types */
+  .modal-success .modal-icon { color: #28a745; }
+  .modal-error .modal-icon { color: #dc3545; }
+  .modal-warning .modal-icon { color: #ffc107; }
+  .modal-info .modal-icon { color: #4a9eff; }
+
+  /* Edit Account Modal Styles */
   #editAccountModal .edit-account-modal { background:#1b2540; border:1px solid #26345c; color:#e6ecff; box-shadow:0 20px 50px rgba(0,0,0,0.4); }
   #editAccountModal .config-modal-header { border-bottom:1px solid #26345c; }
   #editAccountModal .edit-account-avatar { background:linear-gradient(135deg,#4a9eff 0%,#7bb3ff 100%); box-shadow:0 6px 18px rgba(74,158,255,0.35); }
@@ -654,7 +800,156 @@
   /* Close button */
   #editAccountModal .config-modal-close { color:#bfc9da !important; }
   #editAccountModal .config-modal-close:hover { color:#ffffff !important; }
+
+  /* Hide scrollbars visually but keep scrolling enabled in Edit Account modal */
+  #editAccountModal .config-modal-content,
+  #editAccountModal .edit-account-modal { 
+    overflow-y: auto !important; 
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;    /* Firefox */
+  }
+  #editAccountModal .config-modal-content::-webkit-scrollbar,
+  #editAccountModal .edit-account-modal::-webkit-scrollbar { 
+    width: 0; 
+    height: 0; 
+  }
+  #editAccountModal .config-modal-header { 
+    text-align:center; 
+    display:flex; 
+    flex-direction: column; 
+    align-items: center;
+  }
+  #editAccountModal .config-modal-title { display:block; margin-top:8px; }
+
+  /* Battery Status Styles */
+  .device-sensor-battery {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .device-sensor-battery i {
+    font-size: 14px;
+  }
+
+  .battery-critical {
+    color: #dc3545;
+  }
+
+  .battery-low {
+    color: #ffc107;
+  }
+
+  .battery-medium {
+    color: #fd7e14;
+  }
+
+  .battery-good {
+    color: #28a745;
+  }
+
+  .device-sensor-status {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .device-sensor-status.connected {
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+  }
+
+  .device-sensor-status.disconnected {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+  }
+
+  /* Device Information Section Styles */
+  .device-info-text {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid rgba(74, 158, 255, 0.2);
+    border-radius: 8px;
+  }
+
+  .device-info-text p {
+    margin: 0 0 8px 0;
+    color: #e0e6f6;
+    line-height: 1.5;
+  }
+
+  .device-info-text p:last-child {
+    margin-bottom: 0;
+    color: #9fb8ff;
+    font-size: 0.9rem;
+  }
+
+  .device-info-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .refresh-device-btn,
+  .view-device-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .refresh-device-btn {
+    background: #4a9eff;
+    color: #ffffff;
+  }
+
+  .refresh-device-btn:hover {
+    background: #3a8eef;
+    transform: translateY(-1px);
+  }
+
+  .view-device-btn {
+    background: #2a3658;
+    color: #e0e6f6;
+    border: 1px solid #3a4a6b;
+  }
+
+  .view-device-btn:hover {
+    background: #3a4a6b;
+    border-color: #4a5a7b;
+  }
 </style>
+
+<!-- Global Modal System -->
+<div class="modal-system" id="globalModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <span class="modal-icon">ℹ️</span>
+        <span class="modal-title-text">Information</span>
+      </h3>
+      <button class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-message">Modal message will appear here</p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary modal-btn-cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary modal-btn-confirm">OK</button>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Account Modal -->
 <div class="config-modal" id="editAccountModal" style="display:none;">
@@ -1877,7 +2172,7 @@
     
     // Validate password matching if new password is provided
     if (newPassword && newPassword !== reenterPassword) {
-      alert('New password and re-enter password do not match. Please try again.');
+      window.modalSystem.warning('New password and re-enter password do not match. Please try again.', 'Password Mismatch');
       return;
     }
     
@@ -1896,7 +2191,7 @@
                           localStorage.getItem('session_token');
       
       if (!sessionToken) {
-        alert('No session token found. Please log in again.');
+        window.modalSystem.error('No session token found. Please log in again.', 'Authentication Error');
         return;
       }
       
@@ -1912,7 +2207,12 @@
       const result = await response.json();
       
       if (result.success) {
-        alert('Profile updated successfully!');
+        if (typeof showSuccessToast === 'function') {
+          showSuccessToast('Profile updated successfully!');
+        } else {
+          // Fallback to modal if toast helper not available
+          window.modalSystem.success('Profile updated successfully!', 'Success');
+        }
         document.getElementById('editAccountModal').style.display = 'none';
         
         // Keep sidebar showing "Profile" instead of user name
@@ -1921,13 +2221,70 @@
           accountText.textContent = 'Profile';
         }
       } else {
-        alert(`Error updating profile: ${result.error || 'Unknown error'}`);
+        window.modalSystem.error(`Error updating profile: ${result.error || 'Unknown error'}`, 'Update Failed');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Error updating profile. Please try again.');
+      window.modalSystem.error('Error updating profile. Please try again.', 'Update Failed');
     }
   });
+
+  // Reusable toast helper (styled like logout toast)
+  function showToast(type, message) {
+    try {
+      // Reuse a single toast element to prevent stacking
+      const bg = (type==='success')?'#4caf50':(type==='error')?'#e74c3c':(type==='warning')?'#f39c12':'#3498db';
+      if (!window.__toastEl) {
+        window.__toastEl = document.createElement('div');
+        window.__toastEl.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          z-index: 10000;
+          font-size: 14px;
+          font-weight: 500;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transition: opacity 150ms ease;
+          opacity: 0.95;
+        `;
+        document.body.appendChild(window.__toastEl);
+      }
+      window.__toastEl.style.background = bg;
+      window.__toastEl.textContent = message || 'Success';
+      window.__toastEl.style.display = 'block';
+      window.__toastEl.style.opacity = '0.95';
+
+      if (window.__toastTimer) {
+        clearTimeout(window.__toastTimer);
+      }
+      window.__toastTimer = setTimeout(() => {
+        try {
+          if (window.__toastEl) {
+            window.__toastEl.style.opacity = '0';
+            setTimeout(() => {
+              if (window.__toastEl) window.__toastEl.style.display = 'none';
+            }, 160);
+          }
+        } catch (_) {}
+      }, 2000);
+    } catch (e) {
+      // Silent fallback
+      try {
+        if (type === 'error') window.modalSystem && window.modalSystem.error(message || '');
+        else if (type === 'warning') window.modalSystem && window.modalSystem.warning(message || '');
+        else if (type === 'info') window.modalSystem && window.modalSystem.info(message || '');
+        else window.modalSystem && window.modalSystem.success(message || '');
+      } catch (_) {}
+    }
+  }
+
+  function showSuccessToast(message) { showToast('success', message); }
+  function showInfoToast(message) { showToast('info', message); }
+  function showWarningToast(message) { showToast('warning', message); }
+  function showErrorToast(message) { showToast('error', message); }
   
   // Password visibility toggle
   function togglePasswordVisibility(inputId) {
@@ -1947,82 +2304,187 @@
   // Make openEditAccountModal globally available
   window.openEditAccountModal = openEditAccountModal;
   
-  // Handle logout button click
-  document.addEventListener('DOMContentLoaded', function() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent parent click events
-        
-        // Get JWT token from multiple possible locations
-        const jwtToken = localStorage.getItem('jwt_token') || 
-                         localStorage.getItem('sessionToken') || 
-                         localStorage.getItem('session_token');
-        
-        if (jwtToken) {
-          // Call backend logout API to log the activity
-          fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${jwtToken}`
-            }
-          })
-          .then(response => response.json())
-          .then(data => {
-            // Clear all session/user data regardless of API response
-            clearAllStorage();
-            
-            // Show logout message using existing function
-            if (typeof showLogoutMessage === 'function') {
-              showLogoutMessage();
-            }
-            
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-              window.location.href = '/login';
-            }, 1500);
-          })
-          .catch(error => {
-            console.error('Logout API error:', error);
-            // Still logout even if API fails
-            clearAllStorage();
-            
-            // Show logout message using existing function
-            if (typeof showLogoutMessage === 'function') {
-              showLogoutMessage();
-            }
-            
-            setTimeout(() => {
-              window.location.href = '/login';
-            }, 1500);
-          });
-        } else {
-          // Fallback if no token
-          clearAllStorage();
-          
-          // Show logout message using existing function
-          if (typeof showLogoutMessage === 'function') {
-            showLogoutMessage();
-          }
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 1500);
+  // Global Modal System
+  class ModalSystem {
+    constructor() {
+      this.modal = document.getElementById('globalModal');
+      this.titleElement = this.modal.querySelector('.modal-title-text');
+      this.iconElement = this.modal.querySelector('.modal-icon');
+      this.messageElement = this.modal.querySelector('.modal-message');
+      this.cancelBtn = this.modal.querySelector('.modal-btn-cancel');
+      this.confirmBtn = this.modal.querySelector('.modal-btn-confirm');
+      this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+      const content = this.modal.querySelector('.modal-content');
+      // Prevent clicks inside content from closing the modal
+      if (content) content.addEventListener('click', (e) => e.stopPropagation());
+
+      // Single global ESC handler
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.modal.classList.contains('show')) {
+          this.hide();
         }
       });
     }
+
+    show(options = {}) {
+      const {
+        title = 'Information',
+        message = '',
+        type = 'info', // info, success, warning, error
+        showCancel = false,
+        cancelText = 'Cancel',
+        confirmText = 'OK',
+        onConfirm = null,
+        onCancel = null
+      } = options;
+
+      // Remove any previous temporary listeners to avoid stacking
+      this.teardownTempListeners && this.teardownTempListeners();
+
+      // Set content
+      this.titleElement.textContent = title;
+      this.messageElement.innerHTML = message;
+      this.cancelBtn.textContent = cancelText;
+      this.confirmBtn.textContent = confirmText;
+
+      // Set type styling
+      this.modal.className = `modal-system show modal-${type}`;
+      
+      // Set icon based on type
+      const icons = {
+        info: 'ℹ️',
+        success: '✅',
+        warning: '⚠️',
+        error: '❌'
+      };
+      this.iconElement.textContent = icons[type] || icons.info;
+
+      // Show/hide cancel button
+      this.cancelBtn.style.display = showCancel ? 'flex' : 'none';
+
+      // Store callbacks
+      this.onConfirm = onConfirm;
+      this.onCancel = onCancel;
+
+      // Attach fresh one-time listeners to avoid multi-click issues
+      const backdrop = this.modal.querySelector('.modal-backdrop');
+      const closeX = this.modal.querySelector('.modal-close');
+
+      const cancelOnce = () => {
+        const cb = this.onCancel; this.hide(); if (typeof cb === 'function') cb();
+      };
+      const confirmOnce = () => {
+        const cb = this.onConfirm; this.hide(); if (typeof cb === 'function') cb();
+      };
+
+      backdrop && backdrop.addEventListener('click', cancelOnce, { once: true });
+      closeX && closeX.addEventListener('click', cancelOnce, { once: true });
+      this.cancelBtn && this.cancelBtn.addEventListener('click', cancelOnce, { once: true });
+      this.confirmBtn && this.confirmBtn.addEventListener('click', confirmOnce, { once: true });
+
+      // Keep a teardown to remove any lingering listeners if hide() is called programmatically
+      this.teardownTempListeners = () => {
+        backdrop && backdrop.removeEventListener('click', cancelOnce);
+        closeX && closeX.removeEventListener('click', cancelOnce);
+        this.cancelBtn && this.cancelBtn.removeEventListener('click', cancelOnce);
+        this.confirmBtn && this.confirmBtn.removeEventListener('click', confirmOnce);
+        this.teardownTempListeners = null;
+      };
+
+      // Show modal
+      this.modal.classList.add('show');
+    }
+
+    hide() {
+      // Clean temp listeners to avoid stacking
+      this.teardownTempListeners && this.teardownTempListeners();
+      this.modal.classList.remove('show');
+      this.onConfirm = null;
+      this.onCancel = null;
+    }
+
+    // Convenience methods
+    info(message, title = 'Information') {
+      this.show({ title, message, type: 'info' });
+    }
+
+    success(message, title = 'Success') {
+      this.show({ title, message, type: 'success' });
+    }
+
+    warning(message, title = 'Warning') {
+      this.show({ title, message, type: 'warning' });
+    }
+
+    error(message, title = 'Error') {
+      this.show({ title, message, type: 'error' });
+    }
+
+    confirm(message, title = 'Confirm', onConfirm = null, onCancel = null) {
+      this.show({
+        title,
+        message,
+        type: 'warning',
+        showCancel: true,
+        confirmText: 'Yes',
+        cancelText: 'No',
+        onConfirm,
+        onCancel
+      });
+    }
+  }
+
+  // Initialize modal system
+  window.modalSystem = new ModalSystem();
+
+  // Replace global alert function
+  window.alert = function(message) {
+    window.modalSystem.info(message);
+  };
+
+  // Test modal system on page load (remove this in production)
+  document.addEventListener('DOMContentLoaded', function() {
+    // Test that modal system is working
+    console.log('Modal system initialized:', window.modalSystem);
     
-    // Helper function to clear all storage
-    function clearAllStorage() {
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('currentAdmin');
-      localStorage.removeItem('admin_data');
-      localStorage.removeItem('sessionToken');
-      localStorage.removeItem('sessionExpires');
-      sessionStorage.clear();
+    // Test different modal types
+    setTimeout(() => {
+      // Uncomment the line below to test modals on page load
+      // window.modalSystem.success('Modal system is working correctly!', 'Test Success');
+    }, 1000);
+  });
+
+  // Add confirm function
+  window.confirm = function(message) {
+    return new Promise((resolve) => {
+      window.modalSystem.show({
+        title: 'Confirm',
+        message,
+        type: 'warning',
+        showCancel: true,
+        confirmText: 'Yes',
+        cancelText: 'No',
+        onConfirm: () => {
+          window.modalSystem.hide();
+          resolve(true);
+        },
+        onCancel: () => {
+          window.modalSystem.hide();
+          resolve(false);
+        }
+      });
+    });
+  };
+  
+  // Logout is centrally handled in assets/js/User/user-auth.js to avoid double binding
+  // Prevent logout click from triggering parent profile click (which opens Edit modal)
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) { e.stopPropagation(); });
     }
   });
 </script>

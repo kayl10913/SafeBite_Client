@@ -206,7 +206,7 @@ function renderAdminLogTable() {
     if (action.includes('login') || action.includes('logged in')) activityType = 'login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'logout';
     else if (action.includes('add') || action.includes('created')) activityType = 'add';
-    else if (action.includes('edit') || action.includes('updated')) activityType = 'edit';
+    else if (action.includes('edit') || action.includes('updated')) activityType = 'update';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'delete';
     
     // Format timestamp to relative time
@@ -289,7 +289,7 @@ function exportAdminLogExcel() {
     if (action.includes('login') || action.includes('logged in')) activityType = 'Login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'Logout';
     else if (action.includes('add') || action.includes('created')) activityType = 'Add';
-    else if (action.includes('edit') || action.includes('updated')) activityType = 'Edit';
+    else if (action.includes('edit') || action.includes('updated')) activityType = 'Update';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'Delete';
     
     // Format timestamp to relative time for export
@@ -343,7 +343,7 @@ function exportAdminLogPDF() {
     if (action.includes('login') || action.includes('logged in')) activityType = 'Login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'Logout';
     else if (action.includes('add') || action.includes('created')) activityType = 'Add';
-    else if (action.includes('edit') || action.includes('updated')) activityType = 'Edit';
+    else if (action.includes('edit') || action.includes('updated')) activityType = 'Update';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'Delete';
     const relativeTime = formatRelativeTime(row['Date/Time']);
     return [row.Admin, activityType, relativeTime, row.Activity];

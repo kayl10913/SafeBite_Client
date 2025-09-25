@@ -1582,11 +1582,11 @@ main {
 /* Devices Tab Styles */
 .devices-layout {
   display: flex;
-  gap: 30px;
+  gap: 16px;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 40px 20px;
-  min-height: 70vh;
+  padding: 16px 12px;
+  min-height: 0;
   align-items: stretch;
 }
 
@@ -1598,12 +1598,12 @@ main {
 
 .connect-device-card {
   background: #1a2340;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  padding: 24px;
   border: 1px solid #2a3b6d;
   width: 100%;
-  min-height: 500px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -1611,8 +1611,8 @@ main {
 .connect-device-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .connect-device-header i {
@@ -1631,7 +1631,7 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 12px;
 }
 
 .form-group {
@@ -1705,12 +1705,12 @@ main {
 
 .device-status-card {
   background: #1a2340;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  padding: 24px;
   border: 1px solid #2a3b6d;
   width: 100%;
-  min-height: 500px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -1718,8 +1718,8 @@ main {
 .device-status-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .device-status-header i {
@@ -1738,16 +1738,16 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   overflow-y: auto;
-  padding-right: 10px;
+  padding-right: 6px;
 }
 
 .device-sensor-item {
   background: #0a1a36;
   border: 1px solid #2a3b6d;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1763,7 +1763,7 @@ main {
 .device-sensor-info {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .device-sensor-icon {
@@ -1791,7 +1791,7 @@ main {
 .device-sensor-meta {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .device-sensor-status {

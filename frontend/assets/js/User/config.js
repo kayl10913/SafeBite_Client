@@ -52,7 +52,7 @@ window.initConfigPage = function() {
       const name = (nameInput && nameInput.value || '').trim();
       const category = (categorySelect && categorySelect.value) || '';
       if (!name) {
-        alert('Please enter a food name');
+        window.modalSystem.warning('Please enter a food name', 'Input Required');
         return;
       }
       const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || '';
@@ -73,10 +73,10 @@ window.initConfigPage = function() {
             document.dispatchEvent(new CustomEvent('food-item-added', { detail: { food_id: j.food_id, name, category } }));
           } catch (_) {}
         } else {
-          alert(j && j.message ? j.message : 'Failed to add food item');
+          window.modalSystem.error(j && j.message ? j.message : 'Failed to add food item', 'Add Failed');
         }
       })
-      .catch(() => alert('Failed to add food item'));
+      .catch(() => window.modalSystem.error('Failed to add food item', 'Add Failed'));
     };
   }
 
@@ -191,13 +191,13 @@ window.initConfigPage = function() {
         .then(r => r.json())
         .then(j => {
           if (j && j.success) {
-            alert(`Successfully deleted ${j.deleted_count} scan records for ${foodName}`);
+            window.modalSystem.success(`Successfully deleted ${j.deleted_count} scan records for ${foodName}`, 'Records Deleted');
             loadFoodItems(); // Reload the list
           } else {
-            alert(j && j.message ? j.message : 'Failed to delete ML prediction data');
+            window.modalSystem.error(j && j.message ? j.message : 'Failed to delete ML prediction data', 'Delete Failed');
           }
         })
-        .catch(() => alert('Failed to delete ML prediction data'));
+        .catch(() => window.modalSystem.error('Failed to delete ML prediction data', 'Delete Failed'));
       };
     });
   }

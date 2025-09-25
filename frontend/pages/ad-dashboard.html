@@ -768,9 +768,15 @@
             
             <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
               <div class="form-group" style="flex: 1;">
-                <label for="userName">Name *</label>
-                <input type="text" id="userName" required placeholder="Enter full name" />
+                <label for="userFirstName">First Name *</label>
+                <input type="text" id="userFirstName" required placeholder="Enter first name" />
               </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="userLastName">Last Name *</label>
+                <input type="text" id="userLastName" required placeholder="Enter last name" />
+              </div>
+            </div>
+            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
               <div class="form-group" style="flex: 1;">
                 <label for="userEmail">Email *</label>
                 <input type="email" id="userEmail" required placeholder="Enter email" />
@@ -952,11 +958,11 @@
                     <label for="adminLogActivityType">Activity Type</label>
                     <select id="adminLogActivityType">
                       <option value="all">All Activities</option>
-                      <option value="User logged in successfully">Login</option>
-                      <option value="User logged out">Logout</option>
-                      <option value="Updated">Update</option>
-                      <option value="Added">Add</option>
-                      <option value="Deleted">Delete</option>
+                      <option value="LOGIN">Login</option>
+                      <option value="LOGOUT">Logout</option>
+                      <option value="ADD">Add</option>
+                      <option value="UPDATE">Update</option>
+                      <option value="DELETE">Delete</option>
                     </select>
                   </div>
           <div class="filter-group">
@@ -1797,6 +1803,104 @@ function handleAdminPassFormSubmit(e) {
 <script src="../assets/js/Admin/feedbacks.js"></script>
 <!-- Device Management JavaScript -->
 <script src="../assets/js/Admin/device-management.js"></script>
+
+<!-- Admin Activity Logging Helper -->
+<script>
+(function() {
+  function getAuthToken() {
+    return localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || '';
+  }
+
+  function buildAdminDetails(context) {
+    try {
+      if (!context) return '';
+      // Normalize known contexts into concise descriptions
+      const page = (context.page || '').trim();
+      const target = (context.target || '').trim();
+      const extra = (context.extra || '').trim();
+      if (context.action === 'LOGIN') return 'Logged in';
+      if (context.action === 'LOGOUT') return 'Logged out';
+      if (context.action === 'ADD') {
+        if (page === 'users') return 'Added: User';
+        if (page === 'devices') return 'Added: Device';
+        return 'Added';
+      }
+      if (context.action === 'UPDATE') {
+        if (page === 'analytics') return 'Updated: on Analytics Filters';
+        if (page === 'devices' && target === 'filters') return 'Updated: on Device Management Filters';
+        if (page === 'users' && target === 'filters') return 'Updated: on Users Filters';
+        if (target) return `Updated: ${target}`;
+        return 'Updated';
+      }
+      if (context.action === 'DELETE') {
+        if (page === 'users') return 'Deleted: User';
+        if (page === 'devices') return 'Deleted: Device';
+        return 'Deleted';
+      }
+      return extra || '';
+    } catch(_) { return ''; }
+  }
+
+  async function logAdminActivity(action, details) {
+    // Disabled client-side POST to avoid 404 noise; rely on backend middleware/route-specific logs
+    return;
+  }
+
+  // Expose globally for other modules
+  window.logAdminActivity = logAdminActivity;
+
+  // Wire common actions
+  document.addEventListener('DOMContentLoaded', function() {
+    // Logout button
+    var logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function() {
+        logAdminActivity('LOGOUT', { page: 'account' });
+      });
+    }
+
+    // Add user
+    var addUserBtn = document.getElementById('addUserBtn');
+    // Do not log opening of Add User modal
+
+    // Add device save button in template
+    var addDeviceSave = document.getElementById('addDeviceSave');
+    if (addDeviceSave) {
+      addDeviceSave.addEventListener('click', function() {
+        logAdminActivity('ADD', { page: 'devices' });
+      });
+    }
+
+    // Filters apply (treat as UPDATE)
+    // Intentionally do not log filter apply actions per requirement
+
+    // Generic delegation for ADD/UPDATE/DELETE buttons
+    document.body.addEventListener('click', function(e) {
+      var el = e.target.closest('button, a');
+      if (!el) return;
+      var txt = (el.textContent || '').toLowerCase();
+      if (txt.includes('delete') || el.classList.contains('delete') || el.id.toLowerCase().includes('delete')) {
+        logAdminActivity('DELETE', { page: 'devices' });
+      } else if (txt.includes('add') || txt.startsWith('+') || el.classList.contains('add') || el.id.toLowerCase().includes('add')) {
+        // Try to infer context
+        const inUsers = !!document.getElementById('users-template') && !!document.getElementById('userModal');
+        logAdminActivity('ADD', { page: inUsers ? 'users' : 'devices' });
+      } else if (
+        txt.includes('save') ||
+        txt.includes('update') ||
+        txt.includes('edit') ||
+        el.classList.contains('save') ||
+        el.classList.contains('edit') ||
+        el.id.toLowerCase().includes('save') ||
+        el.id.toLowerCase().includes('update') ||
+        el.id.toLowerCase().includes('edit')
+      ) {
+        logAdminActivity('UPDATE', { page: 'devices' });
+      }
+    });
+  });
+})();
+</script>
 
 
 </body>

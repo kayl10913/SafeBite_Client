@@ -102,7 +102,7 @@ class MLDataUpload {
     const notesTextarea = document.getElementById('mlUploadNotes');
     
     if (!foodSelect || !statusSelect) {
-      alert('ML upload controls not found');
+      if (typeof showErrorToast === 'function') showErrorToast('ML upload controls not found');
       return;
     }
 
@@ -111,12 +111,12 @@ class MLDataUpload {
     const notes = notesTextarea ? notesTextarea.value.trim() : '';
 
     if (!foodId) {
-      alert('Please select a food type');
+      if (typeof showWarningToast === 'function') showWarningToast('Please select a food type');
       return;
     }
 
     if (!status) {
-      alert('Please select a food status');
+      if (typeof showWarningToast === 'function') showWarningToast('Please select a food status');
       return;
     }
 
@@ -130,7 +130,7 @@ class MLDataUpload {
       const result = await this.uploadMLTrainingData(foodId, status, notes);
       
       if (result.success) {
-        alert('Fantastic! You just taught our AI something valuable! 🎓✨');
+        if (typeof showSuccessToast === 'function') showSuccessToast('AI training data uploaded');
         // Clear form
         foodSelect.value = '';
         statusSelect.value = '';
@@ -139,11 +139,11 @@ class MLDataUpload {
         this.addToMLHistory(result.data);
         this.renderMLHistory();
       } else {
-        alert(`Oops! Teaching failed: ${result.error}`);
+        if (typeof showErrorToast === 'function') showErrorToast('Upload failed');
       }
     } catch (error) {
       console.error('ML upload error:', error);
-      alert('Upload failed: ' + error.message);
+      if (typeof showErrorToast === 'function') showErrorToast('Upload error');
     } finally {
       if (uploadBtn) {
         uploadBtn.disabled = false;
@@ -230,7 +230,7 @@ class MLDataUpload {
   }
 
   handleBatchUpload() {
-    alert('Share Multiple feature coming soon! This will allow you to teach our AI about multiple foods at once.');
+    if (typeof showInfoToast === 'function') showInfoToast('Share Multiple coming soon');
   }
 
   // ML History Methods

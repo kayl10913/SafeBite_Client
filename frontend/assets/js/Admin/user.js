@@ -148,6 +148,7 @@ async function fetchUsers(page = 1, limit = 25) {
       // Map backend fields to UI fields
       usersData = (result.users || []).map(u => ({
         user_id: u.user_id,
+        username: u.username,
         name: `${u.first_name} ${u.last_name}`.trim(),
         email: u.email,
         status: u.account_status,
@@ -278,7 +279,7 @@ function renderUserTable() {
       <td><span class="status-badge status-${user.status.toLowerCase()}">${user.status}</span></td>
       <td>
         <button class="action-btn edit" data-id="${user.user_id}">Edit</button>
-        <button class="action-btn delete" data-id="${user.user_id}">Delete</button>
+        <button class="action-btn deactivate" data-id="${user.user_id}">Deactivate</button>
         </td>
       </tr>
     `).join('');
@@ -400,7 +401,9 @@ function openUserModal(editUser) {
   if (editUser) {
     editingUserId = editUser.user_id;
     document.getElementById('userId').value = editUser.user_id;
-    document.getElementById('userName').value = editUser.name;
+    const [fn, ...lnParts] = (editUser.name || '').split(' ');
+    document.getElementById('userFirstName').value = fn || '';
+    document.getElementById('userLastName').value = lnParts.join(' ') || '';
     document.getElementById('userEmail').value = editUser.email;
     document.getElementById('userCategory').value = editUser.tester_type_id || '';
     document.getElementById('userStatus').value = editUser.status;
@@ -431,7 +434,8 @@ function closeUserModal() {
 function handleUserFormSubmit(e) {
   e.preventDefault();
   const id = document.getElementById('userId').value;
-  const name = document.getElementById('userName').value.trim();
+  const firstName = document.getElementById('userFirstName').value.trim();
+  const lastName = document.getElementById('userLastName').value.trim();
   const email = document.getElementById('userEmail').value.trim();
   const category = document.getElementById('userCategory').value;
   const status = document.getElementById('userStatus').value;
@@ -439,14 +443,49 @@ function handleUserFormSubmit(e) {
   const passwordInput = document.getElementById('userPassword');
   const password = passwordInput ? passwordInput.value : '';
   
-  // For now, just close the modal and refresh the data
-  // In a real implementation, you would make an API call to create/update the user
-  console.log('User form submitted:', { id, name, email, category, status, dateCreated, password });
-  
-  closeUserModal();
-  
-  // Refresh the user list
-  fetchUsers(currentUserPage, userRecordsPerPage);
+  // Create or update via Admin API
+  const jwtToken = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+  if (!jwtToken) {
+    alert('Not authenticated. Please log in again.');
+    return;
+  }
+
+  const payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    tester_type_id: category || null,
+    account_status: status,
+    password: password || undefined
+  };
+
+  const isEdit = Boolean(id);
+  const method = isEdit ? 'PUT' : 'POST';
+  const url = isEdit ? `/api/admin/users/${id}` : '/api/admin/users';
+
+  fetch(url, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error || data.message || `Request failed (${res.status})`);
+    }
+    return data;
+  })
+  .then(() => {
+    closeUserModal();
+    fetchUsers(currentUserPage, userRecordsPerPage);
+  })
+  .catch(err => {
+    console.error('Save user error:', err);
+    alert(err.message || 'Failed to save user');
+  });
 }
 
 // Admin password functions using logged-in user's password
@@ -845,8 +884,39 @@ function initUserManager() {
         if (user) {
       editUserWithAdminPass(user);
         }
-      } else if (btn.classList.contains('delete')) {
-        deleteUserWithAdminPass(id);
+      } else if (btn.classList.contains('deactivate')) {
+        // Require admin password, then deactivate user via API
+        const jwtToken = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+        if (!jwtToken) { alert('Not authenticated. Please log in.'); return; }
+        const pwd = promptForAdminPassword('deactivate this user');
+        if (pwd === null) return;
+        verifyAdminPassword(pwd).then((isValid) => {
+          if (!isValid) { alert('Incorrect password.'); return; }
+          if (!confirm('Deactivate this user?')) return;
+          // Use actual username from dataset (no hardcoded derivation)
+          const row = usersData.find(u => u.user_id == id);
+          const username = row && row.username ? row.username : null;
+          const url = username ? `/api/admin/users/by-username/${encodeURIComponent(username)}/status` : `/api/admin/users/${id}/status`;
+          return fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ account_status: 'inactive' })
+          });
+        }).then(async (res) => {
+          if (!res) return;
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data.success === false) {
+            throw new Error(data.error || data.message || `Deactivate failed (${res.status})`);
+          }
+          fetchUsers(currentUserPage, userRecordsPerPage);
+        }).catch(err => {
+          if (!err) return;
+          console.error('Deactivate user error:', err);
+          alert(err.message || 'Failed to deactivate user');
+        });
       }
     };
   }

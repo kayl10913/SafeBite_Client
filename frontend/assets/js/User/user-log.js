@@ -837,11 +837,11 @@ window.initUserLogPage = function() {
   };
   
   document.getElementById('userLogDownloadExcel').onclick = function() {
-    alert('Excel export not implemented in demo.');
+    if (typeof showInfoToast === 'function') showInfoToast('Excel export coming soon');
   };
   
   document.getElementById('userLogDownloadPDF').onclick = function() {
-    alert('PDF export not implemented in demo.');
+    if (typeof showInfoToast === 'function') showInfoToast('PDF export coming soon');
   };
 
   // Setup filter event listeners
