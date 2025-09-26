@@ -471,6 +471,59 @@ input[type="password"] {
     transform: none !important;
 }
 
+/* Signup Email Verification section (moved from inline styles) */
+#emailVerificationGroup {
+    margin-top: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 9998;
+}
+
+#emailVerificationGroup > label {
+    display: block;
+    margin-bottom: 6px;
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+#emailVerificationGroup .otp-input-container {
+    margin: 6px 0 10px 0;
+}
+
+#emailVerificationGroup .verification-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
+    overflow: visible;
+    isolation: isolate;
+}
+
+#sendSignupOtpBtn {
+    background: #0ea5e9;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    height: 40px;
+    border-radius: 10px;
+}
+
+#verifySignupOtpBtn {
+    background: #10b981;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    height: 40px;
+    border-radius: 10px;
+}
+
 /* Sign Up Section */
 .signup-section {
     text-align: center;
