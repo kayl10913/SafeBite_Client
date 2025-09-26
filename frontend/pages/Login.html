@@ -103,6 +103,31 @@
                                         <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required>
                                     </div>
                                 </div>
+
+                                <!-- Email verification controls -->
+                                <div class="input-group" id="emailVerificationGroup" style="margin-top:12px; margin-bottom:16px; position:relative; z-index:9998;">
+                                    <label for="signupEmailOtp" style="display:block; margin-bottom:6px; color:#6b7280; font-size:0.95rem;">Email Verification:</label>
+                                    <div class="otp-input-container" style="margin: 6px 0 10px 0;">
+                                        <div class="otp-inputs">
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="0" required>
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="1" required>
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="2" required>
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="3" required>
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="4" required>
+                                            <input type="text" class="signup-otp-digit" maxlength="1" data-index="5" required>
+                                        </div>
+                                        <input type="hidden" id="signupEmailOtp" maxlength="6">
+                                    </div>
+                                    <div class="verification-row" style="display:flex; gap:8px; align-items:center; width:100%; background:transparent; border:none; padding:0; box-shadow:none; position:relative; z-index:9999; pointer-events:auto; overflow:visible; isolation:isolate;">
+                                        <button type="button" id="sendSignupOtpBtn" class="signin-btn" style="background:#0ea5e9; min-width:120px; padding:8px 12px; font-size:0.9rem; height:40px; border-radius:10px; position:relative; z-index:10000; pointer-events:auto; cursor:pointer;">
+                                            <span>Send Code</span>
+                                        </button>
+                                        <button type="button" id="verifySignupOtpBtn" class="signin-btn" style="background:#10b981; min-width:120px; padding:8px 12px; font-size:0.9rem; height:40px; border-radius:10px; position:relative; z-index:10000; pointer-events:auto; cursor:pointer;">
+                                            <span>Verify Email</span>
+                                        </button>
+                                    </div>
+                                    <div id="signupEmailVerifyStatus" style="margin-top:6px; font-size:0.9rem; color:#b0b0b0;"></div>
+                                </div>
                             </div>
 
                             <!-- Step 2: Contact and Tester Type -->

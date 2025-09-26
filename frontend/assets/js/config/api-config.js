@@ -12,7 +12,9 @@ const API_CONFIG = {
             REGISTER: '/api/auth/register',
             LOGOUT: '/api/auth/logout',
             FORGOT_PASSWORD: '/api/auth/forgot-password',
-            RESET_PASSWORD: '/api/auth/reset-password'
+            RESET_PASSWORD: '/api/auth/reset-password',
+            SEND_SIGNUP_OTP: '/api/auth/send-signup-otp',
+            VERIFY_SIGNUP_OTP: '/api/auth/verify-signup-otp'
         },
         
         // User endpoints

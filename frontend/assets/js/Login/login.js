@@ -96,6 +96,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const stepperItems = document.querySelectorAll('#signupForm .stepper .stepper-item');
     let currentSignupStep = 1;
     const signupEmailInput = document.getElementById('signupEmail');
+    const sendSignupOtpBtn = document.getElementById('sendSignupOtpBtn');
+    const verifySignupOtpBtn = document.getElementById('verifySignupOtpBtn');
+    const signupEmailOtpInput = document.getElementById('signupEmailOtp');
+    const signupEmailVerifyStatus = document.getElementById('signupEmailVerifyStatus');
+    let isSignupEmailVerified = false;
     const signupPasswordInput = document.getElementById('signupPassword');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const toggleSignupPasswordBtn = document.getElementById('toggleSignupPassword');
@@ -291,6 +296,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 showError(signupEmailInput, 'Please enter a valid email address');
                 ok = false;
             }
+            if (!isSignupEmailVerified) {
+                ok = false;
+                if (signupEmailVerifyStatus) {
+                    signupEmailVerifyStatus.textContent = 'Please verify your email to continue';
+                    signupEmailVerifyStatus.style.color = '#f97316';
+                }
+            }
         } else if (stepNum === 2) {
             // Optional fields; no strict validation
         } else if (stepNum === 3) {
@@ -330,6 +342,92 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize step UI on load if signup view is present
     if (signupSteps && signupSteps.length) {
         updateSignupStepUI();
+    }
+
+    // Signup email verification handlers
+    async function sendSignupVerificationCode() {
+        try {
+            const email = signupEmailInput.value.trim();
+            if (!email || !validateEmail(email)) {
+                showError(signupEmailInput, 'Enter a valid email first');
+                return;
+            }
+            isSignupEmailVerified = false;
+            if (signupEmailVerifyStatus) {
+                signupEmailVerifyStatus.textContent = 'Sending verification code...';
+                signupEmailVerifyStatus.style.color = '#93c5fd';
+            }
+            const resp = await makeApiRequest(API_CONFIG.ENDPOINTS.AUTH.SEND_SIGNUP_OTP, {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            showToast(resp.message || 'Verification code sent', 'success');
+            if (signupEmailVerifyStatus) {
+                signupEmailVerifyStatus.textContent = 'Code sent. Check your email.';
+                signupEmailVerifyStatus.style.color = '#10b981';
+            }
+        } catch (e) {
+            showToast(e.message || 'Failed to send verification code', 'error');
+            if (signupEmailVerifyStatus) {
+                signupEmailVerifyStatus.textContent = 'Failed to send code. Try again';
+                signupEmailVerifyStatus.style.color = '#ef4444';
+            }
+        }
+    }
+
+    async function verifySignupCode() {
+        try {
+            const email = signupEmailInput.value.trim();
+            const otp = (signupEmailOtpInput ? signupEmailOtpInput.value.trim() : '').replace(/\D/g, '');
+            if (!email || !validateEmail(email)) {
+                showError(signupEmailInput, 'Enter a valid email first');
+                return;
+            }
+            if (!/^\d{6}$/.test(otp)) {
+                showError(signupEmailOtpInput, 'Enter the 6-digit code');
+                return;
+            }
+            if (signupEmailVerifyStatus) {
+                signupEmailVerifyStatus.textContent = 'Verifying code...';
+                signupEmailVerifyStatus.style.color = '#93c5fd';
+            }
+            const resp = await makeApiRequest(API_CONFIG.ENDPOINTS.AUTH.VERIFY_SIGNUP_OTP, {
+                method: 'POST',
+                body: JSON.stringify({ email, otp })
+            });
+            if (resp.success) {
+                isSignupEmailVerified = true;
+                if (signupEmailVerifyStatus) {
+                    signupEmailVerifyStatus.textContent = 'Email verified ✓';
+                    signupEmailVerifyStatus.style.color = '#10b981';
+                }
+                if (sendSignupOtpBtn) sendSignupOtpBtn.disabled = true;
+                if (verifySignupOtpBtn) verifySignupOtpBtn.disabled = true;
+                if (signupEmailOtpInput) signupEmailOtpInput.disabled = true;
+            } else {
+                showToast(resp.message || 'Invalid code', 'error');
+                if (signupEmailVerifyStatus) {
+                    signupEmailVerifyStatus.textContent = resp.message || 'Invalid code';
+                    signupEmailVerifyStatus.style.color = '#ef4444';
+                }
+            }
+        } catch (e) {
+            showToast(e.message || 'Verification failed', 'error');
+            if (signupEmailVerifyStatus) {
+                signupEmailVerifyStatus.textContent = 'Verification failed';
+                signupEmailVerifyStatus.style.color = '#ef4444';
+            }
+        }
+    }
+
+    if (sendSignupOtpBtn) {
+        sendSignupOtpBtn.addEventListener('click', async function() {
+            await sendSignupVerificationCode();
+            if (signupEmailOtpInput) signupEmailOtpInput.focus();
+        });
+    }
+    if (verifySignupOtpBtn) {
+        verifySignupOtpBtn.addEventListener('click', verifySignupCode);
     }
 
     // Password visibility toggle function
@@ -1841,6 +1939,54 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             updateHiddenOTP();
         };
+
+        // Signup Email Verification OTP (6 individual boxes)
+        const signupOtpInputs = document.querySelectorAll('.signup-otp-digit');
+        const signupHiddenInput = document.getElementById('signupEmailOtp');
+        if (signupOtpInputs.length > 0 && signupHiddenInput) {
+            signupOtpInputs[0].focus();
+            signupOtpInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    if (e.target.value) {
+                        e.target.classList.add('filled');
+                        e.target.classList.remove('error');
+                    } else {
+                        e.target.classList.remove('filled');
+                    }
+                    if (e.target.value && index < signupOtpInputs.length - 1) {
+                        signupOtpInputs[index + 1].focus();
+                    }
+                    updateSignupHidden();
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        signupOtpInputs[index - 1].focus();
+                    }
+                });
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbers = paste.replace(/[^0-9]/g, '').slice(0, 6);
+                    numbers.split('').forEach((digit, i) => {
+                        if (signupOtpInputs[i]) {
+                            signupOtpInputs[i].value = digit;
+                            signupOtpInputs[i].classList.add('filled');
+                            signupOtpInputs[i].classList.remove('error');
+                        }
+                    });
+                    const nextEmptyIndex = Math.min(numbers.length, signupOtpInputs.length - 1);
+                    signupOtpInputs[nextEmptyIndex].focus();
+                    updateSignupHidden();
+                });
+                input.addEventListener('focus', function() { this.select(); });
+            });
+
+            function updateSignupHidden() {
+                const val = Array.from(signupOtpInputs).map(i => i.value).join('');
+                signupHiddenInput.value = val;
+            }
+        }
     }
 
     // Password strength indicator
@@ -2029,8 +2175,8 @@ document.addEventListener('DOMContentLoaded', function() {
             resetSubmitBtn.style.cursor = 'not-allowed';
         }
         
-        // Initialize signup submit button as disabled
-        const signupSubmitBtn = document.querySelector('#signupForm .signin-btn');
+        // Initialize ONLY the final signup submit button as disabled (do not affect verification buttons)
+        const signupSubmitBtn = document.getElementById('signupSubmitBtn');
         if (signupSubmitBtn) {
             signupSubmitBtn.disabled = true;
             signupSubmitBtn.style.opacity = '0.6';
