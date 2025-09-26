@@ -62,11 +62,20 @@ function initializeRecaptcha() {
 document.addEventListener('DOMContentLoaded', function() {
     // Global state management (equivalent to React useState)
     let currentView = 'login';
+    let otpData = {
+        email: '',
+        otp: '',
+        resetToken: ''
+    };
+    let otpTimer = null;
+    let otpCountdown = 60;
     
     // Get DOM elements
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     const forgotForm = document.getElementById('forgotForm');
+    const otpForm = document.getElementById('otpForm');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
     
     // Login form elements
     const emailInput = document.getElementById('email');
@@ -95,10 +104,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Forgot password form elements
     const forgotEmailInput = document.getElementById('forgotEmail');
     
+    // OTP form elements
+    const otpCodeInput = document.getElementById('otpCode');
+    const otpEmailDisplay = document.getElementById('otpEmailDisplay');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const otpTimerDisplay = document.getElementById('otpTimer');
+    
+    // Reset password form elements
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+    const toggleNewPasswordBtn = document.getElementById('toggleNewPassword');
+    const toggleConfirmNewPasswordBtn = document.getElementById('toggleConfirmNewPassword');
+    
     // View elements
     const loginView = document.getElementById('loginView');
     const signupView = document.getElementById('signupView');
     const forgotView = document.getElementById('forgotView');
+    const otpView = document.getElementById('otpView');
+    const resetPasswordView = document.getElementById('resetPasswordView');
     
     // Toaster element
     const toaster = document.getElementById('toaster');
@@ -126,27 +149,38 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hide current view
         const currentViewElement = document.getElementById(currentView + 'View');
-        currentViewElement.classList.add('slide-out');
+        if (currentViewElement) {
+            currentViewElement.classList.add('slide-out');
+        }
         
         setTimeout(() => {
             // Remove active class from all views
-            document.querySelectorAll('.auth-view').forEach(view => {
-                view.classList.remove('active');
+            document.querySelectorAll('.auth-view').forEach(viewElement => {
+                viewElement.classList.remove('active');
             });
             
             // Show new view
             const newViewElement = document.getElementById(view + 'View');
-            newViewElement.classList.add('active', 'slide-in');
+            if (newViewElement) {
+                newViewElement.classList.add('active', 'slide-in');
+            }
             
             // Update current view
             currentView = view;
             
-            // Reset forms when switching views
-            resetForms();
+            // Handle view-specific logic
+            if (view === 'otp') {
+                updateOTPEmailDisplay();
+            }
+            
+            // Reset forms when switching views (except when going to OTP or resetPassword)
+            if (view !== 'otp' && view !== 'resetPassword') {
+                resetForms();
+            }
             
             // Focus on first input of new view
             setTimeout(() => {
-                const firstInput = newViewElement.querySelector('input');
+                const firstInput = newViewElement ? newViewElement.querySelector('input') : null;
                 if (firstInput) firstInput.focus();
             }, 100);
             
@@ -158,6 +192,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.reset();
         signupForm.reset();
         forgotForm.reset();
+        if (otpForm) otpForm.reset();
+        if (resetPasswordForm) resetPasswordForm.reset();
         
         // Clear all errors
         document.querySelectorAll('.input-field').forEach(field => {
@@ -176,6 +212,20 @@ document.addEventListener('DOMContentLoaded', function() {
             currentSignupStep = 1;
             updateSignupStepUI();
         }
+
+        // Reset OTP data
+        otpData = {
+            email: '',
+            otp: '',
+            resetToken: ''
+        };
+
+        // Clear OTP timer
+        if (otpTimer) {
+            clearInterval(otpTimer);
+            otpTimer = null;
+        }
+        otpCountdown = 60;
     }
 
     // Reset password visibility toggles
@@ -316,6 +366,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (toggleConfirmPasswordBtn) {
         setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
     }
+    if (toggleNewPasswordBtn) {
+        setupPasswordToggle('toggleNewPassword', 'newPassword');
+    }
+    if (toggleConfirmNewPasswordBtn) {
+        setupPasswordToggle('toggleConfirmNewPassword', 'confirmNewPassword');
+    }
 
     // Form validation functions
     function validateEmail(email) {
@@ -336,6 +392,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateName(name) {
         return name.trim().length >= 2;
+    }
+
+    function validateOTP(otp) {
+        return /^\d{6}$/.test(otp);
+    }
+
+    // OTP Timer functionality
+    function startOTPTimer() {
+        otpCountdown = 60;
+        if (otpTimerDisplay) {
+            otpTimerDisplay.textContent = otpCountdown;
+        }
+        
+        if (resendOtpBtn) {
+            resendOtpBtn.disabled = true;
+            resendOtpBtn.classList.add('disabled');
+        }
+
+        otpTimer = setInterval(() => {
+            otpCountdown--;
+            if (otpTimerDisplay) {
+                otpTimerDisplay.textContent = otpCountdown;
+            }
+
+            if (otpCountdown <= 0) {
+                clearInterval(otpTimer);
+                otpTimer = null;
+                if (resendOtpBtn) {
+                    resendOtpBtn.disabled = false;
+                    resendOtpBtn.classList.remove('disabled');
+                }
+            }
+        }, 1000);
+    }
+
+    function stopOTPTimer() {
+        if (otpTimer) {
+            clearInterval(otpTimer);
+            otpTimer = null;
+        }
+        if (resendOtpBtn) {
+            resendOtpBtn.disabled = false;
+            resendOtpBtn.classList.remove('disabled');
+        }
     }
 
     function showError(input, message) {
@@ -501,6 +601,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // OTP input formatting
+    if (otpCodeInput) {
+        otpCodeInput.addEventListener('input', function() {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Auto-focus next input if 6 digits entered
+            if (this.value.length === 6) {
+                this.blur();
+            }
+        });
+
+        otpCodeInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+            this.value = pastedData.substring(0, 6);
+        });
+    }
+
+    // Update OTP email display when navigating to OTP view
+    function updateOTPEmailDisplay() {
+        if (otpEmailDisplay && otpData.email) {
+            otpEmailDisplay.textContent = otpData.email;
+        }
+    }
 
     // Login form submission
     if (loginForm) {
@@ -685,14 +811,117 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitBtn = this.querySelector('.signin-btn');
             if (submitBtn) {
                 submitBtn.classList.add('loading');
-                submitBtn.querySelector('span').textContent = 'Sending Reset...';
+                submitBtn.querySelector('span').textContent = 'Sending OTP...';
             }
             
             try {
-                // Perform user password reset with PHP backend
+                // Perform user password reset with Node.js backend
                 await performPasswordReset(email);
             } catch (error) {
                 console.error('User Password reset error:', error);
+            } finally {
+                // Reset button state
+                const submitBtn = this.querySelector('.signin-btn');
+                if (submitBtn) {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.querySelector('span').textContent = 'Send OTP';
+                }
+            }
+        });
+    }
+
+    // OTP form submission
+    if (otpForm) {
+        otpForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const otp = otpCodeInput.value.trim();
+            
+            // Clear previous errors
+            clearError(otpCodeInput);
+            
+            // Validate form
+            if (!otp) {
+                showError(otpCodeInput, 'OTP is required');
+                return;
+            } else if (!validateOTP(otp)) {
+                showError(otpCodeInput, 'Please enter a valid 6-digit OTP');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.signin-btn');
+            if (submitBtn) {
+                submitBtn.classList.add('loading');
+                submitBtn.querySelector('span').textContent = 'Verifying...';
+            }
+            
+            try {
+                // Verify OTP
+                await verifyOTP(otpData.email, otp);
+            } catch (error) {
+                console.error('OTP verification error:', error);
+            } finally {
+                // Reset button state
+                const submitBtn = this.querySelector('.signin-btn');
+                if (submitBtn) {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.querySelector('span').textContent = 'Verify OTP';
+                }
+            }
+        });
+    }
+
+    // Reset password form submission
+    if (resetPasswordForm) {
+        resetPasswordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmNewPasswordInput.value;
+            
+            // Clear previous errors
+            clearError(newPasswordInput);
+            clearError(confirmNewPasswordInput);
+            
+            // Validate form
+            if (!newPassword) {
+                showError(newPasswordInput, 'New password is required');
+                return;
+            }
+            
+            // Check if all password requirements are met
+            const hasLength = newPassword.length >= 8;
+            const hasUpper = /[A-Z]/.test(newPassword);
+            const hasLower = /[a-z]/.test(newPassword);
+            const hasNumber = /[0-9]/.test(newPassword);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(newPassword);
+            
+            if (!hasLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+                showError(newPasswordInput, 'Password must meet all requirements');
+                return;
+            }
+            
+            if (!confirmPassword) {
+                showError(confirmNewPasswordInput, 'Please confirm your password');
+                return;
+            } else if (newPassword !== confirmPassword) {
+                showError(confirmNewPasswordInput, 'Passwords do not match');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.signin-btn');
+            if (submitBtn) {
+                submitBtn.classList.add('loading');
+                submitBtn.querySelector('span').textContent = 'Resetting...';
+            }
+            
+            try {
+                // Reset password
+                await resetPassword(otpData.email, otpData.otp, otpData.resetToken, newPassword, confirmPassword);
+            } catch (error) {
+                console.error('Password reset error:', error);
             } finally {
                 // Reset button state
                 const submitBtn = this.querySelector('.signin-btn');
@@ -804,11 +1033,21 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Password reset response:', data);
 
             if (data.success) {
-                showToast(data.message, 'info');
+                // Store email for OTP verification
+                otpData.email = email;
                 
+                // Show OTP in console for development (remove in production)
+                if (data.otp) {
+                    console.log('OTP for development:', data.otp);
+                }
+                
+                showToast(data.message, 'success');
+                
+                // Navigate to OTP verification view
                 setTimeout(() => {
-                    handleNavigation('login');
-                }, 2000);
+                    handleNavigation('otp');
+                    startOTPTimer();
+                }, 1000);
             } else {
                 showToast(data.error || 'Password reset failed. Please try again.', 'error');
                 if (data.details) {
@@ -826,6 +1065,144 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast(error.message || 'Network error. Please check your connection.', 'error');
             }
         }
+    }
+
+    // Verify OTP with Node.js backend
+    async function verifyOTP(email, otp) {
+        try {
+            console.log('Attempting OTP verification to Node.js API...');
+            
+            const response = await fetch('/api/users/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, otp })
+            });
+
+            const data = await response.json();
+            console.log('OTP verification response:', data);
+
+            if (data.success) {
+                // Store OTP and reset token
+                otpData.otp = otp;
+                otpData.resetToken = data.reset_token;
+                
+                showToast(data.message, 'success');
+                
+                // Stop OTP timer
+                stopOTPTimer();
+                
+                // Navigate to reset password view
+                setTimeout(() => {
+                    handleNavigation('resetPassword');
+                }, 1000);
+            } else {
+                showToast(data.message || 'OTP verification failed. Please try again.', 'error');
+                // Show error state on OTP inputs
+                if (typeof window.showOTPError === 'function') {
+                    window.showOTPError();
+                }
+            }
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            
+            if (error.message && error.message.includes('Failed to fetch')) {
+                showToast('Cannot connect to server. Make sure the Node.js server is running on port 3000', 'error');
+            } else {
+                showToast(error.message || 'Network error. Please check your connection.', 'error');
+            }
+            // Show error state on OTP inputs
+            if (typeof window.showOTPError === 'function') {
+                window.showOTPError();
+            }
+        }
+    }
+
+    // Reset password with Node.js backend
+    async function resetPassword(email, otp, resetToken, newPassword, confirmPassword) {
+        try {
+            console.log('Attempting password reset to Node.js API...');
+            
+            const response = await fetch('/api/users/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    otp, 
+                    reset_token: resetToken, 
+                    new_password: newPassword, 
+                    confirm_password: confirmPassword 
+                })
+            });
+
+            const data = await response.json();
+            console.log('Password reset response:', data);
+
+            if (data.success) {
+                showToast(data.message, 'success');
+                
+                // Navigate back to login
+                setTimeout(() => {
+                    handleNavigation('login');
+                }, 2000);
+            } else {
+                showToast(data.message || 'Password reset failed. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Password reset error:', error);
+            
+            if (error.message && error.message.includes('Failed to fetch')) {
+                showToast('Cannot connect to server. Make sure the Node.js server is running on port 3000', 'error');
+            } else {
+                showToast(error.message || 'Network error. Please check your connection.', 'error');
+            }
+        }
+    }
+
+    // Resend OTP functionality
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            
+            this.classList.add('loading');
+            this.querySelector('span').textContent = 'Resending...';
+            
+            try {
+                const response = await fetch('/api/users/resend-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: otpData.email })
+                });
+
+                const data = await response.json();
+                console.log('Resend OTP response:', data);
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Show OTP in console for development (remove in production)
+                    if (data.otp) {
+                        console.log('New OTP for development:', data.otp);
+                    }
+                    
+                    // Restart timer
+                    startOTPTimer();
+                } else {
+                    showToast(data.message || 'Failed to resend OTP. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Resend OTP error:', error);
+                showToast('Network error. Please check your connection.', 'error');
+            } finally {
+                this.classList.remove('loading');
+                this.querySelector('span').textContent = 'Resend OTP';
+            }
+        });
     }
 
     // Toast notification system (equivalent to React Toaster)
@@ -1360,6 +1737,308 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize modal system
     initializeModalSystem();
+
+    // ENHANCED OTP AND PASSWORD FUNCTIONALITY
+
+    // Enhanced OTP input formatting with individual boxes
+    function setupOTPInput() {
+        const otpInputs = document.querySelectorAll('.otp-digit');
+        const hiddenInput = document.getElementById('otpCode');
+        
+        if (otpInputs.length > 0) {
+            // Focus first input on load
+            otpInputs[0].focus();
+            
+            otpInputs.forEach((input, index) => {
+                // Handle input
+                input.addEventListener('input', function(e) {
+                    // Only allow numbers
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    // Add filled class
+                    if (e.target.value) {
+                        e.target.classList.add('filled');
+                        e.target.classList.remove('error');
+                    } else {
+                        e.target.classList.remove('filled');
+                    }
+                    
+                    // Move to next input if current is filled
+                    if (e.target.value && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                    
+                    // Update hidden input
+                    updateHiddenOTP();
+                });
+                
+                // Handle backspace
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+                
+                // Handle paste
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbers = paste.replace(/[^0-9]/g, '').slice(0, 6);
+                    
+                    // Fill all inputs with pasted numbers
+                    numbers.split('').forEach((digit, i) => {
+                        if (otpInputs[i]) {
+                            otpInputs[i].value = digit;
+                            otpInputs[i].classList.add('filled');
+                            otpInputs[i].classList.remove('error');
+                        }
+                    });
+                    
+                    // Focus the next empty input or the last one
+                    const nextEmptyIndex = Math.min(numbers.length, otpInputs.length - 1);
+                    otpInputs[nextEmptyIndex].focus();
+                    
+                    updateHiddenOTP();
+                });
+                
+                // Handle focus
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+            });
+        }
+        
+        function updateHiddenOTP() {
+            const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+            if (hiddenInput) {
+                hiddenInput.value = otpValue;
+            }
+        }
+        
+        // Function to show error state on OTP inputs
+        window.showOTPError = function() {
+            otpInputs.forEach(input => {
+                input.classList.add('error');
+                input.classList.remove('filled');
+            });
+            
+            // Clear all inputs and focus first one
+            setTimeout(() => {
+                otpInputs.forEach(input => {
+                    input.value = '';
+                    input.classList.remove('error');
+                });
+                otpInputs[0].focus();
+                updateHiddenOTP();
+            }, 2000);
+        };
+        
+        // Function to clear OTP inputs
+        window.clearOTPInputs = function() {
+            otpInputs.forEach(input => {
+                input.value = '';
+                input.classList.remove('filled', 'error');
+            });
+            updateHiddenOTP();
+        };
+    }
+
+    // Password strength indicator
+    function setupPasswordStrength() {
+        // Setup for signup password
+        const signupPasswordInput = document.getElementById('signupPassword');
+        const signupStrengthLabel = document.getElementById('passwordStrengthLabel');
+        const signupStrengthBar = document.getElementById('passwordStrengthBar');
+        
+        if (signupPasswordInput && signupStrengthLabel && signupStrengthBar) {
+            signupPasswordInput.addEventListener('input', function() {
+                updatePasswordStrength(this.value, signupStrengthLabel, signupStrengthBar, 'signup');
+            });
+        }
+        
+        // Setup for reset password
+        const newPasswordInput = document.getElementById('newPassword');
+        const newStrengthLabel = document.getElementById('newPasswordStrengthLabel');
+        const newStrengthBar = document.getElementById('newPasswordStrengthBar');
+        
+        if (newPasswordInput && newStrengthLabel && newStrengthBar) {
+            newPasswordInput.addEventListener('input', function() {
+                updatePasswordStrength(this.value, newStrengthLabel, newStrengthBar, 'reset');
+            });
+        }
+    }
+    
+    // Update password strength display
+    function updatePasswordStrength(password, strengthLabel, strengthBar, type) {
+        const strength = calculatePasswordStrength(password);
+        
+        // Update strength bar
+        strengthBar.style.width = strength.percentage + '%';
+        strengthBar.style.backgroundColor = strength.color;
+        
+        // Update strength label
+        strengthLabel.textContent = strength.text;
+        strengthLabel.style.color = strength.color;
+        
+        // Update requirements checklist
+        updatePasswordRequirements(password, type);
+    }
+    
+    // Update password requirements checklist
+    function updatePasswordRequirements(password, type) {
+        const prefix = type === 'signup' ? '' : 'new-';
+        
+        const lengthReq = document.getElementById(prefix + 'req-length');
+        const upperReq = document.getElementById(prefix + 'req-upper');
+        const lowerReq = document.getElementById(prefix + 'req-lower');
+        const numberReq = document.getElementById(prefix + 'req-number');
+        const specialReq = document.getElementById(prefix + 'req-special');
+        
+        // Check each requirement
+        const hasLength = password.length >= 8;
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+        
+        // Update visual state
+        updateRequirementItem(lengthReq, hasLength);
+        updateRequirementItem(upperReq, hasUpper);
+        updateRequirementItem(lowerReq, hasLower);
+        updateRequirementItem(numberReq, hasNumber);
+        updateRequirementItem(specialReq, hasSpecial);
+        
+        // Check if all requirements are met
+        const allRequirementsMet = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+        
+        // Update submit button state
+        updateSubmitButtonState(allRequirementsMet, type);
+        
+        return allRequirementsMet;
+    }
+    
+    // Update submit button state based on password requirements
+    function updateSubmitButtonState(requirementsMet, type) {
+        let submitButton;
+        
+        if (type === 'signup') {
+            submitButton = document.querySelector('#signupForm .signin-btn');
+        } else if (type === 'reset') {
+            submitButton = document.querySelector('#resetPasswordForm .signin-btn');
+        }
+        
+        if (submitButton) {
+            if (requirementsMet) {
+                submitButton.disabled = false;
+                submitButton.style.opacity = '1';
+                submitButton.style.cursor = 'pointer';
+            } else {
+                submitButton.disabled = true;
+                submitButton.style.opacity = '0.6';
+                submitButton.style.cursor = 'not-allowed';
+            }
+        }
+    }
+    
+    // Update individual requirement item
+    function updateRequirementItem(element, isValid) {
+        if (element) {
+            if (isValid) {
+                element.style.color = '#27ae60';
+                element.innerHTML = element.innerHTML.replace('•', '✓');
+            } else {
+                element.style.color = '#b0b0b0';
+                element.innerHTML = element.innerHTML.replace('✓', '•');
+            }
+        }
+    }
+
+    // Calculate password strength
+    function calculatePasswordStrength(password) {
+        let score = 0;
+
+        // Length requirements
+        if (password.length >= 8) score += 20;
+        if (password.length >= 12) score += 10;
+        
+        // Character type requirements
+        if (password.match(/[a-z]/)) score += 15; // lowercase
+        if (password.match(/[A-Z]/)) score += 15; // uppercase
+        if (password.match(/[0-9]/)) score += 15; // numbers
+        if (password.match(/[^a-zA-Z0-9]/)) score += 15; // special characters
+        
+        // Bonus for very long passwords
+        if (password.length >= 16) score += 10;
+
+        let strength = 'Very Weak';
+        let color = '#e74c3c';
+
+        if (score >= 80) {
+            strength = 'Very Strong';
+            color = '#27ae60';
+        } else if (score >= 60) {
+            strength = 'Strong';
+            color = '#2ecc71';
+        } else if (score >= 40) {
+            strength = 'Medium';
+            color = '#f39c12';
+        } else if (score >= 20) {
+            strength = 'Weak';
+            color = '#e67e22';
+        }
+
+        return {
+            percentage: Math.min(score, 100),
+            text: strength,
+            color: color
+        };
+    }
+
+    // Enhanced resend button functionality
+    function setupResendButton() {
+        const resendBtn = document.getElementById('resendOtpBtn');
+        if (resendBtn) {
+            resendBtn.addEventListener('click', function() {
+                if (!this.disabled) {
+                    // Add loading state
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Resending...</span>';
+                    this.disabled = true;
+                    
+                    // Re-enable after a short delay (the actual resend will be handled by the existing resend logic)
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-redo"></i><span>Resend Code</span>';
+                        this.disabled = false;
+                    }, 2000);
+                }
+            });
+        }
+    }
+
+    // Initialize enhanced functionality
+    setupOTPInput();
+    setupPasswordStrength();
+    setupResendButton();
+    
+    // Initialize submit buttons as disabled
+    function initializeSubmitButtons() {
+        // Initialize reset password submit button as disabled
+        const resetSubmitBtn = document.querySelector('#resetPasswordForm .signin-btn');
+        if (resetSubmitBtn) {
+            resetSubmitBtn.disabled = true;
+            resetSubmitBtn.style.opacity = '0.6';
+            resetSubmitBtn.style.cursor = 'not-allowed';
+        }
+        
+        // Initialize signup submit button as disabled
+        const signupSubmitBtn = document.querySelector('#signupForm .signin-btn');
+        if (signupSubmitBtn) {
+            signupSubmitBtn.disabled = true;
+            signupSubmitBtn.style.opacity = '0.6';
+            signupSubmitBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    initializeSubmitButtons();
 
     console.log('User Authentication app initialized successfully');
 }); 

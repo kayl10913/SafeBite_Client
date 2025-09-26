@@ -251,7 +251,115 @@
                         </div>
 
                         <button type="submit" class="signin-btn">
-                            <span>Reset Password</span>
+                            <span>Send OTP</span>
+                        </button>
+                    </form>
+
+                    <!-- Back to Login Link -->
+                    <div class="signup-section">
+                        <p>Remember your password? <a href="#" class="signup-link" onclick="handleNavigation('login')">Sign in here</a></p>
+                    </div>
+                </div>
+
+                <!-- OTP Verification Form -->
+                <div id="otpView" class="auth-view">
+                    <div class="otp-header">
+                        <h2>Verify Your Identity</h2>
+                        <p class="otp-description">We've sent a 6-digit verification code to</p>
+                        <p class="otp-email"><span id="otpEmailDisplay"></span></p>
+                        <p class="otp-instruction">Please enter the code below to continue</p>
+                    </div>
+                    
+                    <form class="otp-form" id="otpForm">
+                        <div class="input-group">
+                            <label for="otpCode">Verification Code</label>
+                            <div class="otp-input-container">
+                                <div class="otp-inputs">
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="0" required>
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="1" required>
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="2" required>
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="3" required>
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="4" required>
+                                    <input type="text" class="otp-digit" maxlength="1" data-index="5" required>
+                                </div>
+                                <input type="hidden" id="otpCode" name="otp" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="signin-btn">
+                            <span>Verify Code</span>
+                        </button>
+                    </form>
+
+                    <div class="otp-actions">
+                        <div class="otp-timer-container">
+                            <div class="timer-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <p class="otp-timer">Resend available in <span id="otpTimer">60</span>s</p>
+                        </div>
+                        <button type="button" class="resend-btn" id="resendOtpBtn" disabled>
+                            <i class="fas fa-redo"></i>
+                            <span>Resend Code</span>
+                        </button>
+                    </div>
+
+                    <!-- Back to Login Link -->
+                    <div class="signup-section">
+                        <p>Remember your password? <a href="#" class="signup-link" onclick="handleNavigation('login')">Sign in here</a></p>
+                    </div>
+                </div>
+
+                <!-- Reset Password Form -->
+                <div id="resetPasswordView" class="auth-view">
+                    <div class="reset-header">
+                        <h2>Create New Password</h2>
+                        <p class="reset-description">Your identity has been verified. Please create a new secure password.</p>
+                    </div>
+                    
+                    <form class="reset-password-form" id="resetPasswordForm">
+                        <div class="input-group">
+                            <label for="newPassword">New Password</label>
+                            <div class="input-field">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="newPassword" name="new_password" placeholder="Create a password" required>
+                                <button type="button" class="toggle-password" id="toggleNewPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <!-- Password strength bar -->
+                            <div class="password-strength" style="margin-top:10px;">
+                                <div class="strength-label" id="newPasswordStrengthLabel">Weak</div>
+                                <div class="strength-track">
+                                    <div class="strength-bar" id="newPasswordStrengthBar"></div>
+                                </div>
+                            </div>
+                            <!-- Password requirements checklist -->
+                            <div id="newPasswordRequirements" style="margin-top:8px; font-size:0.9rem; color:#b0b0b0; line-height:1.4;">
+                                <ul style="list-style:none; padding-left:0; margin:0;">
+                                    <li id="new-req-length">• At least 8 characters</li>
+                                    <li id="new-req-upper">• One uppercase letter (A-Z)</li>
+                                    <li id="new-req-lower">• One lowercase letter (a-z)</li>
+                                    <li id="new-req-number">• One number (0-9)</li>
+                                    <li id="new-req-special">• One special character (!@#$%^&* etc.)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="confirmNewPassword">Confirm New Password</label>
+                            <div class="input-field">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="confirmNewPassword" name="confirm_password" placeholder="Confirm your new password" required>
+                                <button type="button" class="toggle-password" id="toggleConfirmNewPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <button type="submit" class="signin-btn">
+                            <span>Update Password</span>
                         </button>
                     </form>
 
