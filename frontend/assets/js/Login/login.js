@@ -1034,19 +1034,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Real user login process with Node.js backend
     async function performUserLogin(email, password) {
         try {
-            console.log('Attempting secure user login...');
+            console.log('Attempting user login to Node.js API...');
             
-            // Check if SecureAuth is available
-            if (typeof SecureAuth === 'undefined') {
-                throw new Error('SecureAuth helper not found. Make sure secure-auth.js is loaded.');
+            // Check if Auth is available
+            if (typeof Auth === 'undefined') {
+                throw new Error('Auth helper not found. Make sure api-config.js is loaded.');
             }
             
-            // Use the SecureAuth helper for secure cookie-based authentication
-            const data = await SecureAuth.login(email, password);
+            // Use the Auth helper from api-config.js
+            const data = await Auth.login(email, password);
 
             console.log('User login response data:', data);
 
             if (data.success) {
+                // Store user data and JWT token (use consistent key names)
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                localStorage.setItem('jwt_token', data.jwt_token);
+                localStorage.setItem('user_data', JSON.stringify(data.user));
+                localStorage.setItem('session_token', data.session.token);
+                localStorage.setItem('sessionExpires', data.session.expires_at);
+                
                 showToast(`Welcome back, ${data.user.full_name || data.user.first_name}! Redirecting to User Dashboard...`, 'success');
                 
                 setTimeout(() => {
