@@ -11,6 +11,51 @@ class FoodSelection {
     this.init();
   }
 
+  // Gas emission threshold analysis function
+  analyzeGasEmissionThresholds(gasLevel) {
+    if (gasLevel >= 251) {
+      // High Risk (251+ ppm) - Spoilage Detected
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 95,
+        confidence: 90,
+        recommendation: 'High Risk: Spoilage Detected (251+ ppm). Do not consume. Dispose of the food to avoid foodborne illness. Sanitize storage area to prevent cross-contamination.',
+        threshold: '251+ ppm'
+      };
+    } else if (gasLevel >= 121) {
+      // Medium Risk (121-250 ppm) - Early Spoilage Signs
+      return {
+        riskLevel: 'medium',
+        status: 'caution',
+        probability: 75,
+        confidence: 85,
+        recommendation: 'Medium Risk: Early Spoilage Signs (121-250 ppm). Consume soon (within 1–2 days). Refrigerate immediately if not yet stored. Check for changes in smell, texture, or color.',
+        threshold: '121-250 ppm'
+      };
+    } else if (gasLevel >= 0) {
+      // Low Risk (0-120 ppm) - Fresh/Safe
+      return {
+        riskLevel: 'low',
+        status: 'safe',
+        probability: gasLevel > 80 ? 60 : 20,
+        confidence: 90,
+        recommendation: 'Low Risk: Fresh/Safe (0-120 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
+        threshold: '0-120 ppm'
+      };
+    }
+    
+    // Invalid gas level
+    return {
+      riskLevel: 'unknown',
+      status: 'unknown',
+      probability: 0,
+      confidence: 0,
+      recommendation: 'Invalid gas level reading. Please check sensor.',
+      threshold: 'invalid'
+    };
+  }
+
   // Ensure we never bind the same DOM listener multiple times
   bindOnce(target, eventName, handler, key) {
     if (!target || !eventName || !handler) return;
@@ -1942,6 +1987,71 @@ class FoodSelection {
     }
   }
 
+  // Environmental conditions analysis based on baseline values
+  analyzeEnvironmentalConditions(temperature, humidity) {
+    // Baseline environmental conditions
+    const baselineTemp = 27.5; // Average of 27-28°C
+    const baselineHumidity = 73.8; // Annual average
+    
+    const tempDeviation = temperature - baselineTemp;
+    const humidityDeviation = humidity - baselineHumidity;
+    
+    let tempRisk = 'normal';
+    let humidityRisk = 'normal';
+    let overallRisk = 'normal';
+    
+    // Temperature analysis
+    if (temperature > baselineTemp + 5) {
+      tempRisk = 'high';
+    } else if (temperature > baselineTemp + 2) {
+      tempRisk = 'medium';
+    } else if (temperature < baselineTemp - 5) {
+      tempRisk = 'low'; // Cooler than baseline
+    }
+    
+    // Humidity analysis
+    if (humidity > baselineHumidity + 15) {
+      humidityRisk = 'high';
+    } else if (humidity > baselineHumidity + 8) {
+      humidityRisk = 'medium';
+    } else if (humidity < baselineHumidity - 15) {
+      humidityRisk = 'low'; // Drier than baseline
+    }
+    
+    // Overall environmental risk
+    if (tempRisk === 'high' || humidityRisk === 'high') {
+      overallRisk = 'high';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      overallRisk = 'medium';
+    }
+    
+    return {
+      baselineTemp,
+      baselineHumidity,
+      tempDeviation,
+      humidityDeviation,
+      tempRisk,
+      humidityRisk,
+      overallRisk,
+      recommendation: this.getEnvironmentalRecommendation(tempRisk, humidityRisk)
+    };
+  }
+
+  // Gets environmental recommendation based on risk levels
+  getEnvironmentalRecommendation(tempRisk, humidityRisk) {
+    if (tempRisk === 'high' && humidityRisk === 'high') {
+      return 'High temperature and humidity detected. Consider refrigeration or air conditioning to slow spoilage.';
+    } else if (tempRisk === 'high') {
+      return 'High temperature detected. Store in cooler location or refrigerate if possible.';
+    } else if (humidityRisk === 'high') {
+      return 'High humidity detected. Use dehumidifier or store in drier location.';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      return 'Environmental conditions are slightly elevated. Monitor food closely.';
+    } else {
+      return 'Environmental conditions are within normal range for your location.';
+    }
+  }
+
   // Assess food condition using table thresholds (image) with DB as source-of-truth when available
   assessFoodCondition(sensorData) {
     const temperature = sensorData.temperature?.value;
@@ -1954,72 +2064,43 @@ class FoodSelection {
       return 'safe';
     }
 
-    // Basis table from provided image (MQ4 = gas)
-    const basis = {
-      'banana':    { spoiled: { gas:190, temp:25, humidity:83 }, normal: { gas:3,   temp:35, humidity:70 } },
-      'carrot':    { spoiled: { gas:161, temp:30, humidity:45 }, normal: { gas:2,   temp:32, humidity:30 } },
-      'taro root': { spoiled: { gas:170, temp:30, humidity:60 }, normal: { gas:2,   temp:40, humidity:40 } }
-    };
-
-    const lowerName = String(this.selectedFood?.name || '').toLowerCase();
-    const key = Object.keys(basis).find(k => lowerName.includes(k)) || null;
-
-    // If matched in table: decide by distance to normal vs spoiled vectors
-    if (key) {
-      const b = basis[key];
-      // Hard safety rules: if readings are at/above spoiled thresholds, mark unsafe
-      if (gasLevel >= b.spoiled.gas || humidity >= b.spoiled.humidity) {
-        return {
-          condition: 'unsafe',
-          spoilageScore: 95,
-          temperature,
-          humidity,
-          gasLevel,
-          assessment: { basis: key, rule: 'exceeded_spoiled_thresholds' }
-        };
-      }
-      const rng = {
-        gas: Math.max(b.spoiled.gas, b.normal.gas) - Math.min(b.spoiled.gas, b.normal.gas) || 1,
-        temp: Math.max(b.spoiled.temp, b.normal.temp) - Math.min(b.spoiled.temp, b.normal.temp) || 1,
-        humidity: Math.max(b.spoiled.humidity, b.normal.humidity) - Math.min(b.spoiled.humidity, b.normal.humidity) || 1
-      };
-      const w = { gas: 0.5, temp: 0.25, humidity: 0.25 };
-      const dSpoil =
-        w.gas * Math.abs(gasLevel - b.spoiled.gas) / rng.gas +
-        w.temp * Math.abs(temperature - b.spoiled.temp) / rng.temp +
-        w.humidity * Math.abs(humidity - b.spoiled.humidity) / rng.humidity;
-      const dNormal =
-        w.gas * Math.abs(gasLevel - b.normal.gas) / rng.gas +
-        w.temp * Math.abs(temperature - b.normal.temp) / rng.temp +
-        w.humidity * Math.abs(humidity - b.normal.humidity) / rng.humidity;
-
-      const ratio = dNormal / (dSpoil + dNormal); // closer to 0 => spoiled, 1 => normal
-      let condition = 'safe';
-      if (ratio < 0.45) condition = 'unsafe';
-      else if (ratio < 0.6) condition = 'caution';
-
+    // Use standardized gas emission thresholds for all foods
+    const gasAnalysis = this.analyzeGasEmissionThresholds(gasLevel);
+    
+    // If gas analysis indicates high or medium risk, use that result
+    if (gasAnalysis.riskLevel === 'high' || gasAnalysis.riskLevel === 'medium') {
       return {
-        condition,
-        spoilageScore: Math.round((1 - ratio) * 100),
+        condition: gasAnalysis.status,
+        spoilageScore: gasAnalysis.probability,
         temperature,
         humidity,
         gasLevel,
         assessment: {
-          basis: key,
-          dSpoil: Number(dSpoil.toFixed(3)),
-          dNormal: Number(dNormal.toFixed(3))
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: gasAnalysis.recommendation
         }
       };
     }
 
-    // Fallback generic model if food not in table. This is used only when
-    // no table row applies; DB-driven analysis still happens elsewhere.
-    let spoilageScore = 0;
-    if (temperature > 15) spoilageScore += 40; else if (temperature > 10) spoilageScore += 25; else if (temperature > 7) spoilageScore += 10; else if (temperature < 0) spoilageScore += 5;
-    if (humidity > 85) spoilageScore += 30; else if (humidity > 75) spoilageScore += 20; else if (humidity > 70) spoilageScore += 10; else if (humidity < 40) spoilageScore += 5;
-    if (gasLevel > 60) spoilageScore += 35; else if (gasLevel > 40) spoilageScore += 25; else if (gasLevel > 25) spoilageScore += 15; else if (gasLevel > 15) spoilageScore += 5;
-
-    const condition = spoilageScore >= 70 ? 'unsafe' : spoilageScore >= 40 ? 'caution' : 'safe';
+    // For low-risk gas levels, analyze environmental conditions based on baseline values
+    // Gas emission thresholds take priority - if gas is safe, food is generally safe
+    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
+    
+    let spoilageScore = 20; // Base safe score for low gas levels
+    let condition = 'safe';
+    
+    // Apply environmental adjustments based on baseline conditions
+    if (envAnalysis.overallRisk === 'high') {
+      spoilageScore += 20; // Minor increase for high environmental risk
+      condition = 'caution';
+    } else if (envAnalysis.overallRisk === 'medium') {
+      spoilageScore += 10; // Very minor increase for medium environmental risk
+    }
+    
+    // Cap spoilage score at 40% for low gas levels (since gas is the primary indicator)
+    spoilageScore = Math.min(spoilageScore, 40);
+    
     return {
       condition,
       spoilageScore,
@@ -2027,9 +2108,12 @@ class FoodSelection {
       humidity,
       gasLevel,
       assessment: {
-        tempRisk: temperature > 10 ? 'high' : temperature > 7 ? 'medium' : 'low',
-        humidityRisk: humidity > 80 ? 'high' : humidity > 70 ? 'medium' : 'low',
-        gasRisk: gasLevel > 40 ? 'high' : gasLevel > 25 ? 'medium' : 'low'
+        gasRisk: gasAnalysis.riskLevel,
+        gasThreshold: gasAnalysis.threshold,
+        recommendation: gasAnalysis.recommendation,
+        environmental: envAnalysis,
+        tempRisk: envAnalysis.tempRisk,
+        humidityRisk: envAnalysis.humidityRisk
       }
     };
   }

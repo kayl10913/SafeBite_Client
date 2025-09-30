@@ -139,7 +139,7 @@
                     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">142</div>
+                    <div class="stat-value" id="activeUsersCount">0</div>
                     <div class="stat-label">Active Users</div>
                   </div>
                 </div>
@@ -153,7 +153,7 @@
                     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21.75 8a.75.75 0 00-.75-.75h-2.25a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM3.75 12a8.25 8.25 0 1116.5 0 8.25 8.25 0 01-16.5 0z"/></svg>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">89</div>
+                    <div class="stat-value" id="deviceReportsCount">0</div>
                     <div class="stat-label">Device Reports</div>
                   </div>
                 </div>
@@ -167,7 +167,7 @@
                     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">31</div>
+                    <div class="stat-value" id="activeDevicesCount">0</div>
                   <div class="stat-label">Active Devices</div>
                   </div>
                 </div>
@@ -345,28 +345,24 @@
       </div>
     </div>
     <div class="spoilage-stats-row">
-      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Sensors</div><div class="stat-value">156</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Active Testers</div><div class="stat-value">142</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoilage Alert</div><div class="stat-value">6</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Inactive</div><div class="stat-value">12</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Sensors</div><div class="stat-value" id="totalSensorsCount">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Active Testers</div><div class="stat-value" id="activeTestersCount">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoilage Alert</div><div class="stat-value" id="spoilageAlertCount">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Inactive</div><div class="stat-value" id="inactiveCount">0</div></div>
     </div>
     <div class="spoilage-main-cards">
       <div class="spoilage-card spoilage-bar-card">
         <div class="spoilage-card-title">Sensor Usage by Tester Type</div>
-        <div class="spoilage-bar-list">
-          <div class="spoilage-bar-row"><span class="bar-label">Street Food Testers</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:65%"></div></div><span class="bar-value">65%</span></div>
-          <div class="spoilage-bar-row"><span class="bar-label">Food Truck Inspectors</span><div class="bar-bg"><div class="bar-fill bar-red" style="width:25%"></div></div><span class="bar-value">25%</span></div>
-          <div class="spoilage-bar-row"><span class="bar-label">Canteen Auditors</span><div class="bar-bg"><div class="bar-fill" style="width:10%"></div></div><span class="bar-value">10%</span></div>
+        <div class="spoilage-bar-list" id="sensorUsageBars">
+          <!-- Dynamic content will be populated by JavaScript -->
         </div>
       </div>
       <div class="spoilage-card spoilage-summary-card">
         <div class="spoilage-card-title">Sensor Activity Summary</div>
-        <div class="spoilage-summary-list">
-          <div class="summary-row"><span class="summary-label">MQ4 Sensors</span><span class="summary-desc">98 food testers actively using</span><span class="summary-rate bar-red">81.7%</span></div>
-          <div class="summary-row"><span class="summary-label">DHT11 Sensors</span><span class="summary-desc">32 food testers actively using</span><span class="summary-rate">88.9%</span></div>
-          <div class="summary-row"><span class="summary-label">DS18B20 Sensors</span><span class="summary-desc">12 food testers actively using</span><span class="summary-rate">100%</span></div>
+        <div class="spoilage-summary-list" id="sensorActivitySummary">
+          <!-- Dynamic content will be populated by JavaScript -->
         </div>
-        <div class="summary-total">Total Overview: <span class="summary-total-right">142 food testers actively using sensors</span></div>
+        <div class="summary-total">Total Overview: <span class="summary-total-right" id="totalOverviewText">0 food testers actively using sensors</span></div>
       </div>
     </div>
   </div>
@@ -459,7 +455,7 @@
         </div>
       </div>
       <div class="detailed-report-table-card">
-        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">156</span> devices)</div>
+        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">0</span> devices)</div>
         <div class="report-table-container">
         <table class="detailed-report-table admin-log-table">
           <thead>
@@ -473,54 +469,7 @@
             </tr>
           </thead>
           <tbody id="sensorTableBody">
-            <tr>
-              <td>Juan's Tacos Cart<br><span class="created-date">Registered: 6/25/2025</span></td>
-              <td><span class="cat-badge">Street Food Tester</span></td>
-              <td><span class="status-badge spoiled">Spoilage Alert</span></td>
-              <td>6/26/2025<br><span class="expiry-today">2 mins ago</span></td>
-              <td>Gas: 380 ppm</td>
-              <td><span class="alert-badge">3 alerts</span></td>
-            </tr>
-            <tr>
-              <td>Maria's Food Truck<br><span class="created-date">Registered: 6/22/2025</span></td>
-              <td><span class="cat-badge">Food Truck Inspector</span></td>
-              <td><span class="status-badge expired">Inactive</span></td>
-              <td>6/25/2025<br><span class="expiry-expired">1 day ago</span></td>
-              <td>Temp: 4.2°C, Hum: 78%</td>
-              <td><span class="alert-badge none">0 alerts</span></td>
-            </tr>
-            <tr>
-              <td>School Canteen #3<br><span class="created-date">Registered: 6/25/2025</span></td>
-              <td><span class="cat-badge">Canteen Auditor</span></td>
-              <td><span class="status-badge active">Active</span></td>
-              <td>6/26/2025<br><span class="expiry-today">5 mins ago</span></td>
-              <td>Temp: -1.8°C</td>
-              <td><span class="alert-badge">1 alert</span></td>
-            </tr>
-            <tr>
-              <td>Carlos BBQ Cart<br><span class="created-date">Registered: 6/25/2025</span></td>
-              <td><span class="cat-badge">Street Food Tester</span></td>
-              <td><span class="status-badge active">Active</span></td>
-              <td>6/30/2025<br><span class="expiry-days">1 min ago</span></td>
-              <td>Gas: 220 ppm</td>
-              <td><span class="alert-badge">2 alerts</span></td>
-            </tr>
-            <tr>
-              <td>Office Canteen A<br><span class="created-date">Registered: 6/24/2025</span></td>
-              <td><span class="cat-badge">Canteen Auditor</span></td>
-              <td><span class="status-badge spoiled">Spoilage Alert</span></td>
-              <td>6/26/2025<br><span class="expiry-today">3 mins ago</span></td>
-              <td>Temp: 25.3°C, Hum: 89%</td>
-              <td><span class="alert-badge">4 alerts</span></td>
-            </tr>
-            <tr>
-              <td>Beach Food Truck #2<br><span class="created-date">Registered: 6/23/2025</span></td>
-              <td><span class="cat-badge">Food Truck Inspector</span></td>
-              <td><span class="status-badge active">Active</span></td>
-              <td>6/26/2025<br><span class="expiry-today">1 min ago</span></td>
-              <td>Temp: 3.8°C</td>
-              <td><span class="alert-badge none">0 alerts</span></td>
-            </tr>
+            <!-- Dynamic content will be populated by JavaScript -->
           </tbody>
         </table>
         </div>
@@ -1061,38 +1010,38 @@
         <h1>Feedback Dashboard</h1>
         <div class="feedbacks-subtitle">Manage customer feedback and support tickets</div>
       </div>
-      <a href="#" class="feedbacks-tickets-link">8 feedbacks</a>
+      <a href="#" class="feedbacks-tickets-link" id="feedbacksCountLink">0 feedbacks</a>
     </div>
     <div class="feedbacks-stats-row feedbacks-feedback-stats-row" style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px;align-items:stretch;">
       <div class="feedbacks-stat-card feedbacks-stat-blue" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#128172;</span>
         <div class="stat-label">Total</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value" id="feedbackTotalCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-yellow" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#11088;</span>
         <div class="stat-label">Avg Rating</div>
-        <div class="stat-value stat-rating">0.0</div>
+        <div class="stat-value stat-rating" id="feedbackAvgRating">0.0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-green" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#128515;</span>
         <div class="stat-label">Positive</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value" id="feedbackPositiveCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-yellow" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#128994;</span>
         <div class="stat-label">5 Stars</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value" id="feedbackFiveStarsCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-red" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#128196;</span>
         <div class="stat-label">Negative</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value" id="feedbackNegativeCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-blue" style="display:flex;flex-direction:column;justify-content:center;">
         <span class="stat-icon">&#128337;</span>
         <div class="stat-label">Recent (3d)</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value" id="feedbackRecentCount">0</div>
       </div>
     </div>
     <div class="report-generator-card" style="padding:20px 24px;">
@@ -1186,7 +1135,7 @@
             <th>ACTION</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="feedbacksTableBody">
           <!-- Data will be populated dynamically by JavaScript -->
         </tbody>
       </table>
@@ -1214,26 +1163,26 @@
       <div class="device-management-stat-card">
         <span class="stat-icon stat-blue">&#128187;</span>
         <div class="stat-label">Total Devices</div>
-        <div class="stat-value">3</div>
-        <div class="stat-trend">↑ 3 sensors</div>
+        <div class="stat-value" id="totalDevicesCount">0</div>
+        <div class="stat-trend" id="totalDevicesTrend">↑ 0 sensors</div>
       </div>
       <div class="device-management-stat-card">
         <span class="stat-icon stat-green">&#128200;</span>
         <div class="stat-label">Active Devices</div>
-        <div class="stat-value">3</div>
-        <div class="stat-trend">↑ 100% online</div>
+        <div class="stat-value" id="activeDevicesManagementCount">0</div>
+        <div class="stat-trend" id="activeDevicesTrend">↑ 0% online</div>
       </div>
       <div class="device-management-stat-card">
         <span class="stat-icon stat-orange">&#9200;</span>
         <div class="stat-label">Device Health</div>
-        <div class="stat-value">100%</div>
-        <div class="stat-trend">↑ All operational</div>
+        <div class="stat-value" id="deviceHealthPercent">0%</div>
+        <div class="stat-trend" id="deviceHealthTrend">↑ All operational</div>
       </div>
       <div class="device-management-stat-card">
         <span class="stat-icon stat-red">&#9888;</span>
         <div class="stat-label">Alerts</div>
-        <div class="stat-value">0</div>
-        <div class="stat-trend">↓ No issues</div>
+        <div class="stat-value" id="deviceAlertsCount">0</div>
+        <div class="stat-trend" id="deviceAlertsTrend">↓ No issues</div>
       </div>
     </div>
 
