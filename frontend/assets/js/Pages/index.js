@@ -274,19 +274,42 @@ function initFormHandling() {
                 return;
             }
             
-            // Simulate form submission
+            // Submit to API
             const submitBtn = contactForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
             
-            setTimeout(() => {
-                showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
-                contactForm.reset();
+            // Send to API
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    contactForm.reset();
+                } else {
+                    showNotification(data.error || 'Failed to send message', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Contact form error:', error);
+                showNotification('Failed to send message. Please try again.', 'error');
+            })
+            .finally(() => {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-            }, 2000);
+            });
         });
     }
 }
@@ -388,17 +411,38 @@ function initNewsletterForm() {
                 return;
             }
             
-            // Simulate subscription
+            // Submit to API
             const originalContent = button.innerHTML;
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             button.disabled = true;
             
-            setTimeout(() => {
-                showNotification('Successfully subscribed to our newsletter!', 'success');
-                input.value = '';
+            // Send to API
+            fetch('/api/newsletter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    input.value = '';
+                } else {
+                    showNotification(data.error || 'Failed to subscribe', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Newsletter subscription error:', error);
+                showNotification('Failed to subscribe. Please try again.', 'error');
+            })
+            .finally(() => {
                 button.innerHTML = originalContent;
                 button.disabled = false;
-            }, 1500);
+            });
         });
     }
 }
