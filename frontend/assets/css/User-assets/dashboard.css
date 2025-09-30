@@ -1,5 +1,81 @@
 /* css/dashboard.css */
 
+/* ML Results Modal Styles */
+.ml-results-modal {
+  max-width: 500px;
+  background: #212c4d;
+  color: #e0e6f6;
+  border: 1px solid #2b3a66;
+}
+
+.ml-results-body {
+  padding: 20px;
+}
+
+.ml-results-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ml-results-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #2b3a66;
+}
+
+.ml-results-item:last-child {
+  border-bottom: none;
+}
+
+.ml-results-label {
+  color: #9fb8ff;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.ml-results-value {
+  color: #e0e6f6;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.ml-results-value.status-fresh {
+  color: #4ade80;
+}
+
+.ml-results-value.status-unsafe {
+  color: #f87171;
+}
+
+.ml-results-value.status-at-risk {
+  color: #fbbf24;
+}
+
+.ml-results-recommendation {
+  margin-top: 16px;
+  padding: 12px;
+  background: #1a2332;
+  border-radius: 8px;
+  border: 1px solid #2b3a66;
+}
+
+.ml-results-recommendation-text {
+  color: #e0e6f6;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ml-results-footer {
+  border-top: 1px solid #2b3a66;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Smart Training Styles */
 .food-picker-section {
   background: #1a2332;

@@ -33,69 +33,88 @@
     <span class="sidebar-title">Admin</span>
   </div>
   <nav class="sidebar-nav">
-    <ul>
-      <li class="nav-item active">
-        <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#8962;</span>
-          <span class="nav-text">Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="analytics-summary" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128200;</span>
-          <span class="nav-text">Sensor Analytics</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="ml-predictions" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#129302;</span>
-          <span class="nav-text">ML Predictions & Analytics</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128229;</span>
-          <span class="nav-text">Reports Generator</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="device-management" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128187;</span>
-          <span class="nav-text">Device Management</span>
-        </a>
-      </li>
-    </ul>
-    <hr class="sidebar-divider">
-    <ul>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="users" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128101;</span>
-          <span class="nav-text">Users</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="user-activity-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128221;</span>
-          <span class="nav-text">All User Activity Log</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="admin-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128273;</span>
-          <span class="nav-text">Admin Logs / History</span>
-        </a>
-      </li>
-    </ul>
-    <hr class="sidebar-divider">
-    <ul>
-      <li class="nav-item">
-        <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128172;</span>
-          <span class="nav-text">Feedbacks/ Support Tickets</span>
-        </a>
-      </li>
-  </ul>
-</nav>
+    <!-- Core System Section -->
+    <div class="nav-section">
+      <div class="nav-section-header">Core System</div>
+      <ul>
+        <li class="nav-item active">
+          <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#8962;</span>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="analytics-summary" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128200;</span>
+            <span class="nav-text">Sensor Analytics</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="ml-predictions" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#129302;</span>
+            <span class="nav-text">ML Predictions</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="device-management" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128187;</span>
+            <span class="nav-text">Device Management</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Reports Section -->
+    <div class="nav-section">
+      <div class="nav-section-header">Reports</div>
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128229;</span>
+            <span class="nav-text">Report Generator</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="nav-section">
+      <div class="nav-section-header">User Management</div>
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="users" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128101;</span>
+            <span class="nav-text">Users</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="user-activity-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128221;</span>
+            <span class="nav-text">User Activity Log</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="admin-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128273;</span>
+            <span class="nav-text">Admin Logs</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Support Section -->
+    <div class="nav-section">
+      <div class="nav-section-header">Support</div>
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+            <span class="nav-icon">&#128172;</span>
+            <span class="nav-text">Feedback & Support</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
   <div class="sidebar-account" id="sidebarAccountBtn" onclick="openAdminAccountModal()" style="cursor: pointer;">
     <span class="account-icon">&#128100;</span>
     <span class="account-text">Account</span>

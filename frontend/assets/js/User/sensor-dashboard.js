@@ -1220,9 +1220,9 @@ class SensorDashboard {
         food_id: foodId,
         food_name: foodName,
         food_category: foodCategory,
-        temperature: sensorData.temperature?.value || null,
-        humidity: sensorData.humidity?.value || null,
-        gas_level: sensorData.gas?.value || null,
+        temperature: sensorData.temperature || null,
+        humidity: sensorData.humidity || null,
+        gas_level: sensorData.gas || null,
         actual_outcome: actualOutcome,
         is_training_data: isTrainingData ? 1 : 0
       };
@@ -1779,7 +1779,12 @@ class SensorDashboard {
   // Show ML prediction results in custom modal (SmartSense-aligned)
   showMLPredictionResults(foodName, prediction) {
     const modal = document.getElementById('mlPredictionResultsModal');
-    if (!modal) return;
+    if (!modal) {
+      console.error('ML Prediction Results Modal not found');
+      return;
+    }
+
+    console.log('Showing ML prediction results:', { foodName, prediction });
 
     // Populate the modal with prediction data
     const foodElement = document.getElementById('mlResultFood');
@@ -1995,7 +2000,18 @@ class SensorDashboard {
 
       // Perform ML prediction using new sensor data (SmartSense Scanner creates training data)
       console.log('🔍 Calling performMLPrediction with:', { foodId, foodName, foodCategory, isTrainingData: true });
-      const prediction = await this.performMLPrediction(foodId, foodName, foodCategory, newSensorData, null, true);
+      console.log('🔍 New sensor data structure:', newSensorData);
+      
+      // Ensure sensor data is in the correct format for ML prediction
+      const formattedSensorData = {
+        temperature: newSensorData.temperature?.value || newSensorData.temperature,
+        humidity: newSensorData.humidity?.value || newSensorData.humidity,
+        gas: newSensorData.gas?.value || newSensorData.gas
+      };
+      
+      console.log('🔍 Formatted sensor data for ML:', formattedSensorData);
+      
+      const prediction = await this.performMLPrediction(foodId, foodName, foodCategory, formattedSensorData, null, true);
       console.log('🔍 ML prediction result:', prediction);
       
       if (prediction.success) {
