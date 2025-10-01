@@ -254,14 +254,14 @@ function initFormHandling() {
     const contactForm = document.querySelector('.form');
     
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Get form data
-            const formData = new FormData(contactForm);
-            const name = contactForm.querySelector('input[type="text"]').value;
-            const email = contactForm.querySelector('input[type="email"]').value;
-            const message = contactForm.querySelector('textarea').value;
+            const name = contactForm.querySelector('input[type="text"]').value.trim();
+            const email = contactForm.querySelector('input[type="email"]').value.trim();
+            const message = contactForm.querySelector('textarea').value.trim();
+            const recaptchaResponse = grecaptcha.getResponse();
             
             // Basic validation
             if (!name || !email || !message) {
@@ -274,42 +274,53 @@ function initFormHandling() {
                 return;
             }
             
-            // Submit to API
+            if (!recaptchaResponse) {
+                showNotification('Please complete the reCAPTCHA verification', 'error');
+                return;
+            }
+            
+            // Get submit button and show loading state
             const submitBtn = contactForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Send to API
-            fetch('/api/contact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: name,
-                    email: email,
-                    message: message
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
+            try {
+                // Send form data to backend
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        message: message,
+                        recaptcha_token: recaptchaResponse
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showNotification(result.message || 'Message sent successfully! We\'ll get back to you soon.', 'success');
                     contactForm.reset();
+                    grecaptcha.reset(); // Reset reCAPTCHA after successful submission
                 } else {
-                    showNotification(data.error || 'Failed to send message', 'error');
+                    showNotification(result.message || 'Failed to send message. Please try again.', 'error');
+                    grecaptcha.reset(); // Reset reCAPTCHA on error
                 }
-            })
-            .catch(error => {
+                
+            } catch (error) {
                 console.error('Contact form error:', error);
-                showNotification('Failed to send message. Please try again.', 'error');
-            })
-            .finally(() => {
+                showNotification('Network error. Please check your connection and try again.', 'error');
+                grecaptcha.reset(); // Reset reCAPTCHA on network error
+            } finally {
+                // Reset button state
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-            });
+            }
         });
     }
 }
