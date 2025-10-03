@@ -1969,7 +1969,7 @@ class SensorDashboard {
     const scanBtn = document.getElementById('readyScanBtn');
     if (scanBtn) {
       scanBtn.disabled = true;
-      scanBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Waiting for new sensor data...';
+      scanBtn.innerHTML = '<div class="circle-loading"></div> Waiting for new sensor data...';
     }
 
     try {
@@ -2108,7 +2108,7 @@ class SensorDashboard {
     const uploadBtn = document.getElementById('uploadMLTrainingDataBtn');
     if (uploadBtn) {
       uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Teaching AI...';
+        uploadBtn.innerHTML = '<div class="circle-loading"></div> Teaching AI...';
     }
 
     try {

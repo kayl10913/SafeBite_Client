@@ -123,7 +123,7 @@ class MLDataUpload {
     const uploadBtn = document.getElementById('uploadMLTrainingDataBtn');
     if (uploadBtn) {
       uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Teaching AI...';
+        uploadBtn.innerHTML = '<div class="circle-loading"></div> Teaching AI...';
     }
 
     try {

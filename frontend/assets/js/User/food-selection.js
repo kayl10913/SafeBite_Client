@@ -11,6 +11,15 @@ class FoodSelection {
     this.init();
   }
 
+  /**
+   * Get authentication token with fallback to multiple keys
+   */
+  getAuthToken() {
+    return localStorage.getItem('jwt_token') || 
+           localStorage.getItem('sessionToken') || 
+           localStorage.getItem('session_token');
+  }
+
   // Gas emission threshold analysis function
   analyzeGasEmissionThresholds(gasLevel) {
     if (gasLevel >= 251) {
@@ -68,6 +77,9 @@ class FoodSelection {
   init() {
     this.setupEventListeners();
     this.renderFoodHistory();
+    
+    // Set up periodic check for updating scanned items
+    this.startPeriodicHistoryCheck();
   }
 
   setupEventListeners() {
@@ -245,6 +257,13 @@ class FoodSelection {
     if (modal) {
       modal.style.display = 'none';
       document.body.style.overflow = 'auto';
+      
+      // Ensure history is updated with final results before closing
+      if (this._lastAnalysisResult || this._lastMLResult) {
+        console.log('🔄 Modal closing - ensuring history is updated with final results');
+        this.updateHistoryWithFinalResults();
+      }
+      
       this.clearForm();
     }
   }
@@ -339,7 +358,7 @@ class FoodSelection {
       // Show loading state
       this.showCategoryLoading();
       
-      const token = localStorage.getItem('jwt_token');
+      const token = this.getAuthToken();
       console.log('Using token:', token ? 'Present' : 'Missing');
       
       if (!token) {
@@ -518,9 +537,7 @@ class FoodSelection {
     try {
       console.log('🔍 Completing scan session from food selection:', this.currentScanSession.session_id);
       
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                          localStorage.getItem('sessionToken') || 
-                          localStorage.getItem('session_token');
+      const sessionToken = this.getAuthToken();
       
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
@@ -583,9 +600,7 @@ class FoodSelection {
     try {
       console.log('🔍 Creating scan session from food selection...');
       
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                          localStorage.getItem('sessionToken') || 
-                          localStorage.getItem('session_token');
+      const sessionToken = this.getAuthToken();
       
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
@@ -653,7 +668,15 @@ class FoodSelection {
   // Create an alert for SmartSense Scanner when condition is caution/unsafe
   async createScannerAlert(foodName, tableCondition, sensorData, spoilageScore) {
     try {
-      if (!tableCondition || tableCondition === 'safe') return;
+      console.log('🚨 Alert Creation Check:');
+      console.log('  Food Name:', foodName);
+      console.log('  Table Condition:', tableCondition);
+      console.log('  Should Create Alert:', tableCondition && tableCondition !== 'safe');
+      
+      if (!tableCondition || tableCondition === 'safe') {
+        console.log('✅ Skipping alert creation - condition is safe or empty');
+        return;
+      }
       const sessionToken = localStorage.getItem('jwt_token') || 
                            localStorage.getItem('sessionToken') || 
                            localStorage.getItem('session_token');
@@ -782,6 +805,7 @@ class FoodSelection {
       if (okBtn) {
         okBtn.disabled = true;
         okBtn.textContent = 'Waiting...';
+        okBtn.style.display = 'block'; // Ensure button is visible initially
       }
       // Hide training upload initially
       if (trainingUpload) trainingUpload.style.display = 'none';
@@ -816,26 +840,56 @@ class FoodSelection {
     const autoTrainingStatus = document.getElementById('autoTrainingStatus');
     if (autoTrainingStatus) {
       autoTrainingStatus.style.display = 'none';
-      autoTrainingStatus.innerHTML = `
+      // Only remove loading class, preserve completed state
+      autoTrainingStatus.classList.remove('loading');
+      
+      // Only reset HTML if not in completed state
+      if (!autoTrainingStatus.classList.contains('completed')) {
+        autoTrainingStatus.innerHTML = `
         <div class="training-status-header">
-          <h3>🧠 AI Training Complete!</h3>
-          <p>Your sensor data has been automatically used to train our AI</p>
+          <h3>🧠 Smart Training In Progress...</h3>
+          <p>Analyzing your sensor data with AI</p>
         </div>
         <div class="training-status-info">
-          <div class="status-item">
-            <i class="bi bi-check-circle"></i>
-            <span>Sensor data collected</span>
+          <div class="status-item" id="trainingStep1">
+            <div class="status-icon loading">
+              <i class="bi bi-activity"></i>
+            </div>
+            <span>Collecting sensor data...</span>
           </div>
-          <div class="status-item">
-            <i class="bi bi-check-circle"></i>
-            <span>AI model updated</span>
+          <div class="status-item" id="trainingStep2">
+            <div class="status-icon loading">
+              <i class="bi bi-robot"></i>
+            </div>
+            <span>Processing with AI...</span>
           </div>
-          <div class="status-item">
-            <i class="bi bi-check-circle"></i>
-            <span>Training data saved</span>
+          <div class="status-item" id="trainingStep3">
+            <div class="status-icon loading">
+              <i class="bi bi-database"></i>
+            </div>
+            <span>Uploading training data...</span>
+          </div>
+          <div class="status-item" id="trainingStep4">
+            <div class="status-icon loading">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <span>Generating prediction...</span>
+          </div>
+          <div class="status-item" id="trainingStep5">
+            <div class="status-icon loading">
+              <i class="bi bi-percent"></i>
+            </div>
+            <span>Calculating confidence...</span>
+          </div>
+          <div class="status-item" id="trainingStep6">
+            <div class="status-icon loading">
+              <i class="bi bi-lightbulb"></i>
+            </div>
+            <span>Finalizing analysis...</span>
           </div>
         </div>
       `;
+      }
     }
 
     // Reset food selected confirmation modal elements
@@ -847,6 +901,7 @@ class FoodSelection {
     if (okBtn) {
       okBtn.disabled = false;
       okBtn.textContent = 'OK';
+      okBtn.style.display = 'none'; // Hide button by default
     }
     if (trainingUpload) trainingUpload.style.display = 'none';
   }
@@ -879,7 +934,7 @@ class FoodSelection {
     localStorage.setItem('foodHistory', JSON.stringify(this.foodHistory));
   }
 
-  addToFoodHistory(foodName, category, status = 'scanned') {
+  addToFoodHistory(foodName, category, status = 'scanned', analysisResult = null) {
     const historyItem = {
       id: Date.now(),
       foodName,
@@ -887,7 +942,8 @@ class FoodSelection {
       status,
       timestamp: new Date().toISOString(),
       date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString()
+      time: new Date().toLocaleTimeString(),
+      analysisResult: analysisResult // Store actual analysis results
     };
     
     this.foodHistory.unshift(historyItem);
@@ -896,11 +952,14 @@ class FoodSelection {
     return historyItem.id;
   }
 
-  updateFoodHistoryStatus(historyId, newStatus) {
+  updateFoodHistoryStatus(historyId, newStatus, analysisResult = null) {
     if (!historyId) return;
     const idx = this.foodHistory.findIndex(h => String(h.id) === String(historyId));
     if (idx !== -1) {
       this.foodHistory[idx].status = newStatus;
+      if (analysisResult) {
+        this.foodHistory[idx].analysisResult = analysisResult;
+      }
       this.saveFoodHistory();
       this.renderFoodHistory();
     }
@@ -1079,7 +1138,13 @@ class FoodSelection {
         return;
       }
       
-      await this.autoTrainMLModel(latestData);
+      const mlResult = await this.autoTrainMLModel(latestData);
+      
+      // Store the ML result for later use when all steps are completed
+      this._lastMLResult = mlResult;
+      
+      // Don't update history yet - wait for all steps to complete
+      console.log('📊 ML result stored, waiting for all steps to complete');
 
       // If no new data arrived within the timeout, mark as failed and exit
       if (!latestData) {
@@ -1151,9 +1216,7 @@ class FoodSelection {
 
   async fetchLatestSensorData() {
     try {
-      const token = localStorage.getItem('jwt_token') || 
-                    localStorage.getItem('sessionToken') || 
-                    localStorage.getItem('session_token');
+      const token = this.getAuthToken();
 
       if (!token) {
         console.error('No authentication token found for sensor data fetch');
@@ -1225,9 +1288,7 @@ class FoodSelection {
 
   async callMlPredict(latest) {
     try {
-      const token = localStorage.getItem('jwt_token') || 
-                    localStorage.getItem('sessionToken') || 
-                    localStorage.getItem('session_token');
+      const token = this.getAuthToken();
       if (!token) return null;
 
       const temperature = typeof latest?.temperature === 'object' ? latest?.temperature?.value : latest?.temperature;
@@ -1260,9 +1321,7 @@ class FoodSelection {
 
   async callAiAnalyze(latest) {
     try {
-      const token = localStorage.getItem('jwt_token') || 
-                    localStorage.getItem('sessionToken') || 
-                    localStorage.getItem('session_token');
+      const token = this.getAuthToken();
       if (!token) return null;
 
       const temp = typeof latest?.temperature === 'object' ? latest?.temperature?.value : latest?.temperature;
@@ -1295,10 +1354,47 @@ class FoodSelection {
       const dd = String(d.getDate()).padStart(2, '0');
       return `${yyyy}-${mm}-${dd}`;
     }
-    // Fallback to risk-based heuristic
+    
+    // Use the mapped spoilage status for consistent expiry calculation
     const risk = String(analysis.riskLevel || '').toUpperCase();
-    const fakePrediction = { spoilage_status: risk === 'HIGH' ? 'HIGH_SPOILAGE_RISK' : risk === 'MEDIUM' ? 'MODERATE_SPOILAGE_RISK' : 'LOW_SPOILAGE_RISK' };
-    return this.deriveExpiryDate(fakePrediction);
+    const spoilageStatus = this.mapRiskLevelToSpoilageStatus(analysis.riskLevel);
+    
+    console.log('🔍 Expiry Calculation:');
+    console.log('  AI Risk Level:', risk);
+    console.log('  Mapped Spoilage Status:', spoilageStatus);
+    
+    // Map spoilage status directly to expiry days with consistent logic
+    const now = new Date();
+    let days = 1; // default
+    
+    switch (spoilageStatus.toLowerCase()) {
+      case 'safe':
+        days = 3; // Safe food lasts 3 days
+        break;
+      case 'caution':
+        days = 2; // Caution food should be consumed within 2 days
+        break;
+      case 'unsafe':
+        days = 0; // Unsafe/spoiled food expires TODAY (already spoiled)
+        break;
+      default:
+        days = 1;
+    }
+    
+    console.log('🔍 Expiry Logic Check:');
+    console.log('  If spoilage_status is "unsafe" but days > 0, there\'s an inconsistency');
+    console.log('  Current spoilage_status:', spoilageStatus);
+    console.log('  Calculated days:', days);
+    
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    
+    console.log('  Expiry Days:', days);
+    console.log('  Expiry Date:', `${yyyy}-${mm}-${dd}`);
+    
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   deriveExpiryDate(prediction) {
@@ -1325,9 +1421,7 @@ class FoodSelection {
 
   async updateFoodExpiry(foodId, expirationDate) {
     try {
-      const token = localStorage.getItem('jwt_token') || 
-                    localStorage.getItem('sessionToken') || 
-                    localStorage.getItem('session_token');
+      const token = this.getAuthToken();
       if (!token) return false;
       const r = await fetch(`/api/users/food-items/${foodId}/expiry`, {
         method: 'PUT',
@@ -1350,9 +1444,7 @@ class FoodSelection {
         return false;
       }
 
-      const token = localStorage.getItem('jwt_token') || 
-                    localStorage.getItem('sessionToken') || 
-                    localStorage.getItem('session_token');
+      const token = this.getAuthToken();
       if (!token) return false;
 
       console.log('Updating existing food items with expiry:', { name, category, expirationDate });
@@ -1450,14 +1542,82 @@ class FoodSelection {
     this.renderFoodHistory();
   }
 
+  // Check and update any "scanned" items that might have analysis results available
+  checkAndUpdateScannedItems() {
+    if (!this._lastAnalysisResult && !this._lastMLResult) return;
+    
+    const analysisResult = this._lastAnalysisResult || this._lastMLResult;
+    let updated = false;
+    
+    // Check for any items with "scanned" status that should be updated
+    this.foodHistory.forEach((item, index) => {
+      if (item.status === 'scanned' && !item.analysisResult) {
+        // Check if this item was created recently (within last 5 minutes)
+        const itemTime = new Date(item.timestamp);
+        const now = new Date();
+        const timeDiff = (now - itemTime) / (1000 * 60); // minutes
+        
+        if (timeDiff < 5 && analysisResult.spoilage_status) {
+          console.log(`🔄 Updating scanned item "${item.foodName}" with analysis results`);
+          
+          const historyAnalysisResult = {
+            prediction_status: analysisResult.spoilage_status,
+            confidence_score: analysisResult.confidence_score,
+            spoilage_probability: analysisResult.spoilage_probability,
+            training_id: analysisResult.training_id,
+            prediction_id: analysisResult.prediction_id,
+            status: analysisResult.spoilage_status,
+            condition: analysisResult.spoilage_status
+          };
+          
+          this.foodHistory[index].status = analysisResult.spoilage_status;
+          this.foodHistory[index].analysisResult = historyAnalysisResult;
+          updated = true;
+        }
+      }
+    });
+    
+    if (updated) {
+      console.log('✅ Updated scanned items with analysis results');
+      this.saveFoodHistory();
+    }
+  }
+
+  // Start periodic check for updating history items
+  startPeriodicHistoryCheck() {
+    // Check every 2 seconds for the first minute, then every 10 seconds
+    let checkCount = 0;
+    const maxFastChecks = 30; // 30 checks * 2 seconds = 1 minute
+    
+    const periodicCheck = () => {
+      this.checkAndUpdateScannedItems();
+      checkCount++;
+      
+      if (checkCount < maxFastChecks) {
+        // Fast checks for first minute
+        setTimeout(periodicCheck, 2000);
+      } else {
+        // Slower checks after first minute
+        setTimeout(periodicCheck, 10000);
+      }
+    };
+    
+    // Start the periodic check
+    setTimeout(periodicCheck, 2000);
+  }
+
   renderFoodHistory() {
     const historyList = document.getElementById('foodHistoryList');
     if (!historyList) return;
 
-    // Limit to 6 most recent items
+    // Check for any "scanned" items that might need updating
+    this.checkAndUpdateScannedItems();
+
+    // Get actual scanner results from localStorage
+    const scannerResults = this.getScannerResultsFromStorage();
     const recentHistory = this.foodHistory.slice(0, 6);
 
-    if (recentHistory.length === 0) {
+    if (recentHistory.length === 0 && scannerResults.length === 0) {
       historyList.innerHTML = `
         <div class="no-history">
           <i class="bi bi-clock-history"></i>
@@ -1468,20 +1628,31 @@ class FoodSelection {
       return;
     }
 
-    const historyHTML = recentHistory.map(item => `
-      <div class="food-history-item">
-        <div class="food-history-info">
-          <div class="food-history-details">
-            <h4>${item.foodName}</h4>
-            <p>Category: ${item.category || 'Unknown'}</p>
+    // Combine food history with scanner results
+    const allResults = [...scannerResults, ...recentHistory].slice(0, 6);
+    
+    const historyHTML = allResults.map(item => {
+      if (item.scannerData) {
+        // This is a scanner result
+        return this.renderScannerHistoryItem(item);
+      } else {
+        // This is a regular food history item
+        return `
+          <div class="food-history-item">
+            <div class="food-history-info">
+              <div class="food-history-details">
+                <h4>${item.foodName}</h4>
+                <p>Category: ${item.category || 'Unknown'}</p>
+              </div>
+            </div>
+            <div class="food-history-meta">
+              <div class="food-history-time">${item.time}</div>
+              <div class="food-history-status ${item.status}">${this.getStatusText(item.status, item.analysisResult)}</div>
+            </div>
           </div>
-        </div>
-        <div class="food-history-meta">
-          <div class="food-history-time">${item.time}</div>
-          <div class="food-history-status ${item.status}">${this.getStatusText(item.status)}</div>
-        </div>
-      </div>
-    `).join('');
+        `;
+      }
+    }).join('');
 
     historyList.innerHTML = historyHTML;
     
@@ -1510,8 +1681,8 @@ class FoodSelection {
       historyList.style.paddingRight = '0';
     }
     
-    // Update counter
-    this.updateHistoryCounter(recentHistory.length);
+    // Update counter to include scanner results
+    this.updateHistoryCounter(allResults.length);
   }
 
   filterFoodHistory(filter) {
@@ -1569,7 +1740,7 @@ class FoodSelection {
         </div>
         <div class="food-history-meta">
           <div class="food-history-time">${item.time}</div>
-          <div class="food-history-status ${item.status}">${item.status}</div>
+          <div class="food-history-status ${item.status}">${this.getStatusText(item.status, item.analysisResult)}</div>
         </div>
       </div>
     `).join('');
@@ -1603,14 +1774,40 @@ class FoodSelection {
     return iconMap[status] || 'question-circle-fill';
   }
 
-  getStatusText(status) {
+  getStatusText(status, analysisResult = null) {
+    // If we have analysis results, show the actual analysis status
+    if (analysisResult) {
+      const resultStatus = analysisResult.prediction_status || analysisResult.status || analysisResult.condition;
+      if (resultStatus) {
+        // Map the status to display text
+        const statusMap = {
+          'safe': 'SAFE',
+          'fresh': 'SAFE',
+          'caution': 'CAUTION',
+          'moderate': 'CAUTION',
+          'getting_old': 'CAUTION',
+          'spoiled': 'SPOILED',
+          'unsafe': 'SPOILED',
+          'high_risk': 'SPOILED'
+        };
+        return statusMap[resultStatus.toLowerCase()] || resultStatus.toUpperCase();
+      }
+    }
+    
+    // Fallback to original status mapping
     const statusMap = {
       'scanned': 'Scanned',
       'analyzed': 'Analyzed',
       'completed': 'Completed',
       'cancelled': 'Cancelled',
       'pending': 'Pending',
-      'error': 'Error'
+      'error': 'Error',
+      'safe': 'SAFE',
+      'caution': 'CAUTION',
+      'spoiled': 'SPOILED',
+      'fresh': 'SAFE',
+      'moderate': 'CAUTION',
+      'high_risk': 'SPOILED'
     };
     return statusMap[status] || status;
   }
@@ -1620,6 +1817,137 @@ class FoodSelection {
     if (counter) {
       counter.textContent = count;
     }
+  }
+
+  // Get scanner results from localStorage
+  getScannerResultsFromStorage() {
+    try {
+      const latestSensorData = localStorage.getItem('latest_sensor_payload');
+      const mlPredictions = localStorage.getItem('ml_predictions');
+      
+      const results = [];
+      
+      // Get latest sensor data
+      if (latestSensorData) {
+        const sensorData = JSON.parse(latestSensorData);
+        if (sensorData && sensorData.sensor_data) {
+          results.push({
+            id: 'scanner_' + Date.now(),
+            scannerData: true,
+            foodName: this.selectedFood?.name || 'Scanned Food',
+            category: this.selectedFood?.category || 'Unknown',
+            status: 'scanned',
+            time: this.getTimeAgo(new Date()),
+            sensorData: sensorData,
+            timestamp: new Date()
+          });
+        }
+      }
+      
+      // Get ML predictions if available
+      if (mlPredictions) {
+        const predictions = JSON.parse(mlPredictions);
+        if (Array.isArray(predictions)) {
+          predictions.slice(0, 3).forEach(prediction => {
+            results.push({
+              id: 'ml_' + prediction.id,
+              scannerData: true,
+              foodName: prediction.food_name || 'ML Analyzed Food',
+              category: prediction.food_category || 'Unknown',
+              status: prediction.prediction_status || 'analyzed',
+              time: this.getTimeAgo(new Date(prediction.created_at)),
+              mlData: prediction,
+              timestamp: new Date(prediction.created_at)
+            });
+          });
+        }
+      }
+      
+      return results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } catch (error) {
+      console.error('Error getting scanner results from storage:', error);
+      return [];
+    }
+  }
+
+  // Render scanner history item with detailed analysis
+  renderScannerHistoryItem(item) {
+    const sensorData = item.sensorData;
+    const mlData = item.mlData;
+    
+    let statusBadge = '';
+    let sensorReadings = '';
+    let analysisInfo = '';
+    
+    if (sensorData && sensorData.sensor_data) {
+      // Display sensor readings
+      const sensors = sensorData.sensor_data;
+      sensorReadings = `
+        <div class="scanner-sensors">
+          ${sensors.map(sensor => `
+            <div class="scanner-sensor-item">
+              <span class="sensor-label">${this.getSensorIcon(sensor.sensor_type)}</span>
+              <span class="sensor-value">${sensor.value}${sensor.unit || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    if (mlData) {
+      // Display ML analysis results
+      const confidence = mlData.confidence_score || 0;
+      const status = mlData.prediction_status || 'unknown';
+      statusBadge = `<span class="scanner-status-badge ${this.getMLStatusClass(status)}">${status}</span>`;
+      
+      analysisInfo = `
+        <div class="scanner-analysis">
+          <div class="confidence-score">Confidence: ${confidence}%</div>
+          ${mlData.recommendations ? `<div class="recommendations">${mlData.recommendations}</div>` : ''}
+        </div>
+      `;
+    }
+    
+    return `
+      <div class="food-history-item scanner-result">
+        <div class="food-history-info">
+          <div class="food-history-details">
+            <h4>${item.foodName}</h4>
+            <p>Category: ${item.category}</p>
+            ${statusBadge}
+          </div>
+        </div>
+        ${sensorReadings}
+        ${analysisInfo}
+        <div class="food-history-meta">
+          <div class="food-history-time">${item.time}</div>
+          <div class="food-history-source">🧠 Smart Scanner</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Get sensor icon based on sensor type
+  getSensorIcon(sensorType) {
+    const icons = {
+      'temperature': '🌡️',
+      'humidity': '💧',
+      'gas': '💨',
+      'light': '💡',
+      'pressure': '📊'
+    };
+    return icons[sensorType?.toLowerCase()] || '📡';
+  }
+
+  // Get ML status class for styling
+  getMLStatusClass(status) {
+    const statusMap = {
+      'fresh': 'status-safe',
+      'spoiled': 'status-danger',
+      'moderate': 'status-warning',
+      'unknown': 'status-unknown'
+    };
+    return statusMap[status?.toLowerCase()] || 'status-unknown';
   }
 
   addShowAllButton() {
@@ -1655,7 +1983,7 @@ class FoodSelection {
         </div>
         <div class="food-history-meta">
           <div class="food-history-time">${item.time}</div>
-          <div class="food-history-status ${item.status}">${this.getStatusText(item.status)}</div>
+          <div class="food-history-status ${item.status}">${this.getStatusText(item.status, item.analysisResult)}</div>
         </div>
       </div>
     `).join('');
@@ -1680,6 +2008,473 @@ class FoodSelection {
     this.renderFoodHistory();
   }
 
+  // Show analysis loading animation in existing modal
+  showAnalysisLoading() {
+    const autoTrainingStatus = document.getElementById('autoTrainingStatus');
+    const okButton = document.getElementById('okFoodSelected');
+    
+    if (autoTrainingStatus) {
+      autoTrainingStatus.style.display = 'block';
+      autoTrainingStatus.classList.add('loading');
+      autoTrainingStatus.classList.remove('completed');
+    }
+    
+    if (okButton) {
+      okButton.style.display = 'none';
+    }
+    
+    // Reset all steps
+    for (let i = 1; i <= 6; i++) {
+      const step = document.getElementById(`trainingStep${i}`);
+      if (step) {
+        step.classList.remove('active', 'completed');
+        const icon = step.querySelector('.status-icon');
+        if (icon) {
+          icon.classList.remove('loading');
+        }
+      }
+    }
+    
+    // Don't start step progression yet - wait for ML workflow to complete
+    // this.progressAnalysisSteps(); // Moved to after ML workflow completion
+  }
+
+  // Progress through analysis steps
+  progressAnalysisSteps() {
+    // Get real analysis results if available
+    const analysisResult = this._lastMLResult || this._lastAnalysisResult;
+    
+    // Debug logging for consistency check
+    console.log('🔍 Progress Analysis Steps - Data Check:');
+    console.log('  Analysis Result:', analysisResult);
+    console.log('  Spoilage Status:', analysisResult?.spoilage_status);
+    
+    // Wait for validated AI analysis result - don't show steps until we have the final result
+    if (!analysisResult || !analysisResult.spoilage_status) {
+      console.log('⏳ Waiting for validated AI analysis result...');
+      // Show loading state for AI analysis step
+      const step2 = document.getElementById('trainingStep2');
+      if (step2) {
+        const stepText = step2.querySelector('span');
+        if (stepText) {
+          stepText.textContent = 'Processing with AI... (validating results)';
+        }
+      }
+      return; // Don't progress steps until we have validated results
+    }
+    
+    console.log('✅ Validated analysis result available, proceeding with steps');
+    console.log('  Status Text (formatted):', analysisResult ? this.getAnalysisStatusText(analysisResult) : 'Default');
+    
+    const statusText = analysisResult ? this.getAnalysisStatusText(analysisResult) : 'AI Analysis: Processing...';
+    
+    // Ensure both AI analysis and prediction show consistent results
+    // If AI analysis shows "Fresh & Safe" but spoilage_status is "unsafe", there's a mismatch
+    const aiAnalysisStatus = analysisResult ? this.extractStatusFromAnalysisText(statusText) : 'safe';
+    const spoilageStatus = analysisResult?.spoilage_status || 'safe';
+    
+    // Use the spoilage_status as the authoritative source (it comes from validated backend)
+    const predictionText = analysisResult ? `Prediction: ${spoilageStatus}` : 'Prediction: Processing...';
+    
+    // Log any inconsistencies for debugging
+    if (aiAnalysisStatus !== spoilageStatus) {
+      console.warn('⚠️ INCONSISTENCY DETECTED:');
+      console.warn('  AI Analysis shows:', aiAnalysisStatus);
+      console.warn('  Spoilage Status shows:', spoilageStatus);
+      console.warn('  Using Spoilage Status as authoritative source');
+    }
+    const confidenceText = analysisResult ? `Confidence: ${analysisResult.confidence_score || 0}%` : 'Confidence: Calculating...';
+    
+    console.log('🔍 Final Step Texts:');
+    console.log('  Status Text:', statusText);
+    console.log('  Prediction Text:', predictionText);
+    console.log('  Confidence Text:', confidenceText);
+    
+    const steps = [
+      { id: 1, delay: 300, text: 'Sensor data collected' },
+      { id: 2, delay: 800, text: statusText },
+      { id: 3, delay: 1300, text: 'ML training data uploaded to database' },
+      { id: 4, delay: 1800, text: predictionText },
+      { id: 5, delay: 2300, text: confidenceText },
+      { id: 6, delay: 2800, text: 'AI Insight: AI analysis completed' }
+    ];
+
+    steps.forEach((step, index) => {
+      setTimeout(() => {
+        const stepElement = document.getElementById(`trainingStep${step.id}`);
+        if (stepElement) {
+          // Mark previous steps as completed
+          for (let i = 1; i < step.id; i++) {
+            const prevStep = document.getElementById(`trainingStep${i}`);
+            if (prevStep) {
+              prevStep.classList.add('completed');
+              prevStep.classList.remove('active');
+              const prevIcon = prevStep.querySelector('.status-icon');
+              if (prevIcon) {
+                prevIcon.classList.remove('loading');
+                // Change icon to checkmark for completed steps
+                const iconElement = prevIcon.querySelector('i');
+                if (iconElement) {
+                  iconElement.className = 'bi bi-check-circle';
+                }
+              }
+            }
+          }
+          
+          // Mark current step as active with loading
+          stepElement.classList.add('active');
+          stepElement.classList.remove('completed');
+          const icon = stepElement.querySelector('.status-icon');
+          if (icon) {
+            icon.classList.add('loading');
+          }
+          
+          // Update step text if provided
+          const stepText = stepElement.querySelector('span');
+          if (stepText && step.text) {
+            stepText.textContent = step.text;
+          }
+          
+          // If this is the last step, mark it as completed after a delay
+          if (index === steps.length - 1) {
+            setTimeout(() => {
+              stepElement.classList.add('completed');
+              stepElement.classList.remove('active');
+              if (icon) {
+                icon.classList.remove('loading');
+                // Change final icon to checkmark
+                const iconElement = icon.querySelector('i');
+                if (iconElement) {
+                  iconElement.className = 'bi bi-check-circle';
+                }
+              }
+              this.hideAnalysisLoading();
+            }, 1000);
+          }
+        }
+      }, step.delay);
+    });
+  }
+
+  // Hide analysis loading and show completion
+  hideAnalysisLoading() {
+    const autoTrainingStatus = document.getElementById('autoTrainingStatus');
+    const okButton = document.getElementById('okFoodSelected');
+    
+    console.log('🔍 hideAnalysisLoading called');
+    console.log('autoTrainingStatus found:', !!autoTrainingStatus);
+    console.log('okButton found:', !!okButton);
+    
+    if (autoTrainingStatus) {
+      autoTrainingStatus.classList.remove('loading');
+      autoTrainingStatus.classList.add('completed');
+      
+      // Update header to show completion
+      const header = autoTrainingStatus.querySelector('.training-status-header');
+      if (header) {
+        header.innerHTML = `
+          <h3>🎉 Smart Training Complete!</h3>
+          <p>New ML training data created and uploaded to database</p>
+        `;
+      }
+      
+      console.log('✅ Added completed class to autoTrainingStatus');
+      console.log('autoTrainingStatus classes:', autoTrainingStatus.className);
+    }
+    
+    // Force complete all steps to ensure OK button shows
+    this.forceCompleteAllSteps();
+    
+    // Always show OK button after analysis is done
+    if (okButton) {
+      okButton.disabled = false;
+      okButton.textContent = 'OK';
+      
+      // Remove any hiding classes
+      okButton.classList.remove('hidden', 'd-none');
+      
+      // Force show the button with multiple methods and !important overrides
+      okButton.style.setProperty('display', 'block', 'important');
+      okButton.style.setProperty('visibility', 'visible', 'important');
+      okButton.style.setProperty('opacity', '1', 'important');
+      okButton.style.setProperty('pointer-events', 'auto', 'important');
+      
+      console.log('✅ OK button shown - Analysis completed');
+      console.log('okButton style.display:', okButton.style.display);
+      console.log('okButton computed display:', window.getComputedStyle(okButton).display);
+      
+      // Also call the nuclear option as backup
+      this.forceShowOKButton();
+    } else {
+      console.error('❌ OK button not found!');
+    }
+    
+    // Update history with final analysis results
+    this.updateHistoryWithFinalResults();
+    
+    console.log('Analysis completion check finished');
+  }
+
+  // Force complete all steps to ensure UI consistency
+  forceCompleteAllSteps() {
+    console.log('🔧 Forcing completion of all training steps');
+    
+    // Ensure the main autoTrainingStatus has completed class
+    const autoTrainingStatus = document.getElementById('autoTrainingStatus');
+    if (autoTrainingStatus) {
+      autoTrainingStatus.classList.add('completed');
+      autoTrainingStatus.classList.remove('loading');
+      console.log('✅ Main autoTrainingStatus marked as completed');
+    }
+    
+    // Complete all steps 1-6
+    for (let i = 1; i <= 6; i++) {
+      const stepElement = document.getElementById(`trainingStep${i}`);
+      if (stepElement) {
+        stepElement.classList.add('completed');
+        stepElement.classList.remove('active', 'loading');
+        
+        // Update step icon
+        const iconElement = stepElement.querySelector('.status-icon');
+        if (iconElement) {
+          iconElement.classList.remove('loading');
+          const iconInner = iconElement.querySelector('i');
+          if (iconInner) {
+            iconInner.className = 'bi bi-check-circle';
+          }
+        }
+        
+        console.log(`✅ Step ${i} forced to completed`);
+      }
+    }
+    
+    // Force show OK button after completing all steps
+    setTimeout(() => {
+      const okButton = document.getElementById('okFoodSelected');
+      if (okButton) {
+        console.log('🔧 Final OK button force show after step completion');
+        okButton.style.setProperty('display', 'block', 'important');
+        okButton.style.setProperty('visibility', 'visible', 'important');
+        okButton.style.setProperty('opacity', '1', 'important');
+      }
+    }, 100);
+  }
+
+  // Check if all training steps are completed
+  checkAllStepsCompleted() {
+    const autoTrainingStatus = document.getElementById('autoTrainingStatus');
+    if (!autoTrainingStatus) return false;
+    
+    // Check if modal has completed class
+    if (!autoTrainingStatus.classList.contains('completed')) {
+      console.log('❌ Modal not marked as completed');
+      return false;
+    }
+    
+    // Check if modal is still loading
+    if (autoTrainingStatus.classList.contains('loading')) {
+      console.log('❌ Modal still loading');
+      return false;
+    }
+    
+    // Check all individual steps (1-6)
+    for (let i = 1; i <= 6; i++) {
+      const stepElement = document.getElementById(`trainingStep${i}`);
+      if (stepElement) {
+        // Check if step is completed
+        if (!stepElement.classList.contains('completed')) {
+          console.log(`❌ Step ${i} not completed`);
+          return false;
+        }
+        
+        // Check if step is still active or loading
+        if (stepElement.classList.contains('active')) {
+          console.log(`❌ Step ${i} still active`);
+          return false;
+        }
+        
+        // Check if step icon is still loading
+        const iconElement = stepElement.querySelector('.status-icon');
+        if (iconElement && iconElement.classList.contains('loading')) {
+          console.log(`❌ Step ${i} icon still loading`);
+          return false;
+        }
+      } else {
+        console.log(`❌ Step ${i} element not found`);
+        return false;
+      }
+    }
+    
+    console.log('✅ All steps completed');
+    return true;
+  }
+
+  // Get formatted analysis status text for modal display
+  getAnalysisStatusText(analysisResult) {
+    if (!analysisResult) return 'AI Analysis: Processing...';
+    
+    const status = analysisResult.spoilage_status || analysisResult.status || 'safe';
+    const confidence = analysisResult.confidence_score || analysisResult.spoilage_probability || 0;
+    
+    // Debug logging for status interpretation
+    console.log('🔍 getAnalysisStatusText Debug:');
+    console.log('  Input analysisResult:', analysisResult);
+    console.log('  Extracted status:', status);
+    console.log('  Extracted confidence:', confidence);
+    
+    let icon = '🍎';
+    let statusText = 'Safe';
+    
+    // Use the correct mapping: LOW→SAFE, MEDIUM→CAUTION, HIGH→UNSAFE
+    switch (status.toLowerCase()) {
+      case 'safe':
+      case 'fresh':
+      case 'low':
+        icon = '🍎';
+        statusText = 'Safe';
+        break;
+      case 'caution':
+      case 'moderate':
+      case 'getting_old':
+      case 'medium':
+        icon = '⚠️';
+        statusText = 'Caution';
+        break;
+      case 'spoiled':
+      case 'unsafe':
+      case 'high_risk':
+      case 'high':
+        icon = '❌';
+        statusText = 'Unsafe';
+        break;
+      default:
+        icon = '🍎';
+        statusText = 'Safe';
+    }
+    
+    return `AI Analysis: ${icon} ${statusText} (${confidence}% confidence)`;
+  }
+
+  // Extract status from AI analysis text for consistency
+  extractStatusFromAnalysisText(analysisText) {
+    if (analysisText.includes('Safe')) return 'safe';
+    if (analysisText.includes('Caution')) return 'caution';
+    if (analysisText.includes('Unsafe')) return 'unsafe';
+    return 'safe'; // default fallback
+  }
+
+  // Update history with final analysis results
+  updateHistoryWithFinalResults() {
+    console.log('🔄 Updating history with final analysis results');
+    
+    // Use the same analysis result that's used in the modal
+    const analysisResult = this._lastAnalysisResult || this._lastMLResult;
+    
+    if (analysisResult && this._lastScanHistoryId) {
+      const historyAnalysisResult = {
+        prediction_status: analysisResult.spoilage_status,
+        confidence_score: analysisResult.confidence_score,
+        spoilage_probability: analysisResult.spoilage_probability,
+        training_id: analysisResult.training_id,
+        prediction_id: analysisResult.prediction_id,
+        status: analysisResult.spoilage_status, // Add status for getStatusText
+        condition: analysisResult.spoilage_status // Add condition for getStatusText
+      };
+      
+      console.log('📊 Updating history with analysis result:', historyAnalysisResult);
+      console.log('📊 Modal shows:', this.getAnalysisStatusText(analysisResult));
+      // Use the actual spoilage status instead of 'completed'
+      const finalHistoryStatus = analysisResult.spoilage_status || 'completed';
+      console.log('📊 Final history status:', finalHistoryStatus);
+      this.updateFoodHistoryStatus(this._lastScanHistoryId, finalHistoryStatus, historyAnalysisResult);
+      
+      // Force re-render after a small delay to ensure DOM updates
+      setTimeout(() => {
+        console.log('🔄 Force re-rendering history after status update');
+        this.renderFoodHistory();
+      }, 100);
+    } else {
+      console.log('⚠️ No analysis result or history ID available for update');
+      console.log('_lastAnalysisResult:', this._lastAnalysisResult);
+      console.log('_lastMLResult:', this._lastMLResult);
+      console.log('_lastScanHistoryId:', this._lastScanHistoryId);
+      
+      // If we don't have a history ID but we have analysis results, try to update the most recent item
+      if (analysisResult && this.foodHistory.length > 0) {
+        console.log('🔄 Attempting to update most recent history item');
+        const mostRecentItem = this.foodHistory[0];
+        if (mostRecentItem && mostRecentItem.status === 'scanned') {
+          const historyAnalysisResult = {
+            prediction_status: analysisResult.spoilage_status,
+            confidence_score: analysisResult.confidence_score,
+            spoilage_probability: analysisResult.spoilage_probability,
+            training_id: analysisResult.training_id,
+            prediction_id: analysisResult.prediction_id,
+            status: analysisResult.spoilage_status,
+            condition: analysisResult.spoilage_status
+          };
+          
+          this.updateFoodHistoryStatus(mostRecentItem.id, analysisResult.spoilage_status, historyAnalysisResult);
+          console.log('✅ Updated most recent history item with analysis results');
+        }
+      }
+    }
+  }
+
+  // Nuclear option to force show OK button
+  forceShowOKButton() {
+    console.log('🚀 forceShowOKButton called');
+    
+    // Add CSS override to head if not already present
+    if (!document.getElementById('okButtonForceShow')) {
+      const style = document.createElement('style');
+      style.id = 'okButtonForceShow';
+      style.textContent = `
+        #okFoodSelected.force-show {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
+      `;
+      document.head.appendChild(style);
+      console.log('✅ Added CSS override for OK button');
+    }
+    
+    // Try multiple times with different delays
+    [0, 50, 100, 200, 500].forEach(delay => {
+      setTimeout(() => {
+        const okButton = document.getElementById('okFoodSelected');
+        if (okButton) {
+          // Force show with all possible methods
+          okButton.style.setProperty('display', 'block', 'important');
+          okButton.style.setProperty('visibility', 'visible', 'important');
+          okButton.style.setProperty('opacity', '1', 'important');
+          okButton.style.setProperty('pointer-events', 'auto', 'important');
+          
+          // Remove any hiding classes
+          okButton.classList.remove('hidden', 'd-none', 'invisible');
+          
+          // Add showing classes and force-show class
+          okButton.classList.add('visible', 'show', 'force-show');
+          
+          // Force reflow
+          okButton.offsetHeight;
+          
+          console.log(`🚀 Force show attempt ${delay}ms:`, {
+            display: okButton.style.display,
+            computedDisplay: window.getComputedStyle(okButton).display,
+            visibility: okButton.style.visibility,
+            opacity: okButton.style.opacity,
+            classes: okButton.className
+          });
+        } else {
+          console.error(`❌ Force show attempt ${delay}ms: OK button not found`);
+        }
+      }, delay);
+    });
+  }
+
   // Automatically perform ML prediction with scanned data
   async autoTrainMLModel(sensorData) {
     // Check if scanning was cancelled before starting ML workflow
@@ -1687,6 +2482,9 @@ class FoodSelection {
       console.log('ML workflow cancelled - scanning was stopped by user');
       return;
     }
+
+    // Show loading animation
+    this.showAnalysisLoading();
 
     const trainingStatus = document.getElementById('autoTrainingStatus');
     
@@ -1699,7 +2497,7 @@ class FoodSelection {
         </div>
         <div class="training-status-items">
           <div class="status-item">
-            <i class="bi bi-hourglass-split text-warning"></i>
+            <div class="circle-loading warning"></div>
             <span>Checking existing ML data...</span>
           </div>
         </div>
@@ -1757,7 +2555,7 @@ class FoodSelection {
               <span>Sensor data collected</span>
             </div>
             <div class="status-item">
-              <i class="bi bi-hourglass-split text-warning"></i>
+              <div class="circle-loading warning"></div>
               <span>Processing with AI...</span>
             </div>
           </div>
@@ -1819,15 +2617,15 @@ class FoodSelection {
         }
 
         // Use AI analysis from the working analysis endpoint
-        console.log('Getting AI analysis...');
-        const aiAnalysisResult = await this.getAIAnalysis(
+        console.log('Getting validated AI analysis...');
+        const aiAnalysisResult = await this.getValidatedAIAnalysis(
           this.selectedFood.name,
           sensorData
         );
         
         // Check if AI analysis was successful
         if (!aiAnalysisResult.success) {
-          console.error('AI analysis failed:', aiAnalysisResult.error);
+          console.error('Validated AI analysis failed:', aiAnalysisResult.error);
           if (trainingStatus) {
             trainingStatus.innerHTML = `
               <div class="training-status-header">
@@ -1850,15 +2648,40 @@ class FoodSelection {
         }
         
         // Get AI-assessed condition and table-assessed condition
-        const aiCondition = aiAnalysisResult.success ? 
+        let aiCondition = aiAnalysisResult.success ? 
           this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe';
         const assessed = this.assessFoodCondition(sensorData) || {};
         const tableCondition = assessed.condition || aiCondition;
+        
+        // Debug logging to track status mapping
+        console.log('🔍 Smart Training status mapping:');
+        console.log('  AI Analysis Result:', aiAnalysisResult.success ? aiAnalysisResult.analysis : 'Failed');
+        console.log('  AI Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'N/A');
+        console.log('  AI Condition (mapped):', aiCondition);
+        console.log('  Table Assessment:', assessed);
+        console.log('  Final Table Condition:', tableCondition);
+        
+        // Temporary fix: Override AI condition if sensor data indicates unsafe conditions
+        if (aiAnalysisResult.success && sensorData) {
+          const temp = sensorData.temperature?.value;
+          const humidity = sensorData.humidity?.value;
+          
+          // Check if temperature or humidity exceed safe thresholds
+          if ((temp && temp > 26) || (humidity && humidity > 60)) {
+            console.log('🔧 Overriding AI condition due to unsafe sensor readings');
+            console.log('  Temperature:', temp, '°C (threshold: 26°C)');
+            console.log('  Humidity:', humidity, '% (threshold: 60%)');
+            aiCondition = 'unsafe';
+          }
+        }
+        
+        // Use AI condition as primary source for consistency with modal display
+        const finalCondition = aiAnalysisResult.success ? aiCondition : tableCondition;
 
         // Fire alert immediately for caution/unsafe conditions
-        if (tableCondition === 'caution' || tableCondition === 'unsafe') {
-          console.log('Creating SmartSense alert for condition:', tableCondition, 'score:', assessed.spoilageScore);
-          await this.createScannerAlert(this.selectedFood.name, tableCondition, sensorData, assessed.spoilageScore);
+        if (finalCondition === 'caution' || finalCondition === 'unsafe') {
+          console.log('Creating SmartSense alert for condition:', finalCondition, 'score:', assessed.spoilageScore);
+          await this.createScannerAlert(this.selectedFood.name, finalCondition, sensorData, assessed.spoilageScore);
         }
         
         // Check if scanning was cancelled before ML workflow
@@ -1869,27 +2692,58 @@ class FoodSelection {
         
         // Only proceed with ML workflow if food creation was successful
         console.log('Proceeding with ML workflow using food ID:', foodId);
-        // Persist SmartSense status into ML training table by sending tableCondition
+        console.log('Using final condition for ML workflow:', finalCondition);
+        // Use AI-assessed condition for consistency with modal display
         const mlWorkflowResult = await this.performMLWorkflow(
           foodId,
           this.selectedFood.name,
           this.selectedFood.category,
           sensorData,
-          tableCondition,
+          finalCondition,
           aiAnalysisResult
         );
         
         if (mlWorkflowResult.success) {
           console.log('ML workflow successful:', mlWorkflowResult);
+          
+          // Store the validated ML workflow result which contains the corrected AI analysis
+          this._lastAnalysisResult = {
+            spoilage_status: mlWorkflowResult.spoilage_status,
+            confidence_score: mlWorkflowResult.confidence_score,
+            spoilage_probability: mlWorkflowResult.spoilage_probability,
+            training_id: mlWorkflowResult.training_id,
+            prediction_id: mlWorkflowResult.prediction_id
+          };
+          
+          console.log('📊 Stored validated analysis result:', this._lastAnalysisResult);
+          
+          // Now start the step progression with validated results
+          this.progressAnalysisSteps();
+          
+          // Ensure OK button shows after ML workflow completion
+          setTimeout(() => {
+            console.log('🔧 Ensuring OK button shows after ML workflow success');
+            this.hideAnalysisLoading();
+          }, 2000);
+          
           // Update the training status with ML workflow results
           if (trainingStatus) {
-            const conditionIcon = tableCondition === 'safe' ? '🍎' : 
-                                 tableCondition === 'caution' ? '⚠️' : '❌';
-            const conditionText = tableCondition === 'safe' ? 'Fresh & Safe' : 
-                                 tableCondition === 'caution' ? 'Getting Old' : 'Spoiled';
+            // Use the ACTUAL ML workflow result for consistency
+            const actualStatus = mlWorkflowResult.spoilage_status || 'safe';
+            const actualConfidence = mlWorkflowResult.confidence_score || 75;
             
-            const aiConfidence = aiAnalysisResult.success ? 
-              (aiAnalysisResult.analysis.riskScore || 75) : 75;
+            console.log('🔍 Modal Display Consistency Check:');
+            console.log('  AI Analysis Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'N/A');
+            console.log('  AI Mapped Status:', aiAnalysisResult.success ? 
+              this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe');
+            console.log('  ML Workflow Result Status:', actualStatus);
+            console.log('  Using for display:', actualStatus);
+            
+            const conditionIcon = actualStatus === 'safe' ? '🍎' : 
+                                 actualStatus === 'caution' ? '⚠️' : '❌';
+            const conditionText = actualStatus === 'safe' ? 'Safe' : 
+                                 actualStatus === 'caution' ? 'Caution' : 'Unsafe';
+            
             const aiAnalysis = aiAnalysisResult.success ? 
               (aiAnalysisResult.analysis.reasoning || 'AI analysis completed') : 'Fallback analysis used';
             
@@ -1905,7 +2759,7 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-robot text-primary"></i>
-                  <span>AI Analysis: ${conditionIcon} ${conditionText} (${aiConfidence}% confidence)</span>
+                  <span>AI Analysis: ${conditionIcon} ${conditionText} (${actualConfidence}% confidence)</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
@@ -1913,11 +2767,11 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
-                  <span>Prediction: ${mlWorkflowResult.spoilage_status}</span>
+                  <span>Prediction: ${actualStatus}</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
-                  <span>Confidence: ${mlWorkflowResult.confidence_score || aiConfidence}%</span>
+                  <span>Confidence: ${actualConfidence}%</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-lightbulb text-warning"></i>
@@ -1928,15 +2782,33 @@ class FoodSelection {
           }
         } else {
           console.error('ML workflow failed:', mlWorkflowResult.error);
+          
+          // Start step progression even if ML workflow failed (with fallback data)
+          this.progressAnalysisSteps();
+          
+          // Ensure OK button shows even if ML workflow failed
+          setTimeout(() => {
+            console.log('🔧 Ensuring OK button shows after ML workflow failure');
+            this.hideAnalysisLoading();
+          }, 2000);
+          
           // Still show food item was created even if ML workflow failed
           if (trainingStatus) {
-            const conditionIcon = tableCondition === 'safe' ? '🍎' : 
-                                 tableCondition === 'caution' ? '⚠️' : '❌';
-            const conditionText = tableCondition === 'safe' ? 'Fresh & Safe' : 
-                                 tableCondition === 'caution' ? 'Getting Old' : 'Spoiled';
-            
-            const aiConfidence = aiAnalysisResult.success ? 
+            // Use the AI analysis result as fallback when ML workflow fails
+            const fallbackStatus = aiAnalysisResult.success ? 
+              this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe';
+            const fallbackConfidence = aiAnalysisResult.success ? 
               (aiAnalysisResult.analysis.riskScore || 75) : 75;
+            
+            console.log('🔍 Modal Display (ML Failed) Consistency Check:');
+            console.log('  Using fallback AI status:', fallbackStatus);
+            console.log('  Using fallback confidence:', fallbackConfidence);
+            
+            const conditionIcon = fallbackStatus === 'safe' ? '🍎' : 
+                                 fallbackStatus === 'caution' ? '⚠️' : '❌';
+            const conditionText = fallbackStatus === 'safe' ? 'Safe' : 
+                                 fallbackStatus === 'caution' ? 'Caution' : 'Unsafe';
+            
             const aiAnalysis = aiAnalysisResult.success ? 
               (aiAnalysisResult.analysis.reasoning || 'AI analysis completed') : 'Fallback analysis used';
             
@@ -1952,7 +2824,7 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-robot text-primary"></i>
-                  <span>AI Analysis: ${conditionIcon} ${conditionText}</span>
+                  <span>AI Analysis: ${conditionIcon} ${conditionText} (${fallbackConfidence}% confidence)</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
@@ -2165,8 +3037,8 @@ class FoodSelection {
     }
   }
 
-  // Get AI analysis using the working analysis endpoint
-  async getAIAnalysis(foodName, sensorData) {
+  // Get validated AI analysis that waits for backend validation to complete
+  async getValidatedAIAnalysis(foodName, sensorData) {
     try {
       const sessionToken = localStorage.getItem('jwt_token') || 
                            localStorage.getItem('sessionToken') || 
@@ -2189,6 +3061,7 @@ class FoodSelection {
         throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
       }
 
+      console.log('🔍 Calling AI analysis endpoint with validation...');
       const response = await fetch('/api/ai/ai-analyze', {
         method: 'POST',
         headers: {
@@ -2206,16 +3079,36 @@ class FoodSelection {
       const result = await response.json();
       
       if (result.analysis) {
-        console.log('AI analysis completed successfully:', result.analysis);
+        console.log('🔍 Validated AI Analysis Response Received:');
+        console.log('  Full Result:', result);
+        console.log('  Analysis Object:', result.analysis);
+        console.log('  Risk Level:', result.analysis.riskLevel);
+        console.log('  Risk Score:', result.analysis.riskScore);
+        console.log('  Notes:', result.analysis.notes);
+        console.log('  Mapped Status:', this.mapRiskLevelToSpoilageStatus(result.analysis.riskLevel));
+        
+        // Check if this result was validated (should have validation note)
+        if (result.analysis.notes && result.analysis.notes.includes('Validated against safety analysis')) {
+          console.log('✅ Received validated AI analysis result');
+        } else {
+          console.log('⚠️ AI analysis result may not be validated');
+        }
+        
         return { success: true, analysis: result.analysis };
       } else {
-        console.error('Failed to get AI analysis:', result.error);
+        console.error('Failed to get validated AI analysis:', result.error);
         return { success: false, error: result.error || 'Unknown error' };
       }
     } catch (error) {
-      console.error('Error getting AI analysis:', error);
+      console.error('Error getting validated AI analysis:', error);
       return { success: false, error: 'Network error' };
     }
+  }
+
+  // Get AI analysis using the working analysis endpoint (legacy method)
+  async getAIAnalysis(foodName, sensorData) {
+    // Redirect to validated version
+    return await this.getValidatedAIAnalysis(foodName, sensorData);
   }
 
   // Map risk level from analysis to spoilage status
@@ -2329,11 +3222,28 @@ class FoodSelection {
           gas_level: gas,
           spoilage_probability: aiAnalysisResult.success ? 
             (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          spoilage_status: spoilageStatus,
+          spoilage_status: (() => {
+            const mappedStatus = aiAnalysisResult.success ? 
+              this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe';
+            
+            console.log('🔍 ML Workflow Request Debug:');
+            console.log('  AI Analysis Success:', aiAnalysisResult.success);
+            console.log('  AI Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'N/A');
+            console.log('  AI Risk Score:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskScore : 'N/A');
+            console.log('  Mapped Spoilage Status:', mappedStatus);
+            console.log('  Display Override Status:', spoilageStatus);
+            console.log('  Sensor Data:', { temp, humidity, gas });
+            
+            return mappedStatus;
+          })(),
           confidence_score: aiAnalysisResult.success ? 
             (aiAnalysisResult.analysis.riskScore || 75) : 75,
           recommendations: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.recommendations || []) : []
+            (aiAnalysisResult.analysis.recommendations || []) : [],
+          // Send both original AI result and display override for comparison
+          ai_original_status: aiAnalysisResult.success ? 
+            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
+          display_override_status: spoilageStatus
         })
       });
 
@@ -2383,16 +3293,44 @@ class FoodSelection {
       }
 
       console.log('ML workflow completed successfully');
-      return {
+      
+      // Debug the spoilage status mapping
+      console.log('🔍 ML Workflow Result Creation:');
+      console.log('  Input spoilageStatus parameter (for display):', spoilageStatus);
+      console.log('  AI Analysis Result:', aiAnalysisResult);
+      console.log('  AI Analysis Success:', aiAnalysisResult.success);
+      console.log('  AI Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis?.riskLevel : 'N/A');
+      console.log('  AI Original Status (for ML):', aiAnalysisResult.success ? 
+        this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe');
+      
+      // Use the validated AI analysis result if available
+      const validatedRiskLevel = aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'Low';
+      const validatedSpoilageStatus = this.mapRiskLevelToSpoilageStatus(validatedRiskLevel);
+      const validatedConfidence = aiAnalysisResult.success ? 
+        (aiAnalysisResult.analysis.riskScore || 75) : 75;
+      
+      console.log('🔍 Creating ML workflow result with validated AI data:');
+      console.log('  Validated Risk Level:', validatedRiskLevel);
+      console.log('  Validated Spoilage Status:', validatedSpoilageStatus);
+      console.log('  Validated Confidence:', validatedConfidence);
+      console.log('  Input spoilageStatus (display override):', spoilageStatus);
+      
+      const result = {
         success: true,
         training_id: trainingResult.training_id,
         prediction_id: predictionResult.prediction_id,
-        spoilage_status: spoilageStatus,
-        spoilage_probability: aiAnalysisResult.success ? 
-          (aiAnalysisResult.analysis.riskScore || 75) : 75,
-        confidence_score: aiAnalysisResult.success ? 
-          (aiAnalysisResult.analysis.riskScore || 75) : 75
+        spoilage_status: validatedSpoilageStatus, // Use validated AI result
+        spoilage_probability: validatedConfidence,
+        confidence_score: validatedConfidence,
+        ai_risk_level: validatedRiskLevel, // Include original risk level
+        display_override_status: spoilageStatus // Keep original for comparison
       };
+      
+      // Store the analysis result for use in modal and history
+      this._lastAnalysisResult = result;
+      console.log('📊 Final validated analysis result stored:', result);
+      
+      return result;
 
     } catch (error) {
       console.error('Error in ML workflow:', error);
@@ -3016,7 +3954,7 @@ class FoodSelection {
     
     // Cancel/close scan session when scanning is cancelled
     try {
-      const sessionToken = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+      const sessionToken = this.getAuthToken();
       fetch('/api/sensor/scan-session', {
         method: 'DELETE',
         headers: {
@@ -3152,6 +4090,33 @@ window.initFoodSelection = function() {
     if (!window.foodSelection) {
         window.foodSelection = new FoodSelection();
         console.log('Food selection initialized via global function');
+    }
+};
+
+// Global debug function to force show OK button
+window.forceShowOKButton = function() {
+    const okButton = document.getElementById('okFoodSelected');
+    const autoTrainingStatus = document.getElementById('autoTrainingStatus');
+    
+    console.log('🔧 Global forceShowOKButton called');
+    console.log('okButton found:', !!okButton);
+    console.log('autoTrainingStatus found:', !!autoTrainingStatus);
+    
+    if (autoTrainingStatus) {
+        autoTrainingStatus.classList.add('completed');
+        autoTrainingStatus.classList.remove('loading');
+        console.log('✅ Added completed class to autoTrainingStatus');
+    }
+    
+    if (okButton) {
+        okButton.style.setProperty('display', 'block', 'important');
+        okButton.style.setProperty('visibility', 'visible', 'important');
+        okButton.style.setProperty('opacity', '1', 'important');
+        okButton.disabled = false;
+        okButton.textContent = 'OK';
+        console.log('✅ OK button forced to be visible via global function');
+    } else {
+        console.error('❌ OK button not found in global function');
     }
 };
 

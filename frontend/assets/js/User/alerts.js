@@ -55,13 +55,11 @@ class AlertsManager {
         }
       } else {
         console.log('❌ Failed to fetch alerts, status:', response.status);
-        // Create sample alerts for demonstration
-        this.createSampleAlerts();
+        this.alerts = [];
       }
     } catch (error) {
       console.log('Error loading alerts:', error);
-      // Create sample alerts for demonstration
-      this.createSampleAlerts();
+      this.alerts = [];
     }
   }
 
@@ -96,51 +94,6 @@ class AlertsManager {
     }
   }
 
-  createSampleAlerts() {
-    // Create alerts based on your exact database data from the alerts table
-    this.alerts = [
-      {
-        alert_id: 1,
-        sensor_id: null,
-        user_id: 11,
-        food_id: 3,
-        message: "ML Prediction: Banana may be unsafe (50% probability)",
-        alert_level: "High",
-        alert_type: "ml_prediction",
-        ml_prediction_id: 1,
-        spoilage_probability: 50.00,
-        recommended_action: null,
-        is_ml_generated: 1,
-        confidence_score: 70.00,
-        alert_data: null,
-        is_resolved: 1,
-        resolved_at: "2025-09-22T12:50:43.000Z",
-        resolved_by: 11,
-        timestamp: "2025-09-22T09:05:12.000Z",
-        food_name: "Banana"
-      },
-      {
-        alert_id: 2,
-        sensor_id: null,
-        user_id: 11,
-        food_id: 4,
-        message: "ML Prediction: Apple may be unsafe (50% probability)",
-        alert_level: "High",
-        alert_type: "ml_prediction",
-        ml_prediction_id: 2,
-        spoilage_probability: 50.00,
-        recommended_action: null,
-        is_ml_generated: 1,
-        confidence_score: 85.00,
-        alert_data: null,
-        is_resolved: 1,
-        resolved_at: "2025-09-22T12:50:42.000Z",
-        resolved_by: 11,
-        timestamp: "2025-09-22T10:41:39.000Z",
-        food_name: "Apple"
-      }
-    ];
-  }
 
   renderAlerts() {
     const container = document.getElementById('alerts-container');
@@ -171,33 +124,25 @@ class AlertsManager {
 
     const alertsHTML = alertsToShow.map(alert => {
       const levelClass = this.getAlertLevelClass(alert.alert_level);
+      const severityClass = this.getSeverityClass(alert.alert_level);
       const timeAgo = this.getTimeAgo(alert.timestamp);
       const foodInfo = alert.food_name ? `for ${alert.food_name}` : '';
       const typeLabel = this.getAlertTypeLabel(alert.alert_type);
+      const iconClass = this.getIconClass(alert.alert_type, alert.alert_level);
       
       return `
-        <div class="alert-item ${levelClass} ${alert.is_resolved ? 'alert-resolved' : ''}" data-alert-id="${alert.alert_id}">
-          <div class="alert-header">
-            <div class="alert-level">
-              <span class="alert-level-badge">${alert.alert_level}</span>
-              <span class="alert-type-badge">${typeLabel}</span>
-              ${alert.is_resolved ? '<span class="alert-resolved-badge">RESOLVED</span>' : ''}
-            </div>
-            <div class="alert-time">${timeAgo}</div>
+        <div class="alert-item ${severityClass} ${alert.is_resolved ? 'alert-resolved' : ''}" data-alert-id="${alert.alert_id}">
+          <div class="alert-icon">
+            <i class="bi ${iconClass}"></i>
           </div>
-          <div class="alert-message">${alert.message}</div>
-          ${alert.recommended_action ? `<div class="alert-action">💡 ${alert.recommended_action.split(',')[0]}</div>` : ''}
-          ${(alert.spoilage_probability || alert.confidence_score) ? `
-            <div class="alert-metrics">
-              ${alert.spoilage_probability ? `<div class="alert-probability">Risk: ${alert.spoilage_probability}%</div>` : ''}
-              ${alert.confidence_score ? `<div class="alert-confidence">Confidence: ${alert.confidence_score}%</div>` : ''}
-            </div>
-          ` : ''}
-          ${!alert.is_resolved ? `
-            <div class="alert-actions">
-              <button class="btn-resolve" onclick="alertsManager.resolveAlert(${alert.alert_id})">Mark Resolved</button>
-            </div>
-          ` : ''}
+          <div class="alert-content">
+            <h5 class="alert-title">${alert.message}</h5>
+            <p class="alert-description">${typeLabel} Alert ${foodInfo}</p>
+            <p class="alert-time">${timeAgo}</p>
+          </div>
+          <div class="alert-actions">
+            <button class="alert-action-btn dismiss" onclick="alertsManager.showAlertDetails(${alert.alert_id})">READ</button>
+          </div>
         </div>
       `;
     }).join('');
@@ -212,6 +157,33 @@ class AlertsManager {
       case 'medium': return 'alert-medium';
       case 'low': return 'alert-low';
       default: return 'alert-medium';
+    }
+  }
+
+  getSeverityClass(level) {
+    switch (level.toLowerCase()) {
+      case 'critical': return 'critical';
+      case 'high': return 'critical';
+      case 'medium': return 'warning';
+      case 'low': return 'info';
+      default: return 'warning';
+    }
+  }
+
+  getIconClass(type, level) {
+    const severity = level.toLowerCase();
+    const alertType = type.toLowerCase();
+    
+    if (severity === 'critical' || severity === 'high') {
+      return 'bi-shield-exclamation';
+    } else if (severity === 'medium') {
+      return 'bi-thermometer-half';
+    } else if (alertType === 'ml_prediction') {
+      return 'bi-cpu';
+    } else if (alertType === 'sensor') {
+      return 'bi-activity';
+    } else {
+      return 'bi-info-circle';
     }
   }
 
@@ -329,6 +301,35 @@ class AlertsManager {
     }
   }
 
+  async markAsRead(alertId) {
+    try {
+      // Just mark as read locally without resolving
+      const alertIndex = this.alerts.findIndex(alert => alert.alert_id === alertId);
+      if (alertIndex !== -1) {
+        // Add a visual indicator that it's been read
+        const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+        if (alertElement) {
+          alertElement.classList.add('alert-read');
+          alertElement.style.opacity = '0.7';
+          
+          // Update the button to show it's been read
+          const readButton = alertElement.querySelector('.alert-action-btn.dismiss');
+          if (readButton) {
+            readButton.textContent = 'READ ✓';
+            readButton.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            readButton.disabled = true;
+          }
+        }
+        
+        this.showNotification('Alert marked as read!', 'success');
+        console.log('✅ Alert marked as read:', alertId);
+      }
+    } catch (error) {
+      console.log('Error marking alert as read:', error);
+      this.showNotification('Failed to mark alert as read', 'error');
+    }
+  }
+
   showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
@@ -364,6 +365,115 @@ class AlertsManager {
         }
       }, 300);
     }, 3000);
+  }
+
+  showAlertDetails(alertId) {
+    const alert = this.alerts.find(a => a.alert_id === alertId);
+    if (!alert) {
+      console.log('Alert not found:', alertId);
+      return;
+    }
+
+    // Create modal HTML
+    const modalHTML = `
+      <div class="alert-details-modal" id="alertDetailsModal" style="display: flex;">
+        <div class="alert-details-backdrop"></div>
+        <div class="alert-details-content">
+          <div class="alert-details-header">
+            <span class="alert-details-title">
+              <i class="bi bi-exclamation-triangle" style="color: #ffc107;"></i>
+              Alert Details
+            </span>
+            <button class="alert-details-close" onclick="alertsManager.closeAlertDetails()">&times;</button>
+          </div>
+          <div class="alert-details-body">
+            <div class="alert-detail-section">
+              <h4>Alert Information</h4>
+              <div class="alert-detail-item">
+                <span class="detail-label">Message:</span>
+                <span class="detail-value">${alert.message}</span>
+              </div>
+              <div class="alert-detail-item">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value">${this.getAlertTypeLabel(alert.alert_type)}</span>
+              </div>
+              <div class="alert-detail-item">
+                <span class="detail-label">Timestamp:</span>
+                <span class="detail-value">${new Date(alert.timestamp).toLocaleString()}</span>
+              </div>
+              ${alert.food_name ? `
+                <div class="alert-detail-item">
+                  <span class="detail-label">Food Item:</span>
+                  <span class="detail-value">${alert.food_name}</span>
+                </div>
+              ` : ''}
+              ${alert.food_category ? `
+                <div class="alert-detail-item">
+                  <span class="detail-label">Category:</span>
+                  <span class="detail-value">${alert.food_category}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            <!-- Severity Badge Section -->
+            <div class="alert-detail-section">
+              <h4>Alert Severity</h4>
+              <div class="severity-badge-modal">
+                <span class="alert-severity-badge ${this.getSeverityClass(alert.alert_level)}">${alert.alert_level}</span>
+              </div>
+            </div>
+            
+            ${alert.recommended_action ? `
+              <div class="alert-detail-section">
+                <h4>Recommendations</h4>
+                <div class="alert-recommendations">
+                  ${alert.recommended_action.split(',').map(rec => `
+                    <div class="recommendation-item">
+                      <i class="bi bi-lightbulb"></i>
+                      <span>${rec.trim()}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${(alert.spoilage_probability || alert.confidence_score) ? `
+              <div class="alert-detail-section">
+                <h4>Analysis Results</h4>
+                <div class="alert-metrics-detail">
+                  ${alert.spoilage_probability ? `
+                    <div class="metric-item">
+                      <span class="metric-label">Risk:</span>
+                      <span class="metric-value risk-${alert.spoilage_probability > 70 ? 'high' : alert.spoilage_probability > 40 ? 'medium' : 'low'}">${alert.spoilage_probability}%</span>
+                    </div>
+                  ` : ''}
+                  ${alert.confidence_score ? `
+                    <div class="metric-item">
+                      <span class="metric-label">Confidence:</span>
+                      <span class="metric-value confidence-${alert.confidence_score > 80 ? 'high' : alert.confidence_score > 60 ? 'medium' : 'low'}">${alert.confidence_score}%</span>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="alert-details-footer">
+            <button class="alert-details-btn secondary" onclick="alertsManager.closeAlertDetails()">Close</button>
+            <button class="alert-details-btn primary" onclick="alertsManager.resolveAlert(${alertId}); alertsManager.closeAlertDetails();">Mark as Done</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  }
+
+  closeAlertDetails() {
+    const modal = document.getElementById('alertDetailsModal');
+    if (modal) {
+      modal.remove();
+    }
   }
 }
 

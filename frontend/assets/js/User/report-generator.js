@@ -28,6 +28,9 @@ class ReportGenerator {
         // Read initial values from HTML elements
         this.readInitialValues();
         
+        // Initialize date range pickers (including daily)
+        this.updateDateRangePickers();
+        
         this.loadReportData();
         this.setupEventListeners();
         this.showEmptyState();
@@ -253,6 +256,10 @@ class ReportGenerator {
         
         // Show appropriate picker based on date range
         switch (this.currentDateRange) {
+            case 'daily':
+                console.log('📅 Setting default daily date range');
+                this.setDefaultDailyPicker();
+                break;
             case 'weekly':
                 if (weekPickerGroup) {
                     weekPickerGroup.style.display = 'block';
@@ -356,6 +363,29 @@ class ReportGenerator {
         }
     }
 
+    setDefaultDailyPicker() {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        if (startDateInput && endDateInput) {
+            console.log('🔧 setDefaultDailyPicker called - setting current date');
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Set both start and end date to today
+            startDateInput.value = todayStr;
+            endDateInput.value = todayStr;
+            
+            // Store the custom dates for later use
+            this.customStartDate = todayStr;
+            this.customEndDate = todayStr;
+            
+            console.log('✅ setDefaultDailyPicker completed - dates set to:', todayStr);
+        } else {
+            console.log('⏭️ setDefaultDailyPicker skipped - date inputs not found');
+        }
+    }
+
     getWeekNumber(date) {
         // ISO week number (Monday-based). Week 1 is the week with Jan 4th.
         const target = new Date(date);
@@ -385,6 +415,12 @@ class ReportGenerator {
             days.add(`${y}-${m}-${d}`);
             cur.setDate(cur.getDate() + 1);
         }
+        
+        console.log('🔍 buildSelectedDaysSet Debug:');
+        console.log('  Date range:', this.currentDateRange);
+        console.log('  Start date:', startDate, 'End date:', endDate);
+        console.log('  Selected days:', Array.from(days));
+        
         return days;
     }
 
@@ -688,8 +724,26 @@ class ReportGenerator {
                 return;
             }
 
-            // Fetch a larger window and filter on the client similar to Alert Summary
-            const response = await fetch(`/api/users/food-spoilage-report?limit=1000&offset=0`, {
+            // Get date range for backend filtering
+            const { startDate, endDate } = this.getDatesFromPicker();
+            const startDateStr = startDate.toISOString().split('T')[0];
+            const endDateStr = endDate.toISOString().split('T')[0];
+            
+            console.log('🔍 Report Generator Daily Debug:');
+            console.log('  Date range:', this.currentDateRange);
+            console.log('  Start date:', startDateStr);
+            console.log('  End date:', endDateStr);
+            
+            // Build query parameters with date filtering
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+                start_date: startDateStr,
+                end_date: endDateStr
+            });
+            
+            // Use the same endpoint as detailed report for consistency
+            const response = await fetch(`/api/users/detailed-spoilage-report?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${sessionToken}`,
@@ -702,7 +756,7 @@ class ReportGenerator {
             }
 
             const result = await response.json();
-            console.log('🔍 Food Spoilage API Response:', result);
+            console.log('🔍 Report Generator API Response:', result);
             console.log('🔍 Raw data sample:', result.data?.[0]);
             
             if (result.success && result.data) {
@@ -712,7 +766,7 @@ class ReportGenerator {
                     return;
                 }
                 
-                // Transform the data to match the expected format
+                // Transform the data to match the expected format (detailed report structure)
                 const allItems = result.data.map(item => ({
                     foodId: item.foodId || item['FOOD ID'] || '',
                     foodItem: item.foodItem || item['FOOD ITEM'] || '',
@@ -722,21 +776,42 @@ class ReportGenerator {
                     expiryDate: item.expiryDate || item['EXPIRY DATE'] || '',
                     sensorReadings: item.sensorReadings || item['SENSOR READINGS'] || '',
                     alertCount: item.alertCount || item['ALERT COUNT'] || 0,
-                    _rawTs: item.expiryDate || item['EXPIRY DATE'] || item.lastUpdate || item['LAST UPDATE'] || ''
+                    createdAt: item.createdAt || item['CREATED AT'] || '',
+                    _rawTs: item.createdAt || item['CREATED AT'] || item.expiryDate || item['EXPIRY DATE'] || ''
                 }));
-                // Client-side UTC date filtering (by expiryDate/lastUpdate when available)
-                const filtered = this.filterItemsByUTCDate(allItems, (it) => it._rawTs);
+                
+                console.log('🔍 Report Generator Data Processing:');
+                console.log('  Total items from backend:', allItems.length);
+                console.log('  Sample items:', allItems.slice(0, 3).map(item => ({ 
+                    foodItem: item.foodItem, 
+                    status: item.status,
+                    createdAt: item.createdAt,
+                    _rawTs: item._rawTs
+                })));
 
-                // Manual pagination
-                this.totalRecords = filtered.length;
+                // Use backend pagination instead of client-side filtering
+                this.totalRecords = result.pagination?.total_records || result.pagination?.totalRecords || allItems.length;
                 this.recordsPerPage = parseInt(limit);
                 this.currentPage = parseInt(page);
-                this.totalPages = Math.max(1, Math.ceil(this.totalRecords / this.recordsPerPage));
-                const startIdx = (this.currentPage - 1) * this.recordsPerPage;
-                this.reportData['food-spoilage'] = filtered.slice(startIdx, startIdx + this.recordsPerPage);
+                this.totalPages = result.pagination?.total_pages || result.pagination?.totalPages || Math.max(1, Math.ceil(this.totalRecords / this.recordsPerPage));
+                this.reportData['food-spoilage'] = allItems;
+
+                console.log('🔍 Food spoilage data stored:', {
+                    dataLength: allItems.length,
+                    totalRecords: this.totalRecords,
+                    currentPage: this.currentPage,
+                    totalPages: this.totalPages,
+                    autoRender: autoRender,
+                    currentReportType: this.currentReportType
+                });
 
                 // Render if requested
-                if (autoRender && this.currentReportType === 'food-spoilage') this.renderFoodSpoilageReport();
+                if (autoRender && this.currentReportType === 'food-spoilage') {
+                    console.log('🔍 Auto-rendering food spoilage report');
+                    this.renderFoodSpoilageReport();
+                } else {
+                    console.log('🔍 Not auto-rendering:', { autoRender, currentReportType: this.currentReportType });
+                }
             } else {
                 console.error('Failed to load food spoilage data:', result.error);
                 this.showNoDataState();
@@ -991,21 +1066,71 @@ class ReportGenerator {
     }
 
     renderFoodSpoilageReport() {
+        console.log('🔍 renderFoodSpoilageReport called');
         const tableBody = document.getElementById('userReportTableBody');
         const tableHead = document.querySelector('.report-table thead tr');
-        if (!tableBody || !tableHead) return;
+        const tableContainer = document.querySelector('.report-table-container');
+        
+        console.log('🔍 Table elements found:', {
+            tableBody: !!tableBody,
+            tableHead: !!tableHead,
+            tableContainer: !!tableContainer
+        });
+        
+        if (!tableBody || !tableHead) {
+            console.error('❌ Table elements not found');
+            return;
+        }
+
+        // Ensure table container is visible
+        if (tableContainer) {
+            tableContainer.style.display = 'block';
+            tableContainer.style.visibility = 'visible';
+        }
+
+        // Force table visibility with CSS
+        const table = document.querySelector('.report-table');
+        if (table) {
+            table.style.display = 'table';
+            table.style.visibility = 'visible';
+            table.style.opacity = '1';
+        }
+
+        // Add CSS classes to ensure proper styling
+        if (tableContainer) {
+            tableContainer.classList.add('report-table-container');
+        }
+        if (table) {
+            table.classList.add('report-table');
+        }
 
         // Clear existing table data
         tableBody.innerHTML = '';
 
         // Update table headers
         this.updateTableHeaders(tableHead);
+        console.log('🔍 Table headers updated');
 
         // Get food spoilage data
         const data = this.reportData['food-spoilage'] || [];
+        console.log('🔍 Food spoilage data:', {
+            dataLength: data.length,
+            sampleData: data.slice(0, 2)
+        });
+
+        if (data.length === 0) {
+            console.log('⚠️ No food spoilage data to render');
+            this.showNoDataState();
+            return;
+        }
 
         // Populate table
-        data.forEach(item => {
+        data.forEach((item, index) => {
+            console.log(`🔍 Rendering row ${index}:`, {
+                foodItem: item.foodItem,
+                status: item.status,
+                category: item.category
+            });
             const row = document.createElement('tr');
             row.innerHTML = this.generateTableRow(item);
             tableBody.appendChild(row);
@@ -1456,8 +1581,16 @@ class ReportGenerator {
                 }
             });
         } else if (this.currentReportType === 'food-spoilage') {
+            console.log('🔍 Loading food spoilage data...');
             // For food spoilage, load data with current pagination and date filtering when generate is clicked
             this.loadFoodSpoilageDataWithFilter(this.currentPage, this.recordsPerPage, false).then(() => {
+                console.log('🔍 Food spoilage data loading completed');
+                console.log('🔍 Report data check:', {
+                    hasData: !!this.reportData['food-spoilage'],
+                    dataLength: this.reportData['food-spoilage']?.length || 0,
+                    sampleData: this.reportData['food-spoilage']?.slice(0, 2) || []
+                });
+                
                 // Check if we have data - if not, showNoDataState was already called
                 if (this.reportData['food-spoilage'] && this.reportData['food-spoilage'].length > 0) {
                     console.log('📊 Rendering food spoilage report with data');
@@ -1465,6 +1598,9 @@ class ReportGenerator {
                 } else {
                     console.log('📊 No data to render - showNoDataState should have been called');
                 }
+            }).catch(error => {
+                console.error('❌ Error loading food spoilage data:', error);
+                this.showNoDataState();
             });
         } else if (this.currentReportType === 'alert-summary') {
             // For alert summary, load data with current pagination and date filtering when generate is clicked
@@ -1521,12 +1657,20 @@ class ReportGenerator {
     updateTableHeaders(tableHead) {
         const headers = {
             'user-activity': ['LOG ID', 'ACTION', 'TIMESTAMP'],
-            'food-spoilage': ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts'],
+            'food-spoilage': ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings'],
             'alert-summary': ['ALERT ID', 'ALERT TYPE', 'SEVERITY', 'LOCATION', 'MESSAGE', 'TIMESTAMP', 'STATUS']
         };
 
         const headerRow = headers[this.currentReportType] || [];
+        console.log('🔍 Updating table headers:', {
+            currentReportType: this.currentReportType,
+            headers: headerRow,
+            tableHead: !!tableHead
+        });
+        
         tableHead.innerHTML = headerRow.map(header => `<th>${header}</th>`).join('');
+        
+        console.log('🔍 Table headers updated:', tableHead.innerHTML);
     }
 
     generateTableRow(item) {
@@ -1538,8 +1682,6 @@ class ReportGenerator {
                     <td>${item['TIMESTAMP'] || item.timestamp || ''}</td>
                 `;
             case 'food-spoilage':
-                const alertCount = item.alertCount || 0;
-                const alertText = alertCount === 0 ? 'No alerts' : `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
                 return `
                     <td>${item.foodId || ''}</td>
                     <td>${item.foodItem || ''}</td>
@@ -1548,7 +1690,6 @@ class ReportGenerator {
                     <td>${parseFloat(item.riskScore || 0).toFixed(1)}%</td>
                     <td>${item.expiryDate || ''}</td>
                     <td>${item.sensorReadings || ''}</td>
-                    <td>${alertText}</td>
                 `;
             case 'alert-summary':
                 return `
@@ -1707,6 +1848,7 @@ class ReportGenerator {
                 ];
             case 'food-spoilage':
                 return [
+                    `"${item.foodId || ''}"`,
                     `"${item.foodItem}"`,
                     `"${item.category}"`,
                     `"${item.status}"`,
@@ -1876,7 +2018,7 @@ class ReportGenerator {
                 }
             },
             'food-spoilage': {
-                headers: ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts'],
+                headers: ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings'],
                 columnStyles: {
                     0: { cellWidth: 60, halign: 'center' },   // Food ID
                     1: { cellWidth: 100, halign: 'left' },    // Food Item
@@ -1884,8 +2026,7 @@ class ReportGenerator {
                     3: { cellWidth: 70, halign: 'center' },   // Status
                     4: { cellWidth: 70, halign: 'center' },   // Risk Score
                     5: { cellWidth: 80, halign: 'center' },   // Expiry Date
-                    6: { cellWidth: 150, halign: 'left' },    // Sensor Readings
-                    7: { cellWidth: 60, halign: 'center' }    // Alerts
+                    6: { cellWidth: 150, halign: 'left' }     // Sensor Readings
                 }
             },
             'alert-summary': {
@@ -1913,8 +2054,6 @@ class ReportGenerator {
                     item['TIMESTAMP'] || (item.timestamp ? new Date(item.timestamp).toLocaleString() : '')
                 ];
             case 'food-spoilage':
-                const alertCount = item.alertCount || 0;
-                const alertText = alertCount === 0 ? 'No alerts' : `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
                 const riskScore = item.riskScore || 0;
                 const formattedRiskScore = `${parseFloat(riskScore).toFixed(1)}%`;
                 const expiryDate = item.expiryDate || '';
@@ -1927,8 +2066,7 @@ class ReportGenerator {
                     item.status || '',
                     formattedRiskScore,
                     formattedExpiry,
-                    item.sensorReadings || '',
-                    alertText
+                    item.sensorReadings || ''
                 ];
             case 'alert-summary':
                 return [

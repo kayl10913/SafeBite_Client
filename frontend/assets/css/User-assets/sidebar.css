@@ -28,10 +28,59 @@
   padding: 24px 20px 16px 20px;
   font-size: 20px;
   font-weight: bold;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* When sidebar is collapsed, center the logo */
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 24px 12px 16px 12px;
 }
 
 .sidebar-logo {
   font-size: 1.7em;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+  position: relative;
+  overflow: hidden;
+  color: white;
+  font-weight: bold;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+}
+
+/* When sidebar is collapsed, make logo smaller and centered */
+.sidebar.collapsed .sidebar-logo {
+  width: 32px;
+  height: 32px;
+  font-size: 1.4em;
+  margin: 0 auto;
+}
+
+.sidebar-logo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
 }
 
 .sidebar-title {
@@ -70,6 +119,12 @@
   margin: 2px 8px;
   transition: background 0.15s, color 0.15s;
   position: relative;
+}
+
+/* When sidebar is collapsed, center the nav items */
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 12px;
 }
 
 .nav-item.active, .nav-item:hover {
@@ -128,6 +183,13 @@
   font-size: 1em;
   font-weight: 500;
   margin-top: auto;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* When sidebar is collapsed, center the account section */
+.sidebar.collapsed .sidebar-account {
+  justify-content: center;
+  padding: 18px 12px;
 }
 
 .account-icon {

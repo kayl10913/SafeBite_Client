@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../assets/css/User-assets/user-log.css">
   <link rel="stylesheet" href="../assets/css/User-assets/config.css">
   <link rel="stylesheet" href="../assets/css/User-assets/feedback.css">
-  <link rel="stylesheet" href="../assets/css/User-assets/alerts.css">
+  <!-- <link rel="stylesheet" href="../assets/css/User-assets/alerts.css"> -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     /* Match site theme for dynamically injected buttons */
@@ -63,6 +63,160 @@
     .bar-yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
     .bar-red { background: linear-gradient(90deg, #f87171, #ef4444); }
     
+
+    /* Recommendations Modal Styles */
+    .food-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #2b3a66;
+    }
+
+    .food-detail-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .detail-category {
+      background: #0ea5e9;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-created {
+      color: #9fb8ff;
+      font-size: 12px;
+    }
+
+    .food-detail-status {
+      text-align: right;
+    }
+
+    .detail-status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #22c55e;
+      color: white;
+    }
+
+    .detail-risk-score {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #9fb8ff;
+    }
+
+    .recommendations-section {
+      margin-bottom: 24px;
+    }
+
+    .recommendations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .recommendation-item {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(74, 158, 255, 0.05);
+      border: 1px solid rgba(74, 158, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .recommendation-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .recommendation-content {
+      flex: 1;
+    }
+
+    .recommendation-title {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .recommendation-text {
+      color: #e0e6f6;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sensor-details-section {
+      margin-top: 24px;
+    }
+
+    .sensor-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .sensor-detail-item {
+      padding: 12px;
+      background: rgba(42, 58, 74, 0.3);
+      border: 1px solid #2a3a4a;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .sensor-detail-label {
+      color: #9fb8ff;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .sensor-detail-value {
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .sensor-detail-status {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .sensor-detail-status.good {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .sensor-detail-status.warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+
+    .sensor-detail-status.danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
   </style>
 </head>
 <body>
@@ -76,7 +230,7 @@
 
 <aside class="sidebar expanded" id="sidebar">
   <div class="sidebar-header">
-    <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">&#128230;</span>
+    <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">S</span>
     <span class="sidebar-title user-name">User-name</span>
   </div>
   <nav class="sidebar-nav">
@@ -225,9 +379,44 @@
             </div>
           </div>
           
-          <!-- Bottom Row: Activity Chart and Alerts -->
+          <!-- Middle Row: Latest Scan Result and Alerts -->
+          <div class="dashboard-row row mb-4">
+            <div class="dashboard-card latest-scan-card col-12 col-lg-6 mb-3">
+              <div class="scan-card-header">
+                <div class="scan-card-icon">
+                  <i class="bi bi-clipboard-data"></i>
+                </div>
+                <div class="scan-card-title">
+                  <h4>Latest Scan Result</h4>
+                  <p>Most recent food analysis</p>
+                </div>
+                <div class="scan-card-controls">
+                  <button id="refreshLatestScan" class="btn-refresh-scan" title="Refresh Latest Scan">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                  <div class="realtime-indicator">
+                    <i class="fas fa-circle text-success"></i>
+                    <span>Live</span>
+                  </div>
+                </div>
+              </div>
+              <div class="scan-card-content" id="latestScanContent">
+                <div class="scan-result-card">
+                  <!-- Dynamic content will be loaded here -->
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-card alerts-card col-12 col-lg-6 mb-3">
+              <h4>Device Alerts</h4>
+              <div id="alerts-container" class="alerts-container">
+                <!-- Dynamic alerts will be loaded here by JavaScript -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Device Activity -->
           <div class="dashboard-row row">
-            <div class="dashboard-card tall activity-card col-12 col-lg-8 mb-3">
+            <div class="dashboard-card activity-card col-12">
             <div class="activity-header d-flex justify-content-between align-items-center">
               <span class="activity-title">Device Activity</span>
               <div class="d-flex gap-2">
@@ -244,12 +433,6 @@
             </div>
               <div class="activity-chart-container">
                 <canvas id="activityChart"></canvas>
-              </div>
-            </div>
-            <div class="dashboard-card tall alerts-card col-12 col-lg-4 mb-3">
-              <h4>Device Alerts</h4>
-              <div id="alerts-container" class="alerts-container">
-                <div class="no-alerts">No active alerts</div>
               </div>
             </div>
           </div>
@@ -566,6 +749,95 @@
     <div class="ml-results-footer" style="border-top:1px solid #2b3a66;padding:16px 20px;display:flex;justify-content:flex-end;">
       <button type="button" id="mlResultsOkBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 20px;border-radius:6px;">
         OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Food Recommendations Detail Modal -->
+<div class="config-modal" id="foodRecommendationsModal" style="display:none;">
+  <div class="config-modal-backdrop"></div>
+  <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
+    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+      <span class="config-modal-title" style="color:#fff;">
+        <i class="bi bi-clipboard-data" style="color:#4a9eff;"></i> Food Analysis Details
+      </span>
+      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+    </div>
+    <div class="recommendations-body" style="padding:20px;">
+      <div class="food-detail-header">
+        <div class="food-detail-info">
+          <h3 id="detailFoodName" style="color:#fff;margin:0 0 8px 0;">Fresh Salmon</h3>
+          <div class="food-detail-meta">
+            <span class="detail-category" id="detailCategory">Seafood</span>
+            <span class="detail-created" id="detailCreated">Created: 12/25/2024</span>
+          </div>
+        </div>
+        <div class="food-detail-status">
+          <span class="detail-status-badge" id="detailStatusBadge">Safe</span>
+          <div class="detail-risk-score" id="detailRiskScore">Risk: 15%</div>
+        </div>
+      </div>
+      
+      <div class="recommendations-content">
+        <div class="recommendations-section">
+          <h4 style="color:#fff;margin:0 0 12px 0;display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-lightbulb" style="color:#f59e0b;"></i>
+            Detailed Recommendations
+          </h4>
+          <div class="recommendations-list" id="recommendationsList">
+            <div class="recommendation-item">
+              <div class="recommendation-icon">🌡️</div>
+              <div class="recommendation-content">
+                <div class="recommendation-title">Temperature Control</div>
+                <div class="recommendation-text">Maintain storage temperature between 0-4°C to prevent bacterial growth and maintain freshness.</div>
+              </div>
+            </div>
+            <div class="recommendation-item">
+              <div class="recommendation-icon">⏰</div>
+              <div class="recommendation-content">
+                <div class="recommendation-title">Consumption Timeline</div>
+                <div class="recommendation-text">Consume within 3 days for optimal quality and safety. Monitor for any changes in appearance or smell.</div>
+              </div>
+            </div>
+            <div class="recommendation-item">
+              <div class="recommendation-icon">💧</div>
+              <div class="recommendation-content">
+                <div class="recommendation-title">Humidity Management</div>
+                <div class="recommendation-text">Current humidity levels are optimal. Avoid exposure to direct moisture to prevent spoilage.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sensor-details-section">
+          <h4 style="color:#fff;margin:20px 0 12px 0;display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-activity" style="color:#4a9eff;"></i>
+            Sensor Readings
+          </h4>
+          <div class="sensor-details-grid" id="sensorDetailsGrid">
+            <div class="sensor-detail-item">
+              <div class="sensor-detail-label">Temperature</div>
+              <div class="sensor-detail-value">2.1°C</div>
+              <div class="sensor-detail-status good">Optimal</div>
+            </div>
+            <div class="sensor-detail-item">
+              <div class="sensor-detail-label">Humidity</div>
+              <div class="sensor-detail-value">65%</div>
+              <div class="sensor-detail-status good">Good</div>
+            </div>
+            <div class="sensor-detail-item">
+              <div class="sensor-detail-label">Gas Level</div>
+              <div class="sensor-detail-value">12 ppm</div>
+              <div class="sensor-detail-status good">Normal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="recommendations-footer" style="border-top:1px solid #2b3a66;padding:16px 20px;display:flex;justify-content:flex-end;">
+      <button type="button" id="recommendationsCloseBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 20px;border-radius:6px;">
+        Close
       </button>
     </div>
   </div>
@@ -1129,6 +1401,8 @@
     <div class="food-selected-info">
       <p id="selectedFoodInfo">Salmon Fillet from Seafood category ready</p>
       <p>Scan with your IoT device, then teach our AI!</p>
+      
+      
       <div id="sensorWaitIndicator" class="sensor-wait" style="display:none;">
         <span class="sensor-wait-spinner" aria-hidden="true"></span>
         <span class="sensor-wait-text">Waiting for new sensor data...</span>
@@ -1141,22 +1415,46 @@
           <p>Your sensor data has been automatically used to train our AI</p>
         </div>
         <div class="training-status-info">
-          <div class="status-item">
-            <i class="bi bi-check-circle"></i>
+          <div class="status-item" id="trainingStep1">
+            <div class="status-icon">
+              <i class="bi bi-activity"></i>
+            </div>
             <span>Sensor data collected</span>
           </div>
-          <div class="status-item">
-            <i class="bi bi-check-circle"></i>
-            <span>AI model updated</span>
+          <div class="status-item" id="trainingStep2">
+            <div class="status-icon">
+              <i class="bi bi-robot"></i>
           </div>
-          <div class="status-item">
+            <span> No Data Found</span>
+          </div>
+          <div class="status-item" id="trainingStep3">
+            <div class="status-icon">
+              <i class="bi bi-database"></i>
+            </div>
+            <span>ML training data uploaded to database</span>
+          </div>
+          <div class="status-item" id="trainingStep4">
+            <div class="status-icon">
             <i class="bi bi-check-circle"></i>
-            <span>Training data saved</span>
+          </div>
+            <span>Prediction: safe</span>
+        </div>
+          <div class="status-item" id="trainingStep5">
+            <div class="status-icon">
+              <i class="bi bi-percent"></i>
+      </div>
+            <span>Confidence: 55%</span>
+    </div>
+          <div class="status-item" id="trainingStep6">
+            <div class="status-icon">
+              <i class="bi bi-lightbulb"></i>
+            </div>
+            <span>AI Insight: AI analysis completed</span>
           </div>
         </div>
       </div>
     </div>
-    <button class="food-selected-ok-btn" id="okFoodSelected">OK</button>
+    <button class="food-selected-ok-btn" id="okFoodSelected" style="display:block;">OK</button>
   </div>
 </div>
 
@@ -1247,7 +1545,6 @@
               <th>RISK SCORE</th>
               <th>EXPIRY</th>
               <th>SENSORS</th>
-              <th>ALERTS</th>
               <th>RECOMMENDATIONS</th>
             </tr>
           </thead>
@@ -1403,11 +1700,10 @@
 <!-- Report Generator Template -->
 <template id="report-generator-template">
   <div class="report-generator-main">
-    <div class="report-generator-container">
-      <div class="report-generator-header">
-        <h1 class="report-generator-title">Report Generator</h1>
-        <p class="report-generator-subtitle">Select a report type and date range to generate and download data.</p>
-      </div>
+    <div class="report-generator-header">
+      <h1 class="report-generator-title">Report Generator</h1>
+      <p class="report-generator-subtitle">Select a report type and date range to generate and download data.</p>
+    </div>
       
       <div class="report-generator-card">
         <div class="report-controls">
@@ -1446,16 +1742,6 @@
             <input type="number" id="yearPicker" class="report-date-input" min="1970" max="2100" step="1" placeholder="2025" />
           </div>
           
-          <div class="report-control-group" id="recordsPerPageGroup" style="display:none;">
-            <label for="recordsPerPage">Records per Page</label>
-            <select id="recordsPerPage" class="report-select">
-              <option value="10">10</option>
-              <option value="25" selected>25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </div>
-          
           <div id="customDateRangeGroup" style="display:none;">
             <div class="report-control-group">
               <label for="startDate">Start Date</label>
@@ -1465,6 +1751,16 @@
               <label for="endDate">End Date</label>
               <input type="date" id="endDate" class="report-date-input" />
             </div>
+          </div>
+          
+          <div class="report-control-group" id="recordsPerPageGroup" style="display:none;">
+            <label for="recordsPerPage">Records per Page</label>
+            <select id="recordsPerPage" class="report-select">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
           </div>
           
           <div class="report-actions">
@@ -1516,7 +1812,6 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
@@ -2023,6 +2318,7 @@
 <script src="/js/User/config.js"></script>
 <script src="../assets/js/User/feedback.js"></script>
 <script src="../assets/js/User/alerts.js"></script>
+<script src="../assets/js/User/latest-scan.js"></script>
 <script src="../assets/js/User/user-auth.js"></script>
 <script>
   // Navigation for dashboard/detailed report is handled globally by spa.js (switchPage).
@@ -2486,7 +2782,369 @@
     if (logoutBtn) {
       logoutBtn.addEventListener('click', function(e) { e.stopPropagation(); });
     }
+
+    // Handle view recommendations buttons
+    const viewRecommendationsBtns = document.querySelectorAll('.view-recommendations-btn');
+    viewRecommendationsBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const foodId = this.getAttribute('data-food-id');
+        openRecommendationsModal(foodId);
+      });
+    });
+
+    // Handle recommendations modal close
+    const recommendationsModal = document.getElementById('foodRecommendationsModal');
+    const recommendationsCloseBtn = document.getElementById('recommendationsCloseBtn');
+    const recommendationsBackdrop = recommendationsModal?.querySelector('.config-modal-backdrop');
+    const recommendationsCloseX = recommendationsModal?.querySelector('.config-modal-close');
+
+    [recommendationsCloseBtn, recommendationsBackdrop, recommendationsCloseX].forEach(element => {
+      if (element) {
+        element.addEventListener('click', function() {
+          recommendationsModal.style.display = 'none';
+        });
+      }
+    });
+
+    // Handle view all results button
+    const viewAllResultsBtn = document.getElementById('viewAllResultsBtn');
+    if (viewAllResultsBtn) {
+      viewAllResultsBtn.addEventListener('click', function() {
+        // Navigate to detailed report page
+        if (typeof switchPage === 'function') {
+          switchPage('detailed-report');
+        }
+      });
+    }
   });
+
+  // Function to open recommendations modal with food data
+  function openRecommendationsModal(foodId) {
+    const modal = document.getElementById('foodRecommendationsModal');
+    if (!modal) return;
+
+    // Sample data - in real app, this would come from API
+    const foodData = {
+      '1': {
+        name: 'Fresh Salmon',
+        category: 'Seafood',
+        created: 'Created: 12/25/2024',
+        status: 'Safe',
+        riskScore: 'Risk: 15%',
+        recommendations: [
+          {
+            icon: '🌡️',
+            title: 'Temperature Control',
+            text: 'Maintain storage temperature between 0-4°C to prevent bacterial growth and maintain freshness.'
+          },
+          {
+            icon: '⏰',
+            title: 'Consumption Timeline',
+            text: 'Consume within 3 days for optimal quality and safety. Monitor for any changes in appearance or smell.'
+          },
+          {
+            icon: '💧',
+            title: 'Humidity Management',
+            text: 'Current humidity levels are optimal. Avoid exposure to direct moisture to prevent spoilage.'
+          }
+        ],
+        sensors: [
+          { label: 'Temperature', value: '2.1°C', status: 'good', statusText: 'Optimal' },
+          { label: 'Humidity', value: '65%', status: 'good', statusText: 'Good' },
+          { label: 'Gas Level', value: '12 ppm', status: 'good', statusText: 'Normal' }
+        ]
+      },
+      '2': {
+        name: 'Chicken Breast',
+        category: 'Meat',
+        created: 'Created: 12/24/2024',
+        status: 'At Risk',
+        riskScore: 'Risk: 45%',
+        recommendations: [
+          {
+            icon: '🌡️',
+            title: 'Temperature Alert',
+            text: 'Temperature is too high at 4.8°C. Lower storage temperature immediately to prevent spoilage.'
+          },
+          {
+            icon: '⏰',
+            title: 'Immediate Consumption',
+            text: 'Consume immediately or cook thoroughly. Do not store for more than 24 hours.'
+          },
+          {
+            icon: '⚠️',
+            title: 'Safety Warning',
+            text: 'High risk of bacterial growth detected. Ensure proper cooking temperature if consuming.'
+          }
+        ],
+        sensors: [
+          { label: 'Temperature', value: '4.8°C', status: 'warning', statusText: 'Too High' },
+          { label: 'Humidity', value: '72%', status: 'warning', statusText: 'High' },
+          { label: 'Gas Level', value: '28 ppm', status: 'warning', statusText: 'Elevated' }
+        ]
+      },
+      '3': {
+        name: 'Mixed Vegetables',
+        category: 'Vegetables',
+        created: 'Created: 12/23/2024',
+        status: 'Spoiled',
+        riskScore: 'Risk: 85%',
+        recommendations: [
+          {
+            icon: '🚫',
+            title: 'Discard Immediately',
+            text: 'High spoilage detected. Do not consume under any circumstances. Dispose of safely.'
+          },
+          {
+            icon: '🧽',
+            title: 'Clean Storage Area',
+            text: 'Thoroughly clean the storage area to prevent contamination of other food items.'
+          },
+          {
+            icon: '📋',
+            title: 'Review Storage Conditions',
+            text: 'Check temperature and humidity settings to prevent future spoilage issues.'
+          }
+        ],
+        sensors: [
+          { label: 'Temperature', value: '8.2°C', status: 'danger', statusText: 'Critical' },
+          { label: 'Humidity', value: '85%', status: 'danger', statusText: 'Excessive' },
+          { label: 'Gas Level', value: '95 ppm', status: 'danger', statusText: 'Dangerous' }
+        ]
+      }
+    };
+
+    const data = foodData[foodId];
+    if (!data) return;
+
+    // Update modal content
+    document.getElementById('detailFoodName').textContent = data.name;
+    document.getElementById('detailCategory').textContent = data.category;
+    document.getElementById('detailCreated').textContent = data.created;
+    document.getElementById('detailStatusBadge').textContent = data.status;
+    document.getElementById('detailRiskScore').textContent = data.riskScore;
+
+    // Update status badge color
+    const statusBadge = document.getElementById('detailStatusBadge');
+    statusBadge.className = 'detail-status-badge';
+    if (data.status === 'Safe') {
+      statusBadge.style.background = '#22c55e';
+    } else if (data.status === 'At Risk') {
+      statusBadge.style.background = '#f59e0b';
+    } else if (data.status === 'Spoiled') {
+      statusBadge.style.background = '#ef4444';
+    }
+
+    // Update recommendations
+    const recommendationsList = document.getElementById('recommendationsList');
+    recommendationsList.innerHTML = '';
+    data.recommendations.forEach(rec => {
+      const item = document.createElement('div');
+      item.className = 'recommendation-item';
+      item.innerHTML = `
+        <div class="recommendation-icon">${rec.icon}</div>
+        <div class="recommendation-content">
+          <div class="recommendation-title">${rec.title}</div>
+          <div class="recommendation-text">${rec.text}</div>
+        </div>
+      `;
+      recommendationsList.appendChild(item);
+    });
+
+    // Update sensor details
+    const sensorGrid = document.getElementById('sensorDetailsGrid');
+    sensorGrid.innerHTML = '';
+    data.sensors.forEach(sensor => {
+      const item = document.createElement('div');
+      item.className = 'sensor-detail-item';
+      item.innerHTML = `
+        <div class="sensor-detail-label">${sensor.label}</div>
+        <div class="sensor-detail-value">${sensor.value}</div>
+        <div class="sensor-detail-status ${sensor.status}">${sensor.statusText}</div>
+      `;
+      sensorGrid.appendChild(item);
+    });
+
+    // Show modal
+    modal.style.display = 'flex';
+  }
+
+  // Function to update latest scan result
+  function updateLatestScanResult(scanData) {
+    const latestScanContent = document.getElementById('latestScanContent');
+    if (!latestScanContent || !scanData) return;
+
+    const scanResultCard = latestScanContent.querySelector('.scan-result-card');
+    if (!scanResultCard) return;
+
+    // Update food info
+    const foodName = scanResultCard.querySelector('.scan-food-name');
+    const categoryBadge = scanResultCard.querySelector('.scan-category-badge');
+    const createdDate = scanResultCard.querySelector('.scan-created');
+    
+    if (foodName) foodName.textContent = scanData.name || 'Unknown Food';
+    if (categoryBadge) {
+      categoryBadge.textContent = scanData.category || 'Unknown';
+      categoryBadge.className = `scan-category-badge ${(scanData.category || '').toLowerCase()}`;
+    }
+    if (createdDate) createdDate.textContent = scanData.created || new Date().toLocaleDateString();
+
+    // Update status
+    const statusBadge = scanResultCard.querySelector('.scan-status-badge');
+    const riskScore = scanResultCard.querySelector('.scan-risk-score');
+    
+    if (statusBadge) {
+      statusBadge.textContent = scanData.status || 'Unknown';
+      statusBadge.className = `scan-status-badge ${(scanData.status || '').toLowerCase().replace(' ', '-')}`;
+    }
+    if (riskScore) riskScore.textContent = `Risk: ${scanData.riskScore || '0%'}`;
+
+    // Update sensors
+    const sensorItems = scanResultCard.querySelectorAll('.scan-sensor-item');
+    if (sensorItems.length >= 3 && scanData.sensors) {
+      sensorItems[0].querySelector('.sensor-value').textContent = scanData.sensors.temperature || 'N/A';
+      sensorItems[1].querySelector('.sensor-value').textContent = scanData.sensors.humidity || 'N/A';
+      sensorItems[2].querySelector('.sensor-value').textContent = scanData.sensors.gas || 'N/A';
+    }
+
+    // Update expiry
+    const expiryDate = scanResultCard.querySelector('.scan-expiry-date');
+    const expiryStatus = scanResultCard.querySelector('.scan-expiry-status');
+    
+    if (expiryDate) expiryDate.textContent = `Expires: ${scanData.expiryDate || 'N/A'}`;
+    if (expiryStatus) {
+      expiryStatus.textContent = scanData.expiryStatus || 'Unknown';
+      expiryStatus.className = `scan-expiry-status ${(scanData.expiryStatus || '').toLowerCase().replace(' ', '-')}`;
+    }
+
+    // Update button data attribute
+    const viewBtn = scanResultCard.querySelector('.view-recommendations-btn');
+    if (viewBtn) viewBtn.setAttribute('data-food-id', scanData.id || '1');
+  }
+
+  // Make updateLatestScanResult globally available
+  window.updateLatestScanResult = updateLatestScanResult;
+
+  // Alert functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle alert dismiss buttons
+    const dismissButtons = document.querySelectorAll('.alert-action-btn.dismiss');
+    dismissButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const alertItem = this.closest('.alert-item');
+        if (alertItem) {
+          alertItem.style.opacity = '0';
+          alertItem.style.transform = 'translateX(-100%)';
+          setTimeout(() => {
+            alertItem.remove();
+            updateAlertsDisplay();
+          }, 300);
+        }
+      });
+    });
+
+    // Handle alert action buttons
+    const actionButtons = document.querySelectorAll('.alert-action-btn:not(.dismiss)');
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const alertTitle = this.closest('.alert-item').querySelector('.alert-title').textContent;
+        console.log(`Action clicked for: ${alertTitle}`);
+        // Add your alert action logic here
+      });
+    });
+  });
+
+  // Function to update alerts display
+  function updateAlertsDisplay() {
+    const alertsContainer = document.getElementById('alerts-container');
+    const alertItems = alertsContainer.querySelectorAll('.alert-item');
+    
+    if (alertItems.length === 0) {
+      alertsContainer.innerHTML = '<div class="no-alerts">No active alerts</div>';
+    }
+  }
+
+  // Function to add new alert
+  function addAlert(alertData) {
+    const alertsContainer = document.getElementById('alerts-container');
+    
+    // Remove "no alerts" message if it exists
+    const noAlerts = alertsContainer.querySelector('.no-alerts');
+    if (noAlerts) {
+      noAlerts.remove();
+    }
+
+    const alertItem = document.createElement('div');
+    alertItem.className = `alert-item ${alertData.severity}`;
+    alertItem.innerHTML = `
+      <div class="alert-icon">
+        <i class="bi ${alertData.icon}"></i>
+      </div>
+      <div class="alert-content">
+        <h5 class="alert-title">${alertData.title}</h5>
+        <p class="alert-description">${alertData.description}</p>
+        <p class="alert-time">${alertData.time}</p>
+        <span class="alert-severity ${alertData.severity}">${alertData.severityText}</span>
+        <div class="alert-actions">
+          <button class="alert-action-btn">View Details</button>
+          <button class="alert-action-btn dismiss">Dismiss</button>
+        </div>
+      </div>
+    `;
+
+    // Add event listeners to new alert
+    const dismissBtn = alertItem.querySelector('.alert-action-btn.dismiss');
+    const actionBtn = alertItem.querySelector('.alert-action-btn:not(.dismiss)');
+    
+    dismissBtn.addEventListener('click', function() {
+      alertItem.style.opacity = '0';
+      alertItem.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        alertItem.remove();
+        updateAlertsDisplay();
+      }, 300);
+    });
+
+    actionBtn.addEventListener('click', function() {
+      console.log(`Action clicked for: ${alertData.title}`);
+    });
+
+    alertsContainer.appendChild(alertItem);
+    
+    // Add event listeners to the new alert item
+    addAlertEventListeners(alertItem);
+  }
+  
+  // Function to add event listeners to alert items
+  function addAlertEventListeners(alertItem) {
+    // Handle dismiss button
+    const dismissBtn = alertItem.querySelector('.alert-action-btn.dismiss');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', function() {
+        alertItem.style.opacity = '0';
+        alertItem.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+          alertItem.remove();
+          updateAlertsDisplay();
+        }, 300);
+      });
+    }
+    
+    // Handle action buttons
+    const actionBtn = alertItem.querySelector('.alert-action-btn:not(.dismiss)');
+    if (actionBtn) {
+      actionBtn.addEventListener('click', function() {
+        const alertTitle = alertItem.querySelector('.alert-title').textContent;
+        console.log(`Action clicked for: ${alertTitle}`);
+        // Add your alert action logic here
+      });
+    }
+  }
+
+  // Make functions globally available
+  window.addAlert = addAlert;
+  window.updateAlertsDisplay = updateAlertsDisplay;
+  window.addAlertEventListeners = addAlertEventListeners;
 </script>
 </body>
 </html>

@@ -33,6 +33,14 @@ function showDashboard() {
       window.sensorDashboard = new SensorDashboard();
     }
     
+    // Initialize latest scan manager (delay to ensure DOM is ready)
+    setTimeout(() => {
+      if (window.LatestScanManager) {
+        console.log('Re-initializing LatestScanManager for dashboard');
+        window.latestScanManager = new LatestScanManager();
+      }
+    }, 150);
+    
     // Ensure dashboard content is visible by default
     const dashboardContent = document.getElementById('dashboard-content');
     if (dashboardContent) {

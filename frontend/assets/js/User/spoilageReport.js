@@ -503,6 +503,10 @@ function updateDateRange(rangeType) {
     case 'daily':
       startDate = today;
       endDate = today;
+      console.log('🔍 Detailed Report Daily Debug:');
+      console.log('  Today:', today);
+      console.log('  Start Date:', startDate);
+      console.log('  End Date:', endDate);
       break;
     case 'weekly':
       weekPickerGroup.style.display = 'block';
@@ -547,6 +551,11 @@ function updateDateRange(rangeType) {
   
   startDateInput.value = startDate.toISOString().split('T')[0];
   endDateInput.value = endDate.toISOString().split('T')[0];
+  
+  console.log('🔍 Detailed Report Date Range Set:');
+  console.log('  Range Type:', rangeType);
+  console.log('  Formatted Start Date:', startDateInput.value);
+  console.log('  Formatted End Date:', endDateInput.value);
 }
 
 // Helper functions for date calculations
@@ -666,6 +675,14 @@ async function loadDetailedReportData(page = 1, limit = 25, options = { preserve
     if (hadDateFilter) {
       params.append('start_date', startDate);
       params.append('end_date', endDate);
+      
+      // Debug logging for daily date range
+      if (startDate === endDate) {
+        console.log('🔍 Daily Report Debug:');
+        console.log('  Start Date:', startDate);
+        console.log('  End Date:', endDate);
+        console.log('  Date Range Type: Daily');
+      }
     }
 
     if (foodCategory && foodCategory !== 'all') {
@@ -803,7 +820,6 @@ function updateDetailedReportTable(data, pagination) {
         ${formatDate(item['EXPIRY DATE'])}<br><span class="${expiryInfo.cssClass}">${expiryInfo.text}</span>
       </td>
       <td>${formatSensorReadings(item['SENSOR READINGS'])}</td>
-      <td><span class="alert-badge ${alertClass}">${item['ALERT COUNT'] === 0 ? 'No alerts' : item['ALERT COUNT'] + ' alerts'}</span></td>
       <td>${formatRecommendations(item['RECOMMENDATIONS'])}</td>
     `;
     
@@ -825,13 +841,18 @@ function updateDetailedReportTable(data, pagination) {
 
 // Get CSS class for status
 function getStatusClass(status) {
-  switch (status?.toLowerCase()) {
+  const normalizedStatus = status?.toLowerCase().trim();
+  switch (normalizedStatus) {
     case 'safe': return 'status-fresh';
     case 'fresh': return 'status-fresh'; // Keep backward compatibility
     case 'at risk': return 'status-warning';
+    case 'caution': return 'status-warning'; // Handle caution status
     case 'spoiled': return 'status-danger';
+    case 'unsafe': return 'status-danger'; // Handle unsafe status
     case 'expired': return 'status-expired';
-    default: return 'status-unknown';
+    default: 
+      console.warn('Unknown status for CSS class:', status);
+      return 'status-unknown';
   }
 }
 
@@ -1340,10 +1361,6 @@ async function exportDetailedReportPDF() {
     
     // Prepare table data
     const tableData = reportData.map(item => {
-      // Format alert count properly
-      const alertCount = item['ALERT COUNT'] || 0;
-      const alertText = alertCount === 0 ? 'No alerts' : `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
-      
       // Format expiry date properly
       const expiryDate = item['EXPIRY DATE'] || '';
       const formattedExpiry = expiryDate ? new Date(expiryDate).toLocaleDateString() : '';
@@ -1389,21 +1406,19 @@ async function exportDetailedReportPDF() {
         formattedRiskScore,
         formattedExpiry,
         formattedSensorReadings,
-        alertText,
         formattedRecommendations
       ];
     });
     
     // Calculate optimal column widths to fit the page
     const columnWidths = {
-      0: Math.floor(availableWidth * 0.18), // Food Item (18%)
-      1: Math.floor(availableWidth * 0.12), // Category (12%)
-      2: Math.floor(availableWidth * 0.10), // Status (10%)
-      3: Math.floor(availableWidth * 0.10), // Risk Score (10%)
-      4: Math.floor(availableWidth * 0.12), // Expiry Date (12%)
-      5: Math.floor(availableWidth * 0.20), // Sensor Readings (20%)
-      6: Math.floor(availableWidth * 0.08), // Alerts (8%)
-      7: Math.floor(availableWidth * 0.10)  // Recommendations (10%)
+      0: Math.floor(availableWidth * 0.20), // Food Item (20%)
+      1: Math.floor(availableWidth * 0.14), // Category (14%)
+      2: Math.floor(availableWidth * 0.12), // Status (12%)
+      3: Math.floor(availableWidth * 0.12), // Risk Score (12%)
+      4: Math.floor(availableWidth * 0.14), // Expiry Date (14%)
+      5: Math.floor(availableWidth * 0.22), // Sensor Readings (22%)
+      6: Math.floor(availableWidth * 0.16)  // Recommendations (16%)
     };
     
     // Add professional table
@@ -1411,7 +1426,7 @@ async function exportDetailedReportPDF() {
       // Fallback if plugin attached to prototype
       if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && typeof window.jspdf.jsPDF.API.autoTable === 'function') {
         window.jspdf.jsPDF.API.autoTable.apply(doc, [{
-          head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts', 'Recommendations']],
+          head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Recommendations']],
           body: tableData,
           startY: 180,
           margin: { left: marginLeft, right: marginRight },
@@ -1439,7 +1454,7 @@ async function exportDetailedReportPDF() {
       }
     } else {
       doc.autoTable({
-      head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Alerts', 'Recommendations']],
+      head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Recommendations']],
       body: tableData,
       startY: 180,
       margin: { left: marginLeft, right: marginRight },
@@ -1472,8 +1487,7 @@ async function exportDetailedReportPDF() {
         3: { cellWidth: columnWidths[3], halign: 'center' }, // Risk Score
         4: { cellWidth: columnWidths[4], halign: 'center' }, // Expiry Date
         5: { cellWidth: columnWidths[5], halign: 'left' },   // Sensor Readings
-        6: { cellWidth: columnWidths[6], halign: 'center' }, // Alerts
-        7: { cellWidth: columnWidths[7], halign: 'left' }    // Recommendations
+        6: { cellWidth: columnWidths[6], halign: 'left' }    // Recommendations
       },
       didDrawPage: function (data) {
         // Add page number
@@ -1798,7 +1812,7 @@ class SpoilageAnalytics {
                     valueElement.textContent = stats.caution_count || 0;
                     break;
                 case 'spoiled':
-                    valueElement.textContent = stats.unsafe_count || 0;
+                    valueElement.textContent = stats.spoiled_count || stats.unsafe_count || 0;
                     break;
                 case 'expired':
                     valueElement.textContent = stats.expired_count || 0;
@@ -1934,7 +1948,7 @@ class SpoilageAnalytics {
         const totals = this.spoilageData.summary.totals;
         const totalOverview = document.querySelector('.summary-total-right');
         if (totalOverview) {
-            totalOverview.textContent = `${totals.unsafe_count || 0} spoiled out of ${totals.total_items || 0} items`;
+            totalOverview.textContent = `${totals.spoiled_count || totals.unsafe_count || 0} spoiled out of ${totals.total_items || 0} items`;
         }
     }
 
