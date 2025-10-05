@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initParallaxEffects();
     initCounters();
     initNewsletterForm();
+    initScrollIndicators();
+    initScrollSnapping();
+    initScrollProgress();
 });
 
 // Navigation functionality
@@ -677,6 +680,117 @@ const debouncedScrollHandler = debounce(function() {
 }, 10);
 
 window.addEventListener('scroll', debouncedScrollHandler);
+
+// Scroll Indicators functionality
+function initScrollIndicators() {
+    const indicators = document.querySelectorAll('.scroll-indicators .indicator li a');
+    const sections = document.querySelectorAll('.section');
+    
+    // Update active indicator based on scroll position
+    function updateActiveIndicator() {
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (window.scrollY >= (sectionTop - sectionHeight / 3)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        indicators.forEach(indicator => {
+            indicator.classList.remove('active');
+            if (indicator.getAttribute('href') === `#${current}`) {
+                indicator.classList.add('active');
+            }
+        });
+    }
+    
+    // Smooth scroll to section when indicator is clicked
+    indicators.forEach(indicator => {
+        indicator.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetSection = document.getElementById(targetId);
+            
+            if (targetSection) {
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Update indicators on scroll
+    window.addEventListener('scroll', updateActiveIndicator);
+    
+    // Initialize active indicator
+    updateActiveIndicator();
+}
+
+// Enhanced scroll snapping with intersection observer
+function initScrollSnapping() {
+    const sections = document.querySelectorAll('.section');
+    const contents = document.querySelectorAll('.content');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                // Animate the content when section comes into view
+                const content = entry.target.querySelector('.content');
+                if (content) {
+                    setTimeout(() => {
+                        content.classList.add('animate');
+                    }, 100);
+                }
+            } else {
+                entry.target.classList.remove('active');
+                // Reset animation when section goes out of view
+                const content = entry.target.querySelector('.content');
+                if (content) {
+                    content.classList.remove('animate');
+                }
+            }
+        });
+    }, {
+        threshold: 0.3,
+        rootMargin: '0px'
+    });
+    
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+    
+    // Animate the first section on load
+    if (sections.length > 0) {
+        const firstContent = sections[0].querySelector('.content');
+        if (firstContent) {
+            setTimeout(() => {
+                firstContent.classList.add('animate');
+            }, 300);
+        }
+    }
+}
+
+// Scroll progress bar functionality
+function initScrollProgress() {
+    const progressBar = document.querySelector('.scroll-progress-bar');
+    
+    if (progressBar) {
+        function updateProgressBar() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            progressBar.style.width = scrollPercent + '%';
+        }
+        
+        window.addEventListener('scroll', updateProgressBar);
+        updateProgressBar(); // Initialize
+    }
+}
 
 // Add service worker registration for PWA capabilities
 if ('serviceWorker' in navigator) {

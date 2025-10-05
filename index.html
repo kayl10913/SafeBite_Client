@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-snap-type: y mandatory;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +10,25 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
+    <!-- Animated SVG Background -->
+    <div class="animated-bg">
+        <svg preserveAspectRatio="xMidYMid slice" viewBox="10 10 80 80">
+            <path fill="#003A6B" class="out-top" d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z"/>
+            <path fill="#1B5886" class="in-top" d="M20.6,4.1C11.6,1.5-1.9,2.5-8,11.2-16.3,23.1-8.2,45.6,7.4,50S42.1,38.9,41,24.5C40.2,14.1,29.4,6.6,20.6,4.1Z"/>
+            <path fill="#3776A1" class="out-bottom" d="M105.9,48.6c-12.4-8.2-29.3-4.8-39.4.8-23.4,12.8-37.7,51.9-19.1,74.1s63.9,15.3,76-5.6c7.6-13.3,1.8-31.1-2.3-43.8C117.6,63.3,114.7,54.3,105.9,48.6Z"/>
+            <path fill="#5293BB" class="in-bottom" d="M102,67.1c-9.6-6.1-22-3.1-29.5,2-15.4,10.7-19.6,37.5-7.6,47.8s35.9,3.9,44.5-12.5C115.5,92.6,113.9,74.6,102,67.1Z"/>
+            <path fill="#6EB1D6" class="light-blue-blob" d="M60,20c8-12,25-15,40-6c20,12,24,42,11,60c-15,22-52,22-67,2C-5,35,-1,8,15,-5C25,-14,45,-19,60,20Z"/>
+            <path fill="#89CFF1" class="very-light-blue-blob" d="M80,40c6-8,18-10,28-4c14,8,17,28,8,40c-10,15-35,15-45,1C-3,23,1,5,12,-3C17,-9,30,-12,80,40Z"/>
+        </svg>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="frontend/assets/images/logo.png" alt="SafeBite Logo" class="logo-img">
+                <div class="logo-icon">
+                    <span>S</span>
+                </div>
                 <span class="logo-text">SafeBite</span>
             </div>
             <ul class="nav-menu">
@@ -44,11 +58,27 @@
                 <span class="bar"></span>
             </div>
         </div>
-    </nav>
+     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-container">
+     <!-- Scroll Progress Bar -->
+     <div class="scroll-progress">
+         <div class="scroll-progress-bar"></div>
+        </div>
+    
+     <!-- Navigation Indicators -->
+     <nav class="scroll-indicators">
+          <ul class="indicator">
+             <li><a href="#home"><span class="sr-only">Home</span></a></li>
+             <li><a href="#about"><span class="sr-only">About</span></a></li>
+             <li><a href="#features"><span class="sr-only">Features</span></a></li>
+             <li><a href="#feedback"><span class="sr-only">Feedback</span></a></li>
+             <li><a href="#contact"><span class="sr-only">Contact</span></a></li>
+          </ul>
+        </nav>
+
+     <!-- Hero Section -->
+    <section id="home" class="hero section" style="scroll-snap-align: start; view-timeline: --section;">
+        <div class="hero-container content">
             <div class="hero-content">
                 <div class="hero-text">
                     <h1 class="hero-title">Protect Your Plate!</h1>
@@ -56,14 +86,7 @@
                     <p class="hero-description">
                         Smart Monitoring Platform for Food Spoilage
                     </p>
-                    <div class="hero-buttons">
-                        <a href="frontend/pages/Login.html" class="btn btn-outline btn-large">
-                            Sign Up
-                        </a>
-                        <a href="frontend/pages/Login.html" class="btn btn-primary btn-large">
-                            Log In
-                        </a>
-                    </div>
+                    <!-- Desktop statistics - hidden on mobile -->
                     <div class="hero-stats">
                         <div class="stat">
                             <span class="stat-number">99.9%</span>
@@ -79,13 +102,48 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Mobile-specific layout elements -->
+                <div class="hero-stats-mobile">
+                    <div class="stat">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">Accuracy</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Monitoring</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">1000+</span>
+                        <span class="stat-label">Users</span>
+                    </div>
+                </div>
+                
                 <div class="hero-visual">
                     <div class="hero-card">
                         <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Healthy Food Bowl" class="food-image">
                     </div>
+                    <!-- Desktop buttons - hidden on mobile -->
+                    <div class="hero-buttons">
+                        <a href="frontend/pages/Login.html" class="btn btn-outline btn-large">
+                            Sign Up
+                        </a>
+                        <a href="frontend/pages/Login.html" class="btn btn-primary btn-large">
+                            Log In
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hero-buttons-mobile">
+                    <a href="frontend/pages/Login.html" class="btn btn-outline btn-large">
+                        Sign Up
+                    </a>
+                    <a href="frontend/pages/Login.html" class="btn btn-primary btn-large">
+                        Log In
+                    </a>
                 </div>
             </div>
-        </div>
+          </div>
         <div class="hero-background">
             <div class="floating-shapes">
                 <div class="shape shape-1"></div>
@@ -93,12 +151,12 @@
                 <div class="shape shape-3"></div>
                 <div class="shape shape-4"></div>
             </div>
-        </div>
-    </section>
+          </div>
+        </section>
 
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
+     <!-- About Section -->
+    <section id="about" class="about section" style="scroll-snap-align: start; view-timeline: --section;">
+        <div class="container content">
             <div class="about-content">
                 <div class="about-text">
                     <h2 class="section-title">About SafeBite</h2>
@@ -142,19 +200,19 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+          </div>
+        </section>
 
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Powerful Features</h2>
-                <p class="section-description">
-                    Advanced technology meets food safety to protect what matters most
-                </p>
-            </div>
+     <!-- Features Section -->
+    <section id="features" class="features section" style="scroll-snap-align: start; view-timeline: --section;">
+        <div class="container content">
             <div class="features-grid">
+                <div class="section-header">
+                    <h2 class="section-title">Powerful Features</h2>
+                    <p class="section-description">
+                        Advanced technology meets food safety to protect what matters most
+                    </p>
+                </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-brain"></i>
@@ -210,19 +268,19 @@
                     </p>
                 </div>
             </div>
-        </div>
-    </section>
+          </div>
+        </section>
 
-    <!-- Testimonials Section -->
-    <section id="feedback" class="testimonials">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">What Our Users Say</h2>
-                <p class="section-description">
-                    Discover how SafeBite is transforming food safety and reducing waste for businesses and individuals worldwide
-                </p>
-            </div>
+     <!-- Testimonials Section -->
+    <section id="feedback" class="testimonials section" style="scroll-snap-align: start; view-timeline: --section;">
+        <div class="container content">
             <div class="testimonials-grid">
+                <div class="section-header">
+                    <h2 class="section-title">What Our Users Say</h2>
+                    <p class="section-description">
+                        Discover how SafeBite is transforming food safety and reducing waste for businesses and individuals worldwide
+                    </p>
+                </div>
                 <div class="testimonial-card">
                     <div class="quote-icon">
                         <i class="fas fa-quote-left"></i>
@@ -323,8 +381,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="stats-section">
+                <div class="stats-section">
                 <div class="stat-item">
                     <div class="stat-number stat-1">5000+</div>
                     <div class="stat-label">Happy Users</div>
@@ -342,19 +399,19 @@
                     <div class="stat-label">Monitoring</div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Get In Touch</h2>
-                <p class="section-description">
-                    Ready to revolutionize your food safety? Contact us today!
-                </p>
-            </div>
+          </div>
+        </section>
+    
+     <!-- Contact Section -->
+    <section id="contact" class="contact section" style="scroll-snap-align: start; view-timeline: --section;">
+        <div class="container content">
             <div class="contact-content">
+                <div class="section-header">
+                    <h2 class="section-title">Get In Touch</h2>
+                    <p class="section-description">
+                        Ready to revolutionize your food safety? Contact us today!
+                    </p>
+                </div>
                 <div class="contact-info">
                     <div class="contact-item">
                         <div class="contact-icon">
@@ -396,9 +453,9 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </section>
-
+          </div>
+        </section>
+    
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -468,7 +525,7 @@
                 </div>
             </div>
         </div>
-    </footer>
+      </footer>
 
     <script src="frontend/assets/js/Pages/index.js"></script>
 </body>
