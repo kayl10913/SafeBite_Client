@@ -400,8 +400,29 @@ class FeedbacksManager {
         
         // Set current values
         document.getElementById('responseStatus').value = feedback['STATUS'] || feedback.status || 'Active';
-        document.getElementById('adminNotes').value = feedback.admin_notes || '';
-        document.getElementById('responseText').value = feedback.response_text || '';
+        
+        // Show current response text
+        const currentResponseText = feedback.response_text || feedback['RESPONSE TEXT'] || '';
+        const currentResponseElement = document.getElementById('currentResponseText');
+        if (currentResponseText) {
+            currentResponseElement.textContent = currentResponseText;
+            currentResponseElement.style.fontStyle = 'normal';
+            currentResponseElement.style.color = '#e0e6f6';
+        } else {
+            currentResponseElement.textContent = 'No response sent yet';
+            currentResponseElement.style.fontStyle = 'italic';
+            currentResponseElement.style.color = '#bfc9da';
+        }
+        
+        document.getElementById('responseText').value = '';
+        
+        // Add keyboard event listener for ESC key
+        this.escKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeResponseModal();
+            }
+        };
+        document.addEventListener('keydown', this.escKeyHandler);
         
         // Show modal
         document.getElementById('responseModal').style.display = 'block';
@@ -410,20 +431,30 @@ class FeedbacksManager {
     closeResponseModal() {
         document.getElementById('responseModal').style.display = 'none';
         this.currentFeedbackId = null;
+        
+        // Remove keyboard event listener
+        if (this.escKeyHandler) {
+            document.removeEventListener('keydown', this.escKeyHandler);
+            this.escKeyHandler = null;
+        }
     }
 
     async saveResponse() {
         if (!this.currentFeedbackId) return;
 
         const status = document.getElementById('responseStatus').value;
-        const adminNotes = document.getElementById('adminNotes').value;
         const responseText = document.getElementById('responseText').value;
+
+        // Validate that response text is provided
+        if (!responseText.trim()) {
+            this.showToast('Please enter a response to the customer.', 'warning');
+            return;
+        }
 
         try {
             const success = await this.updateFeedbackStatus(
                 this.currentFeedbackId, 
                 status, 
-                adminNotes, 
                 responseText
             );
 
@@ -432,9 +463,13 @@ class FeedbacksManager {
                 // Refresh data
                 await this.loadFeedbacks();
                 await this.loadStatistics();
+                this.showToast('Response saved successfully!', 'success');
+            } else {
+                this.showToast('Failed to save response. Please try again.', 'error');
             }
         } catch (error) {
             console.error('Error saving response:', error);
+            this.showToast('Error saving response. Please try again.', 'error');
         }
     }
 
@@ -688,7 +723,7 @@ class FeedbacksManager {
         // You can implement actual PDF export logic here
     }
 
-    async updateFeedbackStatus(feedbackId, status, adminNotes, responseText) {
+    async updateFeedbackStatus(feedbackId, status, responseText) {
         try {
             const response = await fetch(`/api/feedbacks/${feedbackId}`, {
                 method: 'PUT',
@@ -697,7 +732,6 @@ class FeedbacksManager {
                 },
                 body: JSON.stringify({
                     status,
-                    admin_notes: adminNotes,
                     response_text: responseText,
                     resolved_by: 1 // You can get this from current admin session
                 })
@@ -745,6 +779,72 @@ class FeedbacksManager {
                 </tr>
             `;
         }
+    }
+
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const colors = {
+            success: { bg: '#10b981', icon: '✅' },
+            error: { bg: '#ef4444', icon: '❌' },
+            warning: { bg: '#f59e0b', icon: '⚠️' },
+            info: { bg: '#3b82f6', icon: 'ℹ️' }
+        };
+        
+        const config = colors[type] || colors.info;
+        
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${config.bg};
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 400px;
+            word-wrap: break-word;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        toast.innerHTML = `
+            <span style="font-size: 16px;">${config.icon}</span>
+            <span>${message}</span>
+        `;
+        
+        // Add animation keyframes if not already added
+        if (!document.getElementById('toast-animations')) {
+            const style = document.createElement('style');
+            style.id = 'toast-animations';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 4000);
     }
 }
 

@@ -111,6 +111,7 @@ function showMlPredictions() {
     // Initialize ML modal functionality after content is loaded
     setTimeout(() => {
       initializeMlModal();
+      initializeUpdateTrainingModal();
     }, 100);
     
     if (window.mlPredictionsManager && window.mlPredictionsManager.loadOverview) {
@@ -400,6 +401,50 @@ function initializeMlModal() {
   }
 }
 
+// Update Training Data Modal functionality
+function initializeUpdateTrainingModal() {
+  console.log('🔍 Initializing Update Training Modal...');
+  
+  const updateTrainingDataModal = document.getElementById('updateTrainingDataModal');
+  const closeUpdateTrainingModal = document.getElementById('closeUpdateTrainingModal');
+  const cancelUpdateTrainingBtn = document.getElementById('cancelUpdateTrainingBtn');
+  const updateTrainingDataBtn = document.getElementById('updateTrainingDataBtn');
+  const updateTrainingDataForm = document.getElementById('updateTrainingDataForm');
+  
+  console.log('🔍 Update modal elements found:', { 
+    updateTrainingDataModal, closeUpdateTrainingModal, cancelUpdateTrainingBtn, 
+    updateTrainingDataBtn, updateTrainingDataForm 
+  });
+
+  // Remove existing event listeners to prevent duplicates
+  if (closeUpdateTrainingModal) {
+    closeUpdateTrainingModal.removeEventListener('click', closeUpdateTrainingModalFunc);
+    closeUpdateTrainingModal.addEventListener('click', closeUpdateTrainingModalFunc);
+  }
+  
+  if (cancelUpdateTrainingBtn) {
+    cancelUpdateTrainingBtn.removeEventListener('click', closeUpdateTrainingModalFunc);
+    cancelUpdateTrainingBtn.addEventListener('click', closeUpdateTrainingModalFunc);
+  }
+
+  if (updateTrainingDataModal) {
+    updateTrainingDataModal.removeEventListener('click', handleUpdateModalClick);
+    updateTrainingDataModal.addEventListener('click', handleUpdateModalClick);
+  }
+
+  if (updateTrainingDataBtn) {
+    updateTrainingDataBtn.removeEventListener('click', updateTrainingData);
+    updateTrainingDataBtn.addEventListener('click', updateTrainingData);
+  }
+
+  if (updateTrainingDataForm) {
+    updateTrainingDataForm.removeEventListener('submit', handleUpdateFormSubmit);
+    updateTrainingDataForm.addEventListener('submit', handleUpdateFormSubmit);
+  }
+  
+  console.log('✅ Update Training Modal initialization completed');
+}
+
 // ML Modal helper functions
 function openMlTrainingModal() {
   const mlTrainingDataModal = document.getElementById('mlTrainingDataModal');
@@ -416,11 +461,22 @@ function openMlTrainingModal() {
 function closeMlTrainingModalFunc() {
   const mlTrainingDataModal = document.getElementById('mlTrainingDataModal');
   const mlTrainingDataForm = document.getElementById('mlTrainingDataForm');
+  const addMlTrainingDataBtn = document.getElementById('addMlTrainingDataBtn');
+  const modalHeader = mlTrainingDataModal?.querySelector('.modal-header h3');
+  
   if (mlTrainingDataModal) {
     mlTrainingDataModal.style.display = 'none';
+    mlTrainingDataModal.classList.remove('update-mode');
   }
   if (mlTrainingDataForm) {
     mlTrainingDataForm.reset();
+  }
+  if (addMlTrainingDataBtn) {
+    addMlTrainingDataBtn.textContent = 'Add Training Data';
+    addMlTrainingDataBtn.removeAttribute('data-training-id');
+  }
+  if (modalHeader) {
+    modalHeader.textContent = 'Add Training Data';
   }
 }
 
@@ -435,6 +491,34 @@ function handleFormSubmit(e) {
   addMlTrainingData();
 }
 
+// Update Training Data Modal helper functions
+function closeUpdateTrainingModalFunc() {
+  const updateTrainingDataModal = document.getElementById('updateTrainingDataModal');
+  const updateTrainingDataForm = document.getElementById('updateTrainingDataForm');
+  const updateTrainingDataBtn = document.getElementById('updateTrainingDataBtn');
+  
+  if (updateTrainingDataModal) {
+    updateTrainingDataModal.style.display = 'none';
+  }
+  if (updateTrainingDataForm) {
+    updateTrainingDataForm.reset();
+  }
+  if (updateTrainingDataBtn) {
+    updateTrainingDataBtn.removeAttribute('data-training-id');
+  }
+}
+
+function handleUpdateModalClick(e) {
+  if (e.target === e.currentTarget) {
+    closeUpdateTrainingModalFunc();
+  }
+}
+
+function handleUpdateFormSubmit(e) {
+  e.preventDefault();
+  updateTrainingData();
+}
+
 function addMlTrainingData() {
   const formData = {
     foodName: document.getElementById('mlFoodName').value,
@@ -444,7 +528,8 @@ function addMlTrainingData() {
     ph: parseFloat(document.getElementById('mlPh').value),
     actualStatus: document.getElementById('mlActualStatus').value,
     source: document.getElementById('mlSource').value,
-    dataQuality: parseInt(document.getElementById('mlDataQuality').value)
+    dataQuality: parseInt(document.getElementById('mlDataQuality').value),
+    environmentalFactors: document.getElementById('mlEnvironmentalFactors').value
   };
 
   // Validate form data
@@ -459,16 +544,21 @@ function addMlTrainingData() {
   }
 
   const addMlTrainingDataBtn = document.getElementById('addMlTrainingDataBtn');
+  const isUpdateMode = addMlTrainingDataBtn.getAttribute('data-training-id');
   
   // Show loading state
   if (addMlTrainingDataBtn) {
     addMlTrainingDataBtn.disabled = true;
-    addMlTrainingDataBtn.textContent = 'Adding...';
+    addMlTrainingDataBtn.textContent = isUpdateMode ? 'Updating...' : 'Adding...';
   }
 
+  // Determine API endpoint and method
+  const apiEndpoint = isUpdateMode ? `/api/ml-training/update/${isUpdateMode}` : '/api/ml-training/add';
+  const method = isUpdateMode ? 'PUT' : 'POST';
+
   // Send data to backend
-  fetch('/api/ml-training/add', {
-    method: 'POST',
+  fetch(apiEndpoint, {
+    method: method,
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
@@ -480,12 +570,15 @@ function addMlTrainingData() {
     if (data.success) {
       // Success - close modal and refresh data
       closeMlTrainingModalFunc();
-      showSuccessMessage('Training data added successfully!');
-      // Explicit admin activity log for ADD
+      const action = isUpdateMode ? 'updated' : 'added';
+      showSuccessMessage(`Training data ${action} successfully!`);
+      
+      // Explicit admin activity log
       try {
         if (window.logAdminActivity) {
           const food = (formData.foodName || '').toString().trim();
-          window.logAdminActivity('ADD', { page: 'ml', target: food ? `Training data (${food})` : 'Training data' });
+          const logAction = isUpdateMode ? 'UPDATE' : 'ADD';
+          window.logAdminActivity(logAction, { page: 'ml', target: food ? `Training data (${food})` : 'Training data' });
         }
       } catch (_) {}
       
@@ -494,18 +587,170 @@ function addMlTrainingData() {
         refreshMlData();
       }
     } else {
-      throw new Error(data.message || 'Failed to add training data');
+      throw new Error(data.message || `Failed to ${isUpdateMode ? 'update' : 'add'} training data`);
     }
   })
   .catch(error => {
-    console.error('Error adding training data:', error);
-    alert('Error adding training data: ' + error.message);
+    console.error(`Error ${isUpdateMode ? 'updating' : 'adding'} training data:`, error);
+    alert(`Error ${isUpdateMode ? 'updating' : 'adding'} training data: ` + error.message);
   })
   .finally(() => {
-    // Reset button state
+    // Reset button state and modal
     if (addMlTrainingDataBtn) {
       addMlTrainingDataBtn.disabled = false;
       addMlTrainingDataBtn.textContent = 'Add Training Data';
+      addMlTrainingDataBtn.removeAttribute('data-training-id');
+    }
+    
+    // Reset modal title and remove update mode class
+    const modal = document.getElementById('mlTrainingDataModal');
+    const modalHeader = modal.querySelector('.modal-header h3');
+    if (modalHeader) modalHeader.textContent = 'Add Training Data';
+    if (modal) modal.classList.remove('update-mode');
+  });
+}
+
+function updateTrainingData() {
+  console.log('🔄 updateTrainingData called');
+  
+  // Try to get form data from the main modal first
+  let formData = null;
+  let trainingId = null;
+  
+  // Check if main modal exists and has data
+  const updateFoodName = document.getElementById('updateFoodName');
+  const updateCategory = document.getElementById('updateCategory');
+  const updateTemperature = document.getElementById('updateTemperature');
+  const updateHumidity = document.getElementById('updateHumidity');
+  const updatePh = document.getElementById('updatePh');
+  const updateActualStatus = document.getElementById('updateActualStatus');
+  const updateSource = document.getElementById('updateSource');
+  const updateDataQuality = document.getElementById('updateDataQuality');
+  const updateEnvironmentalFactors = document.getElementById('updateEnvironmentalFactors');
+  const updateTrainingDataBtn = document.getElementById('updateTrainingDataBtn');
+  
+  if (updateFoodName && updateCategory && updateTemperature && updateHumidity && updatePh && 
+      updateActualStatus && updateSource && updateDataQuality && updateEnvironmentalFactors && updateTrainingDataBtn) {
+    
+    console.log('📝 Using main modal form data');
+    formData = {
+      foodName: updateFoodName.value,
+      category: updateCategory.value,
+      temperature: parseFloat(updateTemperature.value),
+      humidity: parseFloat(updateHumidity.value),
+      ph: parseFloat(updatePh.value),
+      actualStatus: updateActualStatus.value,
+      source: updateSource.value,
+      dataQuality: parseInt(updateDataQuality.value),
+      environmentalFactors: updateEnvironmentalFactors.value
+    };
+    trainingId = updateTrainingDataBtn.getAttribute('data-training-id');
+  } else {
+    // Fallback to temporary modal
+    console.log('📝 Using temporary modal form data');
+    const tempFoodName = document.getElementById('tempFoodName');
+    const tempCategory = document.getElementById('tempCategory');
+    const tempTemperature = document.getElementById('tempTemperature');
+    const tempHumidity = document.getElementById('tempHumidity');
+    const tempPh = document.getElementById('tempPh');
+    const tempActualStatus = document.getElementById('tempActualStatus');
+    const tempSource = document.getElementById('tempSource');
+    const tempDataQuality = document.getElementById('tempDataQuality');
+    const tempEnvironmentalFactors = document.getElementById('tempEnvironmentalFactors');
+    const tempSaveBtn = document.getElementById('tempSaveBtn');
+    
+    if (tempFoodName && tempCategory && tempTemperature && tempHumidity && tempPh && 
+        tempActualStatus && tempSource && tempDataQuality && tempEnvironmentalFactors && tempSaveBtn) {
+      
+      formData = {
+        foodName: tempFoodName.value,
+        category: tempCategory.value,
+        temperature: parseFloat(tempTemperature.value),
+        humidity: parseFloat(tempHumidity.value),
+        ph: parseFloat(tempPh.value),
+        actualStatus: tempActualStatus.value,
+        source: tempSource.value,
+        dataQuality: parseInt(tempDataQuality.value),
+        environmentalFactors: tempEnvironmentalFactors.value
+      };
+      trainingId = tempSaveBtn.getAttribute('data-training-id');
+    }
+  }
+  
+  if (!formData || !trainingId) {
+    console.error('❌ Could not find form data or training ID');
+    alert('Form data or training ID not found');
+    return;
+  }
+  
+  console.log('📊 Form data:', formData);
+  console.log('🆔 Training ID:', trainingId);
+
+  // Validate form data
+  if (!formData.foodName || !formData.category || !formData.actualStatus || !formData.source) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  if (isNaN(formData.temperature) || isNaN(formData.humidity) || isNaN(formData.ph) || isNaN(formData.dataQuality)) {
+    alert('Please enter valid numeric values for temperature, humidity, pH, and data quality');
+    return;
+  }
+  
+  // Show loading state
+  const saveBtn = updateTrainingDataBtn || document.getElementById('tempSaveBtn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Updating...';
+  }
+
+  // Send data to backend
+  fetch(`/api/ml-training/update/${trainingId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Success - close modal and refresh data
+      if (updateTrainingDataBtn) {
+        closeUpdateTrainingModalFunc();
+      } else {
+        // Close temporary modal
+        const tempModal = document.getElementById('tempUpdateModal');
+        if (tempModal) tempModal.remove();
+      }
+      showSuccessMessage('Training data updated successfully!');
+      
+      // Explicit admin activity log
+      try {
+        if (window.logAdminActivity) {
+          const food = (formData.foodName || '').toString().trim();
+          window.logAdminActivity('UPDATE', { page: 'ml', target: food ? `Training data (${food})` : 'Training data' });
+        }
+      } catch (_) {}
+      
+      // Refresh ML data if function exists
+      if (typeof refreshMlData === 'function') {
+        refreshMlData();
+      }
+    } else {
+      throw new Error(data.message || 'Failed to update training data');
+    }
+  })
+  .catch(error => {
+    console.error('Error updating training data:', error);
+    alert('Error updating training data: ' + error.message);
+  })
+  .finally(() => {
+    // Reset button state
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Update Training Data';
     }
   });
 }

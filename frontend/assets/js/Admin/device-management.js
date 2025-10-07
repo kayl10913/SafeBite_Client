@@ -16,15 +16,13 @@ class DeviceManagementManager {
     }
 
     applyInlineFilters() {
-        const type = (document.getElementById('dfType')?.value || '').trim();
         const status = (document.getElementById('dfStatus')?.value || '').trim();
         const user = (document.getElementById('dfSearch')?.value || '').trim().toLowerCase();
         const filtered = this.deviceData.filter(d => {
-            const matchType = !type || d.deviceType === type;
             const matchStatus = !status || (String(d.status || '').toUpperCase() === String(status).toUpperCase());
             const userField = `${d.userUsername || ''} ${d.userEmail || ''} ${d.name || ''}`.toLowerCase();
             const matchUser = !user || userField.includes(user);
-            return matchType && matchStatus && matchUser; // Date range removed
+            return matchStatus && matchUser; // Type filter removed
         });
         this.filteredData = filtered;
         this.filtersActive = true;

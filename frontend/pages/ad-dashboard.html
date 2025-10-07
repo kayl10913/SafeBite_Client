@@ -228,6 +228,7 @@
       <div class="ml-card-header">
         <div class="ml-card-title">Training Data (<span id="mlSamplesCount">0</span>)</div>
         <div class="ml-actions">
+          <button class="ml-btn secondary" id="mlUpdateTraining">🔄 Update</button>
           <button class="ml-btn primary" id="mlAddTraining">+ Add Training Data</button>
         </div>
       </div>
@@ -240,6 +241,7 @@
             <th>Data Quality</th>
             <th>Source</th>
             <th>Date Added</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="mlSamplesTableBody"></tbody>
@@ -248,6 +250,114 @@
           <div id="mlSamplesPageInfo" class="pagination-info"></div>
           <div id="mlSamplesPageControls" class="pagination-controls"></div>
         </div>
+    </div>
+    
+    <!-- Update Training Data Modal -->
+    <div id="updateTrainingDataModal" class="modal" style="display: none;">
+      <div class="modal-content update-modal">
+        <div class="modal-header update-modal-header">
+          <h3 class="update-modal-title">
+            <span class="update-modal-icon">✏️</span>
+            Update Training Data
+          </h3>
+          <span class="close update-modal-close" id="closeUpdateTrainingModal">&times;</span>
+        </div>
+        <div class="modal-body update-modal-body">
+          <div class="update-modal-info">
+            <p class="update-modal-info-text">
+              <span class="update-modal-info-icon">ℹ️</span>
+              Update the details for the training data sample.
+            </p>
+          </div>
+          
+          <form id="updateTrainingDataForm">
+            <!-- Food Information Section -->
+            <div class="update-modal-section">
+              <h4 class="update-modal-section-title">
+                <span>🍎</span> Food Information
+              </h4>
+              <div class="update-modal-form-row">
+                <div class="update-modal-form-group">
+                  <label for="updateFoodName" class="update-modal-label">Food Name</label>
+                  <input type="text" id="updateFoodName" name="foodName" placeholder="e.g., Banana" readonly class="update-modal-input">
+                </div>
+                <div class="update-modal-form-group">
+                  <label for="updateCategory" class="update-modal-label">Category</label>
+                  <input type="text" id="updateCategory" name="category" placeholder="e.g., Fruits" readonly class="update-modal-input">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Environmental Conditions Section -->
+            <div class="update-modal-section">
+              <h4 class="update-modal-section-title">
+                <span>🌡️</span> Environmental Conditions
+              </h4>
+              <div class="update-modal-form-row-three">
+                <div class="update-modal-form-group">
+                  <label for="updateTemperature" class="update-modal-label">🌡️ Temp (°C)</label>
+                  <input type="number" id="updateTemperature" name="temperature" placeholder="25.0" step="0.1" required class="update-modal-input">
+                </div>
+                <div class="update-modal-form-group">
+                  <label for="updateHumidity" class="update-modal-label">💧 Humidity (%)</label>
+                  <input type="number" id="updateHumidity" name="humidity" placeholder="50.0" step="0.1" required class="update-modal-input">
+                </div>
+                <div class="update-modal-form-group">
+                  <label for="updatePh" class="update-modal-label">💨 Gas (ppm)</label>
+                  <input type="number" id="updatePh" name="ph" placeholder="100.0" step="0.1" required class="update-modal-input">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Status & Quality Section -->
+            <div class="update-modal-section">
+              <h4 class="update-modal-section-title">
+                <span>📊</span> Status & Quality
+              </h4>
+              <div class="update-modal-form-row">
+                <div class="update-modal-form-group">
+                  <label for="updateActualStatus" class="update-modal-label">Actual Status</label>
+                  <select id="updateActualStatus" name="actualStatus" required class="update-modal-select">
+                    <option value="">Select status</option>
+                    <option value="safe" class="update-modal-option safe">✅ Safe</option>
+                    <option value="caution" class="update-modal-option caution">⚠️ Caution</option>
+                    <option value="unsafe" class="update-modal-option unsafe">❌ Unsafe</option>
+                  </select>
+                </div>
+                <div class="update-modal-form-group">
+                  <label for="updateSource" class="update-modal-label">Data Source</label>
+                  <select id="updateSource" name="source" required class="update-modal-select">
+                    <option value="">Select source</option>
+                    <option value="manual" class="update-modal-option">👤 Manual</option>
+                    <option value="sensor" class="update-modal-option">📡 Sensor</option>
+                    <option value="user_feedback" class="update-modal-option">💬 User Feedback</option>
+                    <option value="expert" class="update-modal-option">🎓 Expert</option>
+                  </select>
+                </div>
+              </div>
+              <div class="update-modal-form-group">
+                <label for="updateDataQuality" class="update-modal-label">Data Quality (%)</label>
+                <input type="number" id="updateDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
+              </div>
+            </div>
+            
+            <!-- Environmental Factors Section -->
+            <div class="update-modal-section">
+              <h4 class="update-modal-section-title">
+                <span>🌍</span> Environmental Factors
+              </h4>
+              <div class="update-modal-form-group">
+                <label for="updateEnvironmentalFactors" class="update-modal-label">Additional Environmental Data (JSON)</label>
+                <textarea id="updateEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' class="update-modal-textarea" rows="3"></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer update-modal-footer">
+          <button type="button" class="update-modal-btn update-modal-btn-secondary" id="cancelUpdateTrainingBtn">Cancel</button>
+          <button type="button" class="update-modal-btn update-modal-btn-primary" id="updateTrainingDataBtn">Update Training Data</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -302,6 +412,7 @@
       </div>
       <div class="report-actions">
         <button id="mlApplyFilters" class="report-btn report-btn-primary"><span>🔎</span>Filter</button>
+        <button id="mlUpdate" class="report-btn report-btn-primary"><span>🔄</span>Update</button>
         <button id="mlExportCSV" class="report-btn report-btn-secondary"><span>📥</span>Download CSV</button>
         <button id="mlExportPDF" class="filter-btn export"><span>📄</span>Download PDF</button>
       </div>
@@ -1202,15 +1313,6 @@
             <input id="dfSearch" placeholder="Search device or user..." />
           </div>
           <div class="df-item">
-            <label>Type</label>
-            <select id="dfType">
-              <option value="">All</option>
-              <option value="Temperature">Temperature</option>
-              <option value="Humidity">Humidity</option>
-              <option value="Gas">Gas</option>
-            </select>
-          </div>
-          <div class="df-item">
             <label>Status</label>
             <select id="dfStatus">
               <option value="">All</option>
@@ -1461,120 +1563,164 @@
 
 <!-- ML Training Data Modal -->
 <div id="mlTrainingDataModal" class="modal" style="display: none;">
-  <div class="modal-content" style="max-width: 600px;">
-    <div class="modal-header">
-      <h3>Add Training Data</h3>
-      <span class="close" id="closeMlTrainingModal" style="cursor:pointer;">&times;</span>
+  <div class="update-modal">
+    <div class="update-modal-header">
+      <h3 class="update-modal-title">
+        <span class="update-modal-icon">📊</span>
+        Add Training Data
+      </h3>
+      <span class="update-modal-close" id="closeMlTrainingModal">&times;</span>
     </div>
-    <div class="modal-body">
-      <p style="color: #bfc9da; margin-bottom: 20px;">Enter the details for the new training data sample.</p>
+    <div class="update-modal-body">
+      <div class="update-modal-info">
+        <p class="update-modal-info-text">
+          <span class="update-modal-info-icon">ℹ️</span>
+          Enter the details for the new training data sample to improve ML predictions.
+        </p>
+      </div>
       
       <form id="mlTrainingDataForm">
-        <!-- Food Name & Category Row -->
-        <div class="ml-form-row">
-          <div class="ml-form-group">
-            <label for="mlFoodName">Food Name</label>
-            <input type="text" id="mlFoodName" name="foodName" placeholder="e.g., CARROT" required>
-          </div>
-          <div class="ml-form-group">
-            <label for="mlCategory">Category</label>
-            <input type="text" id="mlCategory" name="category" placeholder="e.g., VEGETABLE" required>
-          </div>
-        </div>
-        
-        <!-- Temperature, Humidity & pH Row -->
-        <div class="ml-form-row ml-form-row-three">
-          <div class="ml-form-group">
-            <label for="mlTemperature">Temperature (°C)</label>
-            <input type="number" id="mlTemperature" name="temperature" placeholder="25" step="0.1" required>
-          </div>
-          <div class="ml-form-group">
-            <label for="mlHumidity">Humidity (%)</label>
-            <input type="number" id="mlHumidity" name="humidity" placeholder="25" step="0.1" required>
-          </div>
-          <div class="ml-form-group">
-            <label for="mlPh">pH (ppm)</label>
-            <input type="number" id="mlPh" name="ph" placeholder="25" step="0.1" required>
+        <!-- Food Information Section -->
+        <div class="update-modal-section">
+          <h4 class="update-modal-section-title">
+            <span>🍎</span> Food Information
+          </h4>
+          <div class="update-modal-form-row">
+            <div class="update-modal-form-group">
+              <label for="mlFoodName" class="update-modal-label">Food Name</label>
+              <input type="text" id="mlFoodName" name="foodName" placeholder="e.g., Banana" required class="update-modal-input">
+            </div>
+            <div class="update-modal-form-group">
+              <label for="mlCategory" class="update-modal-label">Category</label>
+              <input type="text" id="mlCategory" name="category" placeholder="e.g., Fruits" required class="update-modal-input">
+            </div>
           </div>
         </div>
         
-        <!-- Actual Status & Source Row -->
-        <div class="ml-form-row">
-          <div class="ml-form-group">
-            <label for="mlActualStatus">Actual Status</label>
-            <select id="mlActualStatus" name="actualStatus" required>
-              <option value="">Select status</option>
-              <option value="safe">safe</option>
-              <option value="caution">caution</option>
-              <option value="unsafe">unsafe</option>
-            </select>
-          </div>
-          <div class="ml-form-group">
-            <label for="mlSource">Data Source</label>
-            <select id="mlSource" name="source" required>
-              <option value="">Select source</option>
-              <option value="manual">manual</option>
-              <option value="sensor">sensor</option>
-              <option value="user_feedback">user_feedback</option>
-              <option value="expert">expert</option>
-            </select>
+        <!-- Environmental Conditions Section -->
+        <div class="update-modal-section">
+          <h4 class="update-modal-section-title">
+            <span>🌡️</span> Environmental Conditions
+          </h4>
+          <div class="update-modal-form-row-three">
+            <div class="update-modal-form-group">
+              <label for="mlTemperature" class="update-modal-label">🌡️ Temp (°C)</label>
+              <input type="number" id="mlTemperature" name="temperature" placeholder="25.0" step="0.1" required class="update-modal-input">
+            </div>
+            <div class="update-modal-form-group">
+              <label for="mlHumidity" class="update-modal-label">💧 Humidity (%)</label>
+              <input type="number" id="mlHumidity" name="humidity" placeholder="50.0" step="0.1" required class="update-modal-input">
+            </div>
+            <div class="update-modal-form-group">
+              <label for="mlPh" class="update-modal-label">💨 Gas (ppm)</label>
+              <input type="number" id="mlPh" name="ph" placeholder="100.0" step="0.1" required class="update-modal-input">
+            </div>
           </div>
         </div>
         
-        <!-- Data Quality Row (Full Width) -->
-        <div class="ml-form-group ml-form-group-full">
-          <label for="mlDataQuality">Data Quality (%)</label>
-          <input type="number" id="mlDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required>
+        <!-- Status & Quality Section -->
+        <div class="update-modal-section">
+          <h4 class="update-modal-section-title">
+            <span>📋</span> Status & Quality
+          </h4>
+          <div class="update-modal-form-row">
+            <div class="update-modal-form-group">
+              <label for="mlActualStatus" class="update-modal-label">Actual Status</label>
+              <select id="mlActualStatus" name="actualStatus" required class="update-modal-select">
+                <option value="" class="update-modal-option">Select status</option>
+                <option value="safe" class="update-modal-option safe">✅ Safe</option>
+                <option value="caution" class="update-modal-option caution">⚠️ Caution</option>
+                <option value="unsafe" class="update-modal-option unsafe">❌ Unsafe</option>
+              </select>
+            </div>
+            <div class="update-modal-form-group">
+              <label for="mlSource" class="update-modal-label">Data Source</label>
+              <select id="mlSource" name="source" required class="update-modal-select">
+                <option value="" class="update-modal-option">Select source</option>
+                <option value="manual" class="update-modal-option">✋ Manual</option>
+                <option value="sensor" class="update-modal-option">📡 Sensor</option>
+                <option value="user_feedback" class="update-modal-option">💬 User Feedback</option>
+                <option value="expert" class="update-modal-option">🎓 Expert</option>
+              </select>
+            </div>
+          </div>
+          <div class="update-modal-form-group">
+            <label for="mlDataQuality" class="update-modal-label">Data Quality (%)</label>
+            <input type="number" id="mlDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
+          </div>
+        </div>
+        
+        <!-- Environmental Factors Section -->
+        <div class="update-modal-section">
+          <h4 class="update-modal-section-title">
+            <span>🌍</span> Environmental Factors
+          </h4>
+          <div class="update-modal-form-group">
+            <label for="mlEnvironmentalFactors" class="update-modal-label">Additional Environmental Data (JSON)</label>
+            <textarea id="mlEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' rows="3" class="update-modal-textarea"></textarea>
+          </div>
         </div>
       </form>
     </div>
-    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-      <button type="button" class="btn btn-secondary" id="cancelMlTrainingBtn">Cancel</button>
-      <button type="button" class="btn btn-primary" id="addMlTrainingDataBtn">Add Training Data</button>
+    <div class="update-modal-footer">
+      <button type="button" class="update-modal-btn update-modal-btn-secondary" id="cancelMlTrainingBtn">Cancel</button>
+      <button type="button" class="update-modal-btn update-modal-btn-primary" id="addMlTrainingDataBtn">Add Training Data</button>
     </div>
   </div>
 </div>
 
 <!-- Response Modal -->
-<div id="responseModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Respond to Feedback</h3>
-      <span class="close" onclick="closeResponseModal()">&times;</span>
+<div id="responseModal" class="modal" style="display: none;" onclick="if(event.target === this) closeResponseModal()">
+  <div class="modal-content" style="max-width: 650px; background: #0f172a; border: 1px solid #1f2a46; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); overflow: hidden;" onclick="event.stopPropagation()">
+    <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: none; padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 12px 12px 0 0;">
+      <h3 style="color: #fff; margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">💬</span>
+        Respond to Feedback
+      </h3>
+      <span class="close" onclick="closeResponseModal()" style="color: #bfc9da; font-size: 24px; font-weight: bold; cursor: pointer; transition: all 0.2s; line-height: 1; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='#bfc9da'; this.style.background='transparent'">&times;</span>
     </div>
-    <div class="modal-body">
-      <div class="feedback-details">
-        <h4>Feedback Details</h4>
-        <div id="modalFeedbackText" class="feedback-text"></div>
-        <div class="feedback-info">
-          <span id="modalCustomerName"></span> • 
-          <span id="modalFeedbackType"></span> • 
-          <span id="modalPriority"></span>
+    <div class="modal-body" style="color: #e0e6f6; padding: 24px; background: #0f172a;">
+      <div class="feedback-details" style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #1a2332 0%, #212c4d 100%); border-radius: 8px; border: 1px solid #2a3a4a;">
+        <h4 style="color: #4a9eff; margin: 0 0 12px 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 14px;">📝</span>
+          Feedback Details
+        </h4>
+        <div id="modalFeedbackText" class="feedback-text" style="background: #0f1419; border: 1px solid #2a3a4a; border-radius: 6px; padding: 16px; margin-bottom: 12px; color: #e0e6f6; line-height: 1.6; min-height: 60px; white-space: pre-wrap; word-wrap: break-word;"></div>
+        <div class="feedback-info" style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; color: #bfc9da;">
+          <span id="modalCustomerName" style="background: #1e2a4f; padding: 4px 8px; border-radius: 4px; border: 1px solid #2b3a66;"></span>
+          <span id="modalFeedbackType" style="background: #1e2a4f; padding: 4px 8px; border-radius: 4px; border: 1px solid #2b3a66;"></span>
+          <span id="modalPriority" style="background: #1e2a4f; padding: 4px 8px; border-radius: 4px; border: 1px solid #2b3a66;"></span>
         </div>
       </div>
       
-      <div class="form-group">
-        <label for="responseStatus">Status:</label>
-        <select id="responseStatus" class="form-control">
-          <option value="Active">Active</option>
-          <option value="Resolved">Resolved</option>
-          <option value="Archived">Archived</option>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="responseStatus" style="display: block; color: #bfc9da; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Status:</label>
+        <select id="responseStatus" class="form-control" style="width: 100%; background: #1a2332; border: 1px solid #2a3a4a; color: #e0e6f6; padding: 12px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'" onblur="this.style.borderColor='#2a3a4a'">
+          <option value="Active">🕐 Active</option>
+          <option value="Resolved">✅ Resolved</option>
+          <option value="Archived">📁 Archived</option>
         </select>
       </div>
       
-      <div class="form-group">
-        <label for="adminNotes">Admin Notes:</label>
-        <textarea id="adminNotes" class="form-control" placeholder="Add internal notes..."></textarea>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="display: block; color: #bfc9da; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Current Response to Customer:</label>
+        <div id="currentResponseText" class="current-response-display" style="background: #0f1419; border: 1px solid #2a3a4a; border-radius: 6px; padding: 16px; min-height: 80px; color: #bfc9da; font-style: italic; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; position: relative;">
+          <div style="position: absolute; top: 8px; right: 12px; font-size: 12px; color: #6b7280;">📋</div>
+          No response sent yet
+        </div>
       </div>
       
-      <div class="form-group">
-        <label for="responseText">Response to Customer:</label>
-        <textarea id="responseText" class="form-control" placeholder="Type your response to the customer..."></textarea>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="responseText" style="display: block; color: #bfc9da; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Response to Customer:</label>
+        <textarea id="responseText" class="form-control" placeholder="Type your response to the customer..." style="width: 100%; background: #1a2332; border: 1px solid #2a3a4a; color: #e0e6f6; padding: 12px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.5;" onfocus="this.style.borderColor='#3b7bfa'" onblur="this.style.borderColor='#2a3a4a'"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="closeResponseModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" onclick="saveResponse()">Save Response</button>
+    <div class="modal-footer" style="border-top: 1px solid #1f2a46; padding: 20px 24px 24px 24px; display: flex; gap: 12px; justify-content: flex-end; background: #0f172a;">
+      <button type="button" class="btn btn-secondary" onclick="closeResponseModal()" style="background: transparent; border: 1px solid #2a3b6d; color: #e0e6f6; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#1a2340'; this.style.borderColor='#3b7bfa'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6'">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="saveResponse()" style="background: #3b7bfa; border: 1px solid #3b7bfa; color: #fff; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#2d5fd8'; this.style.borderColor='#2d5fd8'" onmouseout="this.style.background='#3b7bfa'; this.style.borderColor='#3b7bfa'">
+        <span>💾</span>
+        Save Response
+      </button>
     </div>
   </div>
 </div>

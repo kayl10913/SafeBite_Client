@@ -1004,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tbody = document.getElementById('mlSamplesTableBody');
                     if (tbody) {
                         tbody.innerHTML = `
-                            <tr><td colspan="6" style="color:#f87171;text-align:center;padding:20px;">
+                            <tr><td colspan="7" style="color:#f87171;text-align:center;padding:20px;">
                                 Error loading training data
                             </td></tr>
                         `;
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (total === 0) {
                     const tr = document.createElement('tr');
                     const td = document.createElement('td');
-                    td.colSpan = 6; 
+                    td.colSpan = 7; 
                     td.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:28px 0;color:#bfc9da;"><div style="font-size:46px;line-height:1;opacity:0.8;">📊</div><div>No training data</div></div>`;
                     tr.appendChild(td); tbody.appendChild(tr);
                     if (pag) pag.style.display = 'none';
@@ -1034,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const start = (page-1)*size;
                 const end = Math.min(start+size, total);
                 const slice = rows.slice(start, end);
-                slice.forEach(r => {
+                slice.forEach((r, index) => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${r.food_name || ''}<div style="color:#9fb2e6;font-size:12px;">${r.food_category||''}</div></td>
@@ -1043,6 +1043,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td><div class="ml-progress"><span style="width:${Math.round((r.quality_score||0)*100)}%"></span></div></td>
                         <td>${(r.data_source||'').toUpperCase()}</td>
                         <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="ml-btn secondary update-training-btn" data-id="${r.id || r.training_id}" data-food="${r.food_name || ''}" style="font-size: 12px; padding: 4px 8px;">
+                                🔄 Update
+                            </button>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -1071,11 +1076,121 @@ document.addEventListener('DOMContentLoaded', function() {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
                 return token ? { 'Authorization': `Bearer ${token}` } : {};
             },
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 10000;
+                    font-size: 14px;
+                    font-weight: 500;
+                    max-width: 300px;
+                    word-wrap: break-word;
+                `;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }, 3000);
+            },
             setupEventListeners(){
                 const retrain = document.getElementById('mlRetrain');
                 if (retrain) retrain.addEventListener('click', ()=> alert('Retrain endpoint to be wired'));
                 const exportBtn = document.getElementById('mlExport');
                 if (exportBtn) exportBtn.addEventListener('click', ()=> alert('Export coming soon'));
+                
+                // ML Predictions Update button
+                const mlUpdateBtn = document.getElementById('mlUpdate');
+                if (mlUpdateBtn) {
+                    mlUpdateBtn.addEventListener('click', async () => {
+                        try {
+                            console.log('🔄 Updating ML Predictions data...');
+                            mlUpdateBtn.disabled = true;
+                            mlUpdateBtn.innerHTML = '<span>🔄</span>Updating...';
+                            
+                            // Refresh ML predictions data
+                            if (this.loadDetail) {
+                                await this.loadDetail();
+                            }
+                            
+                            // Show success message
+                            this.showToast('ML Predictions data updated successfully!', 'success');
+                            
+                        } catch (error) {
+                            console.error('Error updating ML predictions:', error);
+                            this.showToast('Error updating ML predictions data', 'error');
+                        } finally {
+                            mlUpdateBtn.disabled = false;
+                            mlUpdateBtn.innerHTML = '<span>🔄</span>Update';
+                        }
+                    });
+                }
+                
+                // Training Data Update button
+                const mlUpdateTrainingBtn = document.getElementById('mlUpdateTraining');
+                if (mlUpdateTrainingBtn) {
+                    mlUpdateTrainingBtn.addEventListener('click', async () => {
+                        try {
+                            console.log('🔄 Updating Training Data...');
+                            mlUpdateTrainingBtn.disabled = true;
+                            mlUpdateTrainingBtn.innerHTML = '🔄 Updating...';
+                            
+                            // Refresh training data
+                            if (this._loadSamples) {
+                                await this._loadSamples();
+                            }
+                            
+                            // Show success message
+                            this.showToast('Training Data updated successfully!', 'success');
+                            
+                        } catch (error) {
+                            console.error('Error updating training data:', error);
+                            this.showToast('Error updating training data', 'error');
+                        } finally {
+                            mlUpdateTrainingBtn.disabled = false;
+                            mlUpdateTrainingBtn.innerHTML = '🔄 Update';
+                        }
+                    });
+                }
+                
+                // Individual Training Data Update buttons (delegated event listener)
+                document.addEventListener('click', (e) => {
+                    console.log('🔍 Click detected on:', e.target);
+                    console.log('🔍 Target classes:', e.target.classList);
+                    
+                    if (e.target.classList.contains('update-training-btn')) {
+                        console.log('✅ Update training button clicked!');
+                        e.preventDefault();
+                        this.handleIndividualTrainingUpdate(e.target);
+                    }
+                });
+                
+                // Initialize update modal after page load
+                setTimeout(() => {
+                    const testModal = document.getElementById('updateTrainingDataModal');
+                    const testForm = document.getElementById('updateTrainingDataForm');
+                    const testBtn = document.getElementById('updateTrainingDataBtn');
+                    
+                    if (testModal && testForm && testBtn) {
+                        console.log('✅ Update modal elements initialized successfully');
+                    } else {
+                        console.warn('⚠️ Some update modal elements not found - fallback modal will be used if needed');
+                    }
+                }, 1000);
 
                 // Normalize text inputs to Sample Case (Title Case) on blur
                 const toSampleCase = (s) => {
@@ -1091,7 +1206,484 @@ document.addEventListener('DOMContentLoaded', function() {
                     category.addEventListener('blur', () => { category.value = toSampleCase(category.value.trim()); });
                 }
             },
-            loadDetail(){ /* placeholder */ }
+            async loadDetail(){
+                try {
+                    console.log('Loading ML predictions detail data...');
+                    
+                    // Get filter values
+                    const search = document.getElementById('mlSearch')?.value || '';
+                    const dateRange = document.getElementById('mlDateRange')?.value || 'all';
+                    const recordsPerPage = document.getElementById('mlRecordsPerPage')?.value || '25';
+                    
+                    // Build query parameters
+                    const params = new URLSearchParams();
+                    if (search) params.append('search', search);
+                    if (dateRange !== 'all') params.append('dateRange', dateRange);
+                    params.append('limit', recordsPerPage);
+                    
+                    // Add specific date parameters if needed
+                    if (dateRange === 'weekly' && document.getElementById('mlWeekPicker')?.value) {
+                        params.append('week', document.getElementById('mlWeekPicker').value);
+                    }
+                    if (dateRange === 'monthly' && document.getElementById('mlMonthPicker')?.value) {
+                        params.append('month', document.getElementById('mlMonthPicker').value);
+                    }
+                    if (dateRange === 'yearly' && document.getElementById('mlYearPicker')?.value) {
+                        params.append('year', document.getElementById('mlYearPicker').value);
+                    }
+                    
+                    const url = `/api/ml/analytics/detail?${params.toString()}`;
+                    console.log('Fetching ML predictions from:', url);
+                    
+                    const response = await fetch(url, { headers: this._authHeaders() });
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.message || 'Failed to load ML predictions');
+                    }
+                    
+                    // Update the table with new data
+                    this.updateMlPredictionsTable(result.data || []);
+                    
+                    console.log('ML predictions detail loaded successfully');
+                    
+                } catch (error) {
+                    console.error('Error loading ML predictions detail:', error);
+                    this.showToast('Error loading ML predictions data', 'error');
+                }
+            },
+            updateMlPredictionsTable(data) {
+                const tbody = document.querySelector('#ml-predictions-detail-template tbody, .admin-log-table tbody');
+                if (!tbody) {
+                    console.error('ML predictions table body not found');
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                if (!data || data.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="7" style="text-align: center; padding: 20px; color: #666;">No ML predictions found</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+                
+                data.forEach(prediction => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(prediction.timestamp || prediction.created_at).toLocaleString()}</td>
+                        <td>${prediction.device_id || prediction.sensor_id || 'N/A'}</td>
+                        <td>${prediction.user_email || prediction.username || 'N/A'}</td>
+                        <td>${prediction.sensor_type || prediction.type || 'N/A'}</td>
+                        <td>${prediction.model_name || prediction.model || 'N/A'}</td>
+                        <td>${prediction.prediction || prediction.result || 'N/A'}</td>
+                        <td>${prediction.confidence ? `${(prediction.confidence * 100).toFixed(1)}%` : 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+            async handleIndividualTrainingUpdate(button) {
+                try {
+                    const trainingId = button.getAttribute('data-id');
+                    const foodName = button.getAttribute('data-food');
+                    
+                    if (!this._samplesAll || this._samplesAll.length === 0) {
+                        this.showToast('No training data available', 'error');
+                        return;
+                    }
+                    
+                    // Try multiple ways to find the training data
+                    let trainingData = null;
+                    
+                    // Method 1: Direct ID match
+                    trainingData = this._samplesAll.find(item => 
+                        item.id == trainingId || item.training_id == trainingId
+                    );
+                    
+                    if (!trainingData) {
+                        // Method 2: String conversion
+                        trainingData = this._samplesAll.find(item => 
+                            String(item.id) === String(trainingId) || 
+                            String(item.training_id) === String(trainingId)
+                        );
+                    }
+                    
+                    if (!trainingData) {
+                        // Method 3: Partial match
+                        trainingData = this._samplesAll.find(item => 
+                            String(item.id).includes(String(trainingId)) || 
+                            String(item.training_id).includes(String(trainingId))
+                        );
+                    }
+                    
+                    if (!trainingData) {
+                        // Create a fallback training data object
+                        trainingData = {
+                            id: trainingId,
+                            training_id: trainingId,
+                            food_name: foodName || 'Unknown Food',
+                            food_category: 'Unknown Category',
+                            temperature: 25,
+                            humidity: 50,
+                            gas_level: 100,
+                            actual_spoilage_status: 'safe',
+                            data_source: 'manual',
+                            quality_score: 0.95
+                        };
+                    }
+                    
+                    // Try to open the modal directly
+                    this.openUpdateModalDirect(trainingData);
+                    
+                } catch (error) {
+                    console.error('Error opening update modal:', error);
+                    this.showToast('Error opening update modal', 'error');
+                }
+            },
+            openUpdateModal(trainingData) {
+                console.log('🔍 Opening update modal with data:', trainingData);
+                
+                // Get the new update modal elements
+                const modal = document.getElementById('updateTrainingDataModal');
+                console.log('🔍 Modal element found:', modal);
+                
+                if (!modal) {
+                    console.error('❌ Update modal element not found!');
+                    console.log('🔍 Available modals in DOM:', document.querySelectorAll('.modal'));
+                    this.showToast('Update modal not found', 'error');
+                    return;
+                }
+                
+                const modalHeader = modal.querySelector('.modal-header h3');
+                const form = document.getElementById('updateTrainingDataForm');
+                const saveBtn = document.getElementById('updateTrainingDataBtn');
+                
+                console.log('🔍 Modal sub-elements found:', { modalHeader, form, saveBtn });
+                
+                if (!modalHeader || !form || !saveBtn) {
+                    console.error('❌ Update modal sub-elements not found!');
+                    console.log('🔍 Available forms:', document.querySelectorAll('form'));
+                    console.log('🔍 Available buttons:', document.querySelectorAll('button'));
+                    this.showToast('Update modal elements not found', 'error');
+                    return;
+                }
+                
+                // Pre-fill form with existing data
+                const foodNameInput = document.getElementById('updateFoodName');
+                const categoryInput = document.getElementById('updateCategory');
+                const temperatureInput = document.getElementById('updateTemperature');
+                const humidityInput = document.getElementById('updateHumidity');
+                const phInput = document.getElementById('updatePh');
+                const actualStatusSelect = document.getElementById('updateActualStatus');
+                const sourceSelect = document.getElementById('updateSource');
+                const dataQualityInput = document.getElementById('updateDataQuality');
+                
+                // Set form values
+                if (foodNameInput) foodNameInput.value = trainingData.food_name || '';
+                if (categoryInput) categoryInput.value = trainingData.food_category || '';
+                if (temperatureInput) temperatureInput.value = trainingData.temperature || '';
+                if (humidityInput) humidityInput.value = trainingData.humidity || '';
+                if (phInput) phInput.value = trainingData.gas_level || '';
+                if (actualStatusSelect) actualStatusSelect.value = trainingData.actual_spoilage_status || '';
+                if (sourceSelect) sourceSelect.value = trainingData.data_source || '';
+                if (dataQualityInput) dataQualityInput.value = Math.round((trainingData.quality_score || 0) * 100);
+                
+                // Add training ID to save button
+                saveBtn.setAttribute('data-training-id', trainingData.id || trainingData.training_id);
+                
+                // Show the modal with forced visibility
+                modal.style.display = 'block';
+                modal.style.zIndex = '10000'; // Ensure it's on top
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                
+                console.log('✅ Update modal opened successfully');
+                console.log('🔍 Modal styles applied:', {
+                    display: modal.style.display,
+                    zIndex: modal.style.zIndex,
+                    visibility: modal.style.visibility,
+                    opacity: modal.style.opacity
+                });
+            },
+            openUpdateModalDirect(trainingData) {
+                // Try multiple ways to find the modal
+                let modal = document.getElementById('updateTrainingDataModal');
+                
+                if (!modal) {
+                    modal = document.querySelector('#updateTrainingDataModal');
+                }
+                
+                if (!modal) {
+                    modal = document.querySelector('.modal[id*="update"]');
+                }
+                
+                if (!modal) {
+                    this.createTemporaryModal(trainingData);
+                    return;
+                }
+                
+                // Pre-fill form data
+                const foodNameInput = document.getElementById('updateFoodName');
+                const categoryInput = document.getElementById('updateCategory');
+                const temperatureInput = document.getElementById('updateTemperature');
+                const humidityInput = document.getElementById('updateHumidity');
+                const phInput = document.getElementById('updatePh');
+                const actualStatusSelect = document.getElementById('updateActualStatus');
+                const sourceSelect = document.getElementById('updateSource');
+                const dataQualityInput = document.getElementById('updateDataQuality');
+                const environmentalFactorsInput = document.getElementById('updateEnvironmentalFactors');
+                
+                if (foodNameInput) foodNameInput.value = trainingData.food_name || '';
+                if (categoryInput) categoryInput.value = trainingData.food_category || '';
+                if (temperatureInput) temperatureInput.value = trainingData.temperature || '';
+                if (humidityInput) humidityInput.value = trainingData.humidity || '';
+                if (phInput) phInput.value = trainingData.gas_level || '';
+                if (actualStatusSelect) actualStatusSelect.value = trainingData.actual_spoilage_status || '';
+                if (sourceSelect) sourceSelect.value = trainingData.data_source || '';
+                if (dataQualityInput) dataQualityInput.value = Math.round((trainingData.quality_score || 0) * 100);
+                if (environmentalFactorsInput) {
+                    const envFactors = trainingData.environmental_factors;
+                    if (envFactors) {
+                        environmentalFactorsInput.value = typeof envFactors === 'string' ? envFactors : JSON.stringify(envFactors, null, 2);
+                    }
+                }
+                
+                // Set training ID on save button
+                const saveBtn = document.getElementById('updateTrainingDataBtn');
+                if (saveBtn) {
+                    saveBtn.setAttribute('data-training-id', trainingData.id || trainingData.training_id);
+                }
+                
+                // Force show modal with all possible styles
+                modal.style.cssText = `
+                    display: block !important;
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgba(0,0,0,0.5) !important;
+                    z-index: 10000 !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                `;
+            },
+            createTemporaryModal(trainingData) {
+                
+                // Create modal HTML directly
+                const modalHTML = `
+                    <div id="tempUpdateModal" style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0,0,0,0.7);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        backdrop-filter: blur(4px);
+                    ">
+                        <div class="update-modal" style="max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                            <div class="update-modal-header">
+                                <h3 class="update-modal-title">
+                                    <span class="update-modal-icon">✏️</span>
+                                    Update Training Data
+                                </h3>
+                            </div>
+                            <div class="update-modal-body">
+                                <div class="update-modal-info">
+                                    <p class="update-modal-info-text">
+                                        <span class="update-modal-info-icon">ℹ️</span>
+                                        Update the details for the training data sample.
+                                    </p>
+                                </div>
+                            <form id="tempUpdateForm">
+                                <!-- Food Information Section -->
+                                <div class="update-modal-section">
+                                    <h4 class="update-modal-section-title">
+                                        <span>🍎</span> Food Information
+                                    </h4>
+                            <div class="update-modal-form-row">
+                                <div class="update-modal-form-group">
+                                    <label class="update-modal-label">Food Name</label>
+                                    <input type="text" id="tempFoodName" value="${trainingData.food_name || ''}" readonly class="update-modal-input">
+                                </div>
+                                <div class="update-modal-form-group">
+                                    <label class="update-modal-label">Category</label>
+                                    <input type="text" id="tempCategory" value="${trainingData.food_category || ''}" readonly class="update-modal-input">
+                                </div>
+                            </div>
+                                </div>
+                                
+                        <!-- Environmental Conditions Section -->
+                        <div class="update-modal-section">
+                            <h4 class="update-modal-section-title">
+                                <span>🌡️</span> Environmental Conditions
+                            </h4>
+                            <div class="update-modal-form-row-three">
+                                <div class="update-modal-form-group">
+                                    <label class="update-modal-label">🌡️ Temp (°C)</label>
+                                    <input type="number" id="tempTemperature" value="${trainingData.temperature || ''}" step="0.1" class="update-modal-input">
+                                </div>
+                                <div class="update-modal-form-group">
+                                    <label class="update-modal-label">💧 Humidity (%)</label>
+                                    <input type="number" id="tempHumidity" value="${trainingData.humidity || ''}" step="0.1" class="update-modal-input">
+                                </div>
+                                <div class="update-modal-form-group">
+                                    <label class="update-modal-label">💨 Gas (ppm)</label>
+                                    <input type="number" id="tempPh" value="${trainingData.gas_level || ''}" step="0.1" class="update-modal-input">
+                                </div>
+                            </div>
+                        </div>
+                                
+                                <!-- Status & Quality Section -->
+                                <div class="update-modal-section">
+                                    <h4 class="update-modal-section-title">
+                                        <span>📊</span> Status & Quality
+                                    </h4>
+                                    <div class="update-modal-form-row" style="margin-bottom: 12px;">
+                                        <div class="update-modal-form-group">
+                                            <label class="update-modal-label">Actual Status</label>
+                                            <select id="tempActualStatus" class="update-modal-select">
+                                                <option value="">Select status</option>
+                                                <option value="safe" ${trainingData.actual_spoilage_status === 'safe' ? 'selected' : ''} class="update-modal-option safe">✅ Safe</option>
+                                                <option value="caution" ${trainingData.actual_spoilage_status === 'caution' ? 'selected' : ''} class="update-modal-option caution">⚠️ Caution</option>
+                                                <option value="unsafe" ${trainingData.actual_spoilage_status === 'unsafe' ? 'selected' : ''} class="update-modal-option unsafe">❌ Unsafe</option>
+                                            </select>
+                                        </div>
+                                        <div class="update-modal-form-group">
+                                            <label class="update-modal-label">Data Source</label>
+                                            <select id="tempSource" class="update-modal-select">
+                                                <option value="">Select source</option>
+                                                <option value="manual" ${trainingData.data_source === 'manual' ? 'selected' : ''} class="update-modal-option">👤 Manual</option>
+                                                <option value="sensor" ${trainingData.data_source === 'sensor' ? 'selected' : ''} class="update-modal-option">📡 Sensor</option>
+                                                <option value="user_feedback" ${trainingData.data_source === 'user_feedback' ? 'selected' : ''} class="update-modal-option">💬 User Feedback</option>
+                                                <option value="expert" ${trainingData.data_source === 'expert' ? 'selected' : ''} class="update-modal-option">🎓 Expert</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                            <div class="update-modal-form-group">
+                                <label class="update-modal-label">Data Quality (%)</label>
+                                <input type="number" id="tempDataQuality" value="${Math.round((trainingData.quality_score || 0) * 100)}" min="0" max="100" step="1" class="update-modal-input">
+                            </div>
+                        </div>
+                        
+                        <!-- Environmental Factors Section -->
+                        <div class="update-modal-section">
+                            <h4 class="update-modal-section-title">
+                                <span>🌍</span> Environmental Factors
+                            </h4>
+                            <div class="update-modal-form-group">
+                                <label class="update-modal-label">Additional Environmental Data (JSON)</label>
+                                <textarea id="tempEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' class="update-modal-textarea" rows="3">${trainingData.environmental_factors ? (typeof trainingData.environmental_factors === 'string' ? trainingData.environmental_factors : JSON.stringify(trainingData.environmental_factors, null, 2)) : ''}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                            <div class="update-modal-footer">
+                                <button type="button" id="tempCancelBtn" class="update-modal-btn update-modal-btn-secondary">Cancel</button>
+                                <button type="button" id="tempSaveBtn" data-training-id="${trainingData.id || trainingData.training_id}" class="update-modal-btn update-modal-btn-primary">Update Training Data</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Add event listeners
+                document.getElementById('tempCancelBtn').onclick = () => {
+                    document.getElementById('tempUpdateModal').remove();
+                };
+                
+                document.getElementById('tempSaveBtn').onclick = () => {
+                    // Use the main updateTrainingData function
+                    if (typeof updateTrainingData === 'function') {
+                        updateTrainingData();
+                    } else {
+                        this.saveTemporaryModal(trainingData.id || trainingData.training_id);
+                    }
+                };
+                
+                // Close on background click
+                document.getElementById('tempUpdateModal').onclick = (e) => {
+                    if (e.target.id === 'tempUpdateModal') {
+                        document.getElementById('tempUpdateModal').remove();
+                    }
+                };
+                
+            },
+            saveTemporaryModal(trainingId) {
+                console.log('💾 Saving temporary modal data...');
+                
+                const formData = {
+                    foodName: document.getElementById('tempFoodName').value,
+                    category: document.getElementById('tempCategory').value,
+                    temperature: parseFloat(document.getElementById('tempTemperature').value),
+                    humidity: parseFloat(document.getElementById('tempHumidity').value),
+                    ph: parseFloat(document.getElementById('tempPh').value),
+                    actualStatus: document.getElementById('tempActualStatus').value,
+                    source: document.getElementById('tempSource').value,
+                    dataQuality: parseInt(document.getElementById('tempDataQuality').value)
+                };
+                
+                // Validate form data
+                if (!formData.foodName || !formData.category || !formData.actualStatus || !formData.source) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                if (isNaN(formData.temperature) || isNaN(formData.humidity) || isNaN(formData.ph) || isNaN(formData.dataQuality)) {
+                    alert('Please enter valid numeric values for temperature, humidity, pH, and data quality');
+                    return;
+                }
+                
+                // Show loading state
+                const saveBtn = document.getElementById('tempSaveBtn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Updating...';
+                
+                // Send data to backend
+                fetch(`/api/ml-training/update/${trainingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Success - close modal and refresh data
+                        document.getElementById('tempUpdateModal').remove();
+                        this.showToast('Training data updated successfully!', 'success');
+                        
+                        // Refresh ML data if function exists
+                        if (typeof refreshMlData === 'function') {
+                            refreshMlData();
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to update training data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating training data:', error);
+                    alert('Error updating training data: ' + error.message);
+                })
+                .finally(() => {
+                    // Reset button state
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Update Training Data';
+                });
+            }
         };
     }
     // Global helper to refresh ML tables/kpis after adding data
