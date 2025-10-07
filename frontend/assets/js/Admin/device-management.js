@@ -112,7 +112,9 @@ class DeviceManagementManager {
     }
 
     setupEventListeners() {
+        console.log('🔧 Setting up event listeners...');
         if (this.listenersBound) {
+            console.log('⚠️ Event listeners already bound, skipping...');
             return; // Avoid rebinding multiple times when SPA swaps pages
         }
         // Export buttons
@@ -124,7 +126,7 @@ class DeviceManagementManager {
         // Refresh button
         const refreshBtn = document.querySelector('.device-management-btn-primary');
         if (refreshBtn && refreshBtn.textContent.includes('Refresh')) {
-            refreshBtn.addEventListener('click', () => this.refreshData());
+            refreshBtn.addEventListener('click', () => this.refreshData(true));
         }
 
         // Add Device button
@@ -133,9 +135,13 @@ class DeviceManagementManager {
             addDeviceBtn.addEventListener('click', () => this.showAddDeviceModal());
         }
 
-        // Action buttons in tables
+        // Action buttons in tables - use event delegation to handle dynamically created buttons
         document.addEventListener('click', (e) => {
+            console.log('🔍 Click event detected on:', e.target);
             if (e.target.classList.contains('device-action-btn')) {
+                console.log('✅ Device action button clicked:', e.target.textContent);
+                e.preventDefault();
+                e.stopPropagation();
                 this.handleActionClick(e.target);
             }
         });
@@ -166,8 +172,9 @@ class DeviceManagementManager {
             const el = document.getElementById(id);
             if (el) el.addEventListener('click', () => this.hideAddDeviceModal());
         });
-        const addSave = document.getElementById('addDeviceSave');
-        if (addSave) addSave.addEventListener('click', () => this.saveNewDevice());
+        // Add Device save button - handled by delegated event listener below
+        // const addSave = document.getElementById('addDeviceSave');
+        // if (addSave) addSave.addEventListener('click', () => this.saveNewDevice());
 
         // Removed Generate button; Sensor ID must be entered manually
 
@@ -218,6 +225,7 @@ class DeviceManagementManager {
         });
 
         this.listenersBound = true;
+        console.log('✅ Event listeners setup completed');
 
         // Global delegated handlers that survive SPA swaps
         if (!this.delegatedBound) {
@@ -236,7 +244,7 @@ class DeviceManagementManager {
                 const refreshBtn = target.closest('.device-management-btn-primary');
                 if (refreshBtn && /refresh/i.test((refreshBtn.textContent || '').trim())) {
                     e.preventDefault();
-                    this.refreshData();
+                    this.refreshData(true);
                     return;
                 }
 
@@ -283,19 +291,37 @@ class DeviceManagementManager {
 
     // Public helper to rebind UI listeners after SPA swaps the HTML
     rebindUI() {
+        console.log('🔄 Rebinding UI listeners after SPA content change...');
+        console.log('🔄 Current device data length:', this.deviceData ? this.deviceData.length : 0);
+        
+        // Reset the listeners bound flag to allow re-setup
+        this.listenersBound = false;
         this.setupEventListeners();
+        
         // Reset pagination and refresh data when returning to the page
         this.pageIndex = 0;
         this.filtersActive = false;
         this.filteredData = [];
-        // Refresh the data and render the page
-        this.refreshData();
+        
+        // If we already have device data, just re-render the tables
+        if (this.deviceData && this.deviceData.length > 0) {
+            console.log('🔄 Re-rendering tables with existing data...');
+            this.populateTables();
+            this.filteredData = this.deviceData;
+            this.renderPage();
+        } else {
+            console.log('🔄 No existing data, refreshing from server...');
+            // Refresh the data and render the page
+            this.refreshData(false);
+        }
     }
 
     async loadDeviceData() {
         try {
             console.log('🔄 Attempting to fetch device data from /api/device-management/devices');
             const response = await fetch('/api/device-management/devices');
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -303,28 +329,141 @@ class DeviceManagementManager {
             
             const result = await response.json();
             console.log('📡 API Response:', result);
+            console.log('📡 API Response data length:', result.data ? result.data.length : 'no data');
+            console.log('📡 First few API data items:', result.data ? result.data.slice(0, 3) : 'no data');
+            
+            // COMPREHENSIVE DEBUG: Check if we have the expected data structure
+            if (result.data && result.data.length > 0) {
+                console.log('🔍 DETAILED API DATA ANALYSIS:');
+                result.data.forEach((item, index) => {
+                    console.log(`🔍 Item ${index}:`, {
+                        sensor_id: item.sensor_id,
+                        user_email: item.user_email,
+                        user_username: item.user_username,
+                        device_type: item.device_type,
+                        status: item.status,
+                        has_user_email: !!item.user_email,
+                        user_email_type: typeof item.user_email
+                    });
+                });
+            } else {
+                console.error('❌ NO API DATA RECEIVED!');
+                console.error('❌ Result object:', result);
+            }
             
             if (result.success) {
-                this.deviceData = result.data.map(device => {
+                // Group sensors by user
+                const userGroups = {};
+                console.log('🔍 STARTING GROUPING PROCESS...');
+                result.data.forEach((device, index) => {
+                    console.log(`🔍 Processing device ${index}:`, device);
+                    const userKey = device.user_email || 'unassigned';
+                    console.log(`🔍 User key for device ${index}: "${userKey}"`);
+                    
+                    if (!userGroups[userKey]) {
+                        console.log(`🔍 Creating new user group for: "${userKey}"`);
+                        userGroups[userKey] = {
+                            userEmail: device.user_email || 'N/A',
+                            userUsername: device.user_username || 'N/A',
+                            userRole: device.user_role || 'N/A',
+                            sensors: [],
+                            lastUpdateMs: 0
+                        };
+                    } else {
+                        console.log(`🔍 Adding to existing user group: "${userKey}"`);
+                    }
+                    
                     const lastUpdateDate = device.last_update ? new Date(device.last_update) : null;
                     const lastUpdateMs = lastUpdateDate ? lastUpdateDate.getTime() : 0;
-                    return {
-                    id: `DEV-${device.sensor_id}`,
-                    name: device.device_name,
-                    type: 'IoT Sensor',
-                    deviceId: device.sensor_id,
-                    location: device.user_username ? `${device.user_username} (${device.user_email || 'N/A'})` : (device.user_email || 'Unassigned'),
-                    userEmail: device.user_email || 'N/A',
-                    userUsername: device.user_username || 'N/A',
-                    userRole: device.user_role || 'N/A',
-                    deviceType: device.device_type,
-                    status: device.status,
+                    
+                    userGroups[userKey].sensors.push({
+                        id: `DEV-${device.sensor_id}`,
+                        name: device.device_name,
+                        deviceId: device.sensor_id,
+                        deviceType: device.device_type,
+                        status: device.status,
                         timestamp: lastUpdateDate ? lastUpdateDate.toLocaleDateString() : '',
                         time: lastUpdateDate ? lastUpdateDate.toLocaleTimeString() : '',
                         lastUpdateMs
-                    };
+                    });
+                    
+                    // Keep track of the most recent update
+                    if (lastUpdateMs > userGroups[userKey].lastUpdateMs) {
+                        userGroups[userKey].lastUpdateMs = lastUpdateMs;
+                    }
                 });
-                console.log('📊 Device data loaded from database:', this.deviceData.length, 'records from all users');
+                
+                // Convert grouped data to device entries (one per user)
+                console.log('🔍 User groups before processing:', userGroups);
+                console.log('🔍 User groups keys:', Object.keys(userGroups));
+                console.log('🔍 User groups values:', Object.values(userGroups));
+                
+                // DETAILED USER GROUP ANALYSIS
+                Object.keys(userGroups).forEach(key => {
+                    const group = userGroups[key];
+                    console.log(`🔍 User group "${key}":`, {
+                        userEmail: group.userEmail,
+                        userUsername: group.userUsername,
+                        sensorCount: group.sensors ? group.sensors.length : 0,
+                        sensors: group.sensors ? group.sensors.map(s => ({deviceId: s.deviceId, deviceType: s.deviceType})) : 'NO SENSORS'
+                    });
+                });
+                
+                this.deviceData = Object.values(userGroups).map((userGroup, index) => {
+                    console.log(`🔍 Processing user group ${index}:`, userGroup);
+                    console.log(`🔍 User group sensors:`, userGroup.sensors);
+                    
+                    const sensorCount = userGroup.sensors ? userGroup.sensors.length : 0;
+                    const onlineCount = userGroup.sensors ? userGroup.sensors.filter(s => s.status === 'ONLINE').length : 0;
+                    const overallStatus = onlineCount === sensorCount ? 'ONLINE' : (onlineCount > 0 ? 'PARTIAL' : 'OFFLINE');
+                    
+                    // Create user-friendly device ID
+                    const sensorIdsWithTypes = userGroup.sensors && userGroup.sensors.length > 0
+                        ? userGroup.sensors
+                            .sort((a, b) => a.deviceId - b.deviceId) // Sort by sensor ID
+                            .map(sensor => {
+                                const typeAbbr = sensor.deviceType.toLowerCase().substring(0, 3); // temp, hum, gas
+                                return `${sensor.deviceId}-${typeAbbr}`;
+                            })
+                            .join(' • ')
+                        : '';
+                    
+                    const deviceId = sensorIdsWithTypes || `Device-${index + 1}`;
+                    
+                    const finalDevice = {
+                        id: deviceId,
+                        name: `${userGroup.userUsername} (${sensorCount} sensors)`,
+                        type: 'User Device Set',
+                        location: userGroup.userEmail,
+                        userEmail: userGroup.userEmail,
+                        userUsername: userGroup.userUsername,
+                        userRole: userGroup.userRole,
+                        deviceType: 'Multi-Sensor Device',
+                        status: overallStatus,
+                        sensorCount: sensorCount,
+                        onlineCount: onlineCount,
+                        sensors: userGroup.sensors || [],
+                        timestamp: userGroup.lastUpdateMs ? new Date(userGroup.lastUpdateMs).toLocaleDateString() : '',
+                        time: userGroup.lastUpdateMs ? new Date(userGroup.lastUpdateMs).toLocaleTimeString() : '',
+                        lastUpdateMs: userGroup.lastUpdateMs
+                    };
+                    
+                    console.log(`🔍 Final device ${index}:`, {
+                        id: finalDevice.id,
+                        userEmail: finalDevice.userEmail,
+                        sensorCount: finalDevice.sensorCount,
+                        sensors: finalDevice.sensors ? finalDevice.sensors.map(s => s.deviceId) : 'NO SENSORS'
+                    });
+                    
+                    return finalDevice;
+                });
+                
+                console.log('📊 Device data grouped by user:', this.deviceData.length, 'user groups from all users');
+                console.log('📊 Final device data:', this.deviceData);
+                this.deviceData.forEach((device, index) => {
+                    console.log(`📊 Device ${index}:`, device);
+                    console.log(`📊 Device ${index} sensors:`, device.sensors);
+                });
             } else {
                 console.error('❌ API returned error:', result.message);
                 this.showToast(`Error loading device data: ${result.message}`);
@@ -378,31 +517,62 @@ class DeviceManagementManager {
             
             const result = await response.json();
             console.log('📡 Stats API Response:', result);
+            console.log('📡 Stats API Debug Info:', result.debug);
             
             if (!result.success) {
                 console.error('❌ Stats API returned error:', result.message);
                 this.showToast(`Error loading statistics: ${result.message}`);
             }
 
-            // Regardless of backend response, derive device-level stats from sensors so 1 device = 3 sensors
-            const derived = this.computeDeviceStatsFromSensors();
+            // Use backend stats if available, otherwise derive from frontend data
             const statCards = document.querySelectorAll('.device-management-stat-card');
             if (statCards.length >= 4) {
-                statCards[0].querySelector('.stat-value').textContent = String(derived.totalDevices);
-                statCards[1].querySelector('.stat-value').textContent = String(derived.activeDevices);
-                statCards[2].querySelector('.stat-value').textContent = `${derived.healthPct.toFixed(2)}%`;
-                statCards[3].querySelector('.stat-value').textContent = String(derived.alerts);
-                const alertTrend = statCards[3].querySelector('.stat-trend');
-                if (alertTrend) alertTrend.textContent = derived.alerts > 1 ? 'device issues' : '↓ No issues';
-                // Trends under totals
-                const trend1 = statCards[0].querySelector('.stat-trend');
-                if (trend1) trend1.textContent = '↑ 3 sensors';
-                const trend2 = statCards[1].querySelector('.stat-trend');
-                const pctOnline = derived.totalDevices > 0 ? Math.round((derived.activeDevices/derived.totalDevices)*100) : 0;
-                if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
-                const trend3 = statCards[2].querySelector('.stat-trend');
-                if (trend3) trend3.textContent = derived.healthPct >= 99.5 ? '↑ All operational' : '↓ Needs attention';
-                console.log('📈 Derived Statistics applied:', derived);
+                if (result.success && result.data) {
+                    // Use backend statistics
+                    const stats = result.data;
+                    console.log('📊 Using backend statistics:', stats);
+                    statCards[0].querySelector('.stat-value').textContent = String(stats.total_devices || 0);
+                    statCards[1].querySelector('.stat-value').textContent = String(stats.active_devices || 0);
+                    statCards[2].querySelector('.stat-value').textContent = `${stats.device_health || 0}%`;
+                    statCards[3].querySelector('.stat-value').textContent = String(stats.alerts || 0);
+                    
+                    // Update trends
+                    const alertTrend = statCards[3].querySelector('.stat-trend');
+                    if (alertTrend) alertTrend.textContent = (stats.alerts || 0) > 0 ? 'device issues' : '↓ No issues';
+                    
+                    const trend1 = statCards[0].querySelector('.stat-trend');
+                    if (trend1) trend1.textContent = `↑ ${(stats.total_devices || 0) * 3} sensors`;
+                    
+                    const trend2 = statCards[1].querySelector('.stat-trend');
+                    const pctOnline = (stats.total_devices || 0) > 0 ? Math.round(((stats.active_devices || 0)/(stats.total_devices || 1))*100) : 0;
+                    if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
+                    
+                    const trend3 = statCards[2].querySelector('.stat-trend');
+                    if (trend3) trend3.textContent = (stats.device_health || 0) >= 99.5 ? '↑ All operational' : '↓ Needs attention';
+                } else {
+                    // Fallback to derived statistics
+                    console.log('📊 Using derived statistics (fallback)');
+                    const derived = this.computeDeviceStatsFromSensors();
+                    statCards[0].querySelector('.stat-value').textContent = String(derived.totalDevices);
+                    statCards[1].querySelector('.stat-value').textContent = String(derived.activeDevices);
+                    statCards[2].querySelector('.stat-value').textContent = `${derived.healthPct.toFixed(2)}%`;
+                    statCards[3].querySelector('.stat-value').textContent = String(derived.alerts);
+                    
+                    const alertTrend = statCards[3].querySelector('.stat-trend');
+                    if (alertTrend) alertTrend.textContent = derived.alerts > 1 ? 'device issues' : '↓ No issues';
+                    
+                    const trend1 = statCards[0].querySelector('.stat-trend');
+                    if (trend1) trend1.textContent = `↑ ${derived.totalDevices * 3} sensors`;
+                    
+                    const trend2 = statCards[1].querySelector('.stat-trend');
+                    const pctOnline = derived.totalDevices > 0 ? Math.round((derived.activeDevices/derived.totalDevices)*100) : 0;
+                    if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
+                    
+                    const trend3 = statCards[2].querySelector('.stat-trend');
+                    if (trend3) trend3.textContent = derived.healthPct >= 99.5 ? '↑ All operational' : '↓ Needs attention';
+                    
+                    console.log('📈 Derived Statistics applied:', derived);
+                }
             } else {
                 console.error('❌ Not enough stat cards found:', statCards.length);
             }
@@ -435,11 +605,27 @@ class DeviceManagementManager {
                     statusByType[t] = statusByType[t] || [];
                     statusByType[t].push(String(s.status || '').toUpperCase());
                 });
+                
+                // Only count as a device if user has all 3 sensor types (Temperature, Humidity, Gas)
                 const hasAll = ['Temperature','Humidity','Gas'].every(t => types.has(t));
                 if (hasAll) {
                     totalDevices += 1;
-                    const allOnline = ['Temperature','Humidity','Gas'].every(t => (statusByType[t]||[]).every(st => st === 'ONLINE'));
-                    if (allOnline) activeDevices += 1;
+                    
+                    // Device is active only if ALL 3 sensors are ONLINE
+                    const allOnline = ['Temperature','Humidity','Gas'].every(t => 
+                        (statusByType[t]||[]).every(st => st === 'ONLINE')
+                    );
+                    if (allOnline) {
+                        activeDevices += 1;
+                    }
+                    
+                    // Device has issues if ALL 3 sensors are OFFLINE
+                    const allOffline = ['Temperature','Humidity','Gas'].every(t => 
+                        (statusByType[t]||[]).every(st => st === 'OFFLINE')
+                    );
+                    if (allOffline) {
+                        deviceIssuesActive += 1;
+                    }
                 }
             });
 
@@ -502,18 +688,50 @@ class DeviceManagementManager {
             return;
         }
 
-        tbody.innerHTML = this.deviceData.map(device => `
+        tbody.innerHTML = this.deviceData.map(device => {
+            console.log('🔍 Processing device for table:', device);
+            console.log('🔍 Device ID:', device.id);
+            console.log('🔍 Device userEmail:', device.userEmail);
+            
+            return `
             <tr>
                 <td>${device.id}</td>
                 <td>${device.name}</td>
                 <td>${device.location}</td>
                 <td>${device.deviceType}</td>
-                <td><span class="status-badge ${this.getStatusClass(device.status)}">${device.status}</span></td>
-                <td><button class="device-action-btn ${device.status === 'OFFLINE' ? 'emergency' : ''}">${this.getActionText(device.status)}</button></td>
+                <td>
+                    <span class="status-badge ${this.getStatusClass(device.status)}">${device.status}</span>
+                    <br><small style="color: #bfc9da; font-size: 0.8em;">${device.onlineCount}/${device.sensorCount} sensors online</small>
+                </td>
+                <td>
+                    <button class="device-action-btn ${device.status === 'OFFLINE' ? 'emergency' : ''}" 
+                            data-user-email="${device.userEmail}">
+                        ${this.getActionText(device.status)}
+                    </button>
+                </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
         
-        console.log('📊 Device activities table populated with', this.deviceData.length, 'devices');
+        console.log('📊 Device activities table populated with', this.deviceData.length, 'user groups');
+        
+        // DEBUG: Check if buttons were created correctly
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.device-action-btn');
+            console.log('🔍 Found', buttons.length, 'action buttons in DOM');
+            buttons.forEach((btn, index) => {
+                const tableRow = btn.closest('tr');
+                const deviceIdCell = tableRow ? tableRow.querySelector('td:first-child') : null;
+                const deviceIdText = deviceIdCell ? deviceIdCell.textContent.trim() : 'N/A';
+                
+                console.log(`🔍 Button ${index}:`, {
+                    textContent: btn.textContent,
+                    'data-user-email': btn.getAttribute('data-user-email'),
+                    'device-id-from-table': deviceIdText,
+                    outerHTML: btn.outerHTML
+                });
+            });
+        }, 100);
     }
 
     populateDeviceStatusTable() {
@@ -573,17 +791,26 @@ class DeviceManagementManager {
         switch (status) {
             case 'ONLINE': return 'status-safe';
             case 'OFFLINE': return 'status-danger';
+            case 'PARTIAL': return 'status-warning';
             case 'ERROR': return 'status-danger';
             default: return 'status-warning';
         }
     }
 
     getActionText(status) {
-        // All rows use Delete action as requested
-        return 'Delete';
+        // Show Deactivate for online devices, Reactivate for offline devices
+        switch (status) {
+            case 'ONLINE':
+            case 'PARTIAL':
+                return 'Deactivate';
+            case 'OFFLINE':
+                return 'Reactivate';
+            default:
+                return 'Deactivate';
+        }
     }
 
-    async refreshData() {
+    async refreshData(showToast = true) {
         console.log('🔄 Refreshing device management data...');
         await this.loadDeviceData();
         await this.loadEquipmentData();
@@ -591,7 +818,9 @@ class DeviceManagementManager {
         this.populateTables();
         // Ensure pagination is rendered after data refresh
         this.renderPage();
-        this.showToast('Data refreshed successfully');
+        if (showToast) {
+            this.showToast('Data refreshed successfully');
+        }
     }
 
     async exportDeviceData() {
@@ -715,43 +944,149 @@ class DeviceManagementManager {
     }
 
     handleActionClick(button) {
+        console.log('🎯 handleActionClick called with button:', button);
+        console.log('🎯 Button HTML:', button.outerHTML);
+        
         const action = button.textContent.trim();
-        const row = button.closest('tr');
-        const deviceId = row.querySelector('td:first-child').textContent;
+        const userEmail = button.getAttribute('data-user-email');
+        
+        // Get the Device ID from the table row
+        const tableRow = button.closest('tr');
+        if (!tableRow) {
+            console.error('❌ Could not find table row for button');
+            this.showToast('Error: Could not find device information');
+            return;
+        }
+        
+        const deviceIdCell = tableRow.querySelector('td:first-child'); // First column is Device ID
+        if (!deviceIdCell) {
+            console.error('❌ Could not find Device ID cell');
+            this.showToast('Error: Could not find device ID');
+            return;
+        }
+        
+        const deviceIdText = deviceIdCell.textContent.trim();
+        console.log(`🎯 Device ID from table: "${deviceIdText}"`);
+        
+        // Extract the first sensor ID from the Device ID (e.g., "13-tem • 14-hum • 15-gas" -> "13")
+        const firstSensorId = this.extractFirstSensorId(deviceIdText);
+        console.log(`🎯 Extracted first sensor ID: ${firstSensorId}`);
 
-        console.log(`🎯 Action clicked: ${action} for ${deviceId}`);
+        if (!firstSensorId) {
+            console.error('❌ Could not extract sensor ID from Device ID:', deviceIdText);
+            this.showToast('Error: Could not extract sensor ID from device ID');
+            return;
+        }
+
+        console.log(`🎯 Action clicked: ${action} for user ${userEmail} (sensor: ${firstSensorId})`);
 
         switch (action) {
-            case 'Delete':
-                this.deleteDevice(deviceId);
+            case 'Deactivate':
+                console.log('🎯 Calling deactivateDevice...');
+                this.deactivateDevice(firstSensorId, userEmail);
+                break;
+            case 'Reactivate':
+                console.log('🎯 Calling reactivateDevice...');
+                this.reactivateDevice(firstSensorId, userEmail);
                 break;
             default:
-                console.log('Unknown action:', action);
+                console.log('❌ Unknown action:', action);
         }
     }
 
-    async deleteDevice(deviceId) {
+    async deactivateDevice(deviceId, userEmail = '') {
         try {
             const numericId = (deviceId || '').toString().replace(/^[^0-9]*/, '');
-            const confirmed = await this.confirm(`Delete device ${deviceId}? This cannot be undone.`);
+            const userName = userEmail ? userEmail.split('@')[0] : 'this user';
+            
+            // Create enhanced confirmation message
+            const confirmed = await this.confirm(
+                `🔒 Deactivate Device Set?`,
+                `This will temporarily disable all sensors for ${userName}.`,
+                `📡 Temperature • Humidity • Gas sensors will be disabled\n⚠️ The user will not receive alerts until reactivated\n🔄 This action can be reversed at any time`
+            );
+            
             if (!confirmed) return;
-            const res = await fetch(`/api/device-management/devices/${numericId}`, { method: 'DELETE' });
+            
+            const res = await fetch(`/api/device-management/devices/${numericId}/deactivate`, { method: 'PUT' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const result = await res.json();
-            if (!result.success) throw new Error(result.message || 'Delete failed');
-            this.showToast('Device deleted');
-            await this.refreshData();
+            if (!result.success) throw new Error(result.message || 'Deactivation failed');
+            
+            // Enhanced success message
+            const successMessage = `✅ Device set deactivated successfully!\n\n📡 ${result.affectedRows || 3} sensors disabled for ${userName}\n🔒 User will not receive alerts until reactivated`;
+            this.showToast(successMessage);
+            await this.refreshData(false);
         } catch (err) {
-            console.error('Delete failed:', err);
-            this.showToast('Failed to delete device');
+            console.error('Deactivation failed:', err);
+            this.showToast('❌ Failed to deactivate device set. Please try again.');
         }
     }
 
-    confirm(message) {
+    async reactivateDevice(deviceId, userEmail = '') {
+        try {
+            const numericId = (deviceId || '').toString().replace(/^[^0-9]*/, '');
+            const userName = userEmail ? userEmail.split('@')[0] : 'this user';
+            
+            // Create enhanced confirmation message
+            const confirmed = await this.confirm(
+                `🔄 Reactivate Device Set?`,
+                `This will re-enable all sensors for ${userName}.`,
+                `📡 Temperature • Humidity • Gas sensors will be enabled\n✅ The user will start receiving alerts again\n🔔 All monitoring features will be restored`
+            );
+            
+            if (!confirmed) return;
+            
+            const res = await fetch(`/api/device-management/devices/${numericId}/reactivate`, { method: 'PUT' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message || 'Reactivation failed');
+            
+            // Enhanced success message
+            const successMessage = `✅ Device set reactivated successfully!\n\n📡 ${result.affectedRows || 3} sensors enabled for ${userName}\n🔔 User will now receive alerts again`;
+            this.showToast(successMessage);
+            await this.refreshData(false);
+        } catch (err) {
+            console.error('Reactivation failed:', err);
+            this.showToast('❌ Failed to reactivate device set. Please try again.');
+        }
+    }
+
+    confirm(title, message, details = '') {
         return new Promise(resolve => {
             const modal = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('confirmTitle');
             const messageEl = document.getElementById('confirmMessage');
+            const detailsEl = document.getElementById('confirmActionDetails');
+            const iconEl = document.getElementById('confirmIcon');
+            
+            // Set title
+            if (titleEl) titleEl.textContent = title || 'Confirm Action';
+            
+            // Set main message
             if (messageEl) messageEl.textContent = message || 'Are you sure?';
+            
+            // Set details if provided
+            if (detailsEl) {
+                if (details) {
+                    detailsEl.textContent = details;
+                    detailsEl.parentElement.style.display = 'block';
+                } else {
+                    detailsEl.parentElement.style.display = 'none';
+                }
+            }
+            
+            // Set appropriate icon based on action
+            if (iconEl) {
+                if (title && title.includes('Deactivate')) {
+                    iconEl.textContent = '🔒';
+                } else if (title && title.includes('Reactivate')) {
+                    iconEl.textContent = '🔄';
+                } else {
+                    iconEl.textContent = '⚠️';
+                }
+            }
+            
             this._confirmResolve = resolve;
             if (modal) modal.style.display = 'block';
         });
@@ -769,13 +1104,32 @@ class DeviceManagementManager {
     }
 
     async saveNewDevice() {
+        console.log('🚀 saveNewDevice called - preventing duplicate execution');
+        if (this.savingDevice) {
+            console.log('⚠️ saveNewDevice already in progress, ignoring duplicate call');
+            return;
+        }
+        this.savingDevice = true;
         try {
             const tempId = (document.getElementById('tempSensorId')?.value || '').trim();
             const humId  = (document.getElementById('humSensorId')?.value || '').trim();
             const gasId  = (document.getElementById('gasSensorId')?.value || '').trim();
             const userRefRaw = (document.getElementById('adAccount')?.value || '').trim();
-            if (!tempId || !humId || !gasId) { this.showToast('All three sensor IDs are required'); return; }
-            if (!userRefRaw) { this.showToast('Account is required'); return; }
+            if (!tempId || !humId || !gasId) { this.showToast('All three sensor IDs are required'); this.savingDevice = false; return; }
+            if (!userRefRaw) { this.showToast('Account is required'); this.savingDevice = false; return; }
+            
+            // Check if user already has devices (active or deactivated)
+            console.log('🔍 Checking if user already has devices...');
+            const userCheckRes = await fetch(`/api/device-management/devices/check-user-status?user_ref=${encodeURIComponent(userRefRaw)}`);
+            if (userCheckRes.ok) {
+                const userCheckResult = await userCheckRes.json();
+                if (userCheckResult.hasActiveDevices) {
+                    this.showToast('❌ User already has devices (active or deactivated). Cannot add new device.');
+                    this.savingDevice = false;
+                    return;
+                }
+                console.log('✅ User has no devices, proceeding with device addition...');
+            }
             const body = {
                 user_ref: userRefRaw,
                 sensors: [
@@ -798,7 +1152,7 @@ class DeviceManagementManager {
             if (!result.success) throw new Error(result.message || 'Add failed');
             this.hideAddDeviceModal();
             this.showToast('Device added');
-            await this.refreshData();
+            await this.refreshData(false);
         } catch (err) {
             console.error('Add device failed:', err);
             const hint = document.getElementById('adDeviceIdHint');
@@ -807,6 +1161,9 @@ class DeviceManagementManager {
                 hint.classList.add('error');
             }
             this.showToast(err.message || 'Failed to add device');
+        } finally {
+            this.savingDevice = false;
+            console.log('✅ saveNewDevice execution completed');
         }
     }
 
@@ -978,8 +1335,51 @@ class DeviceManagementManager {
         this.showToast('Device maintenance view would be implemented here');
     }
 
+    // Helper method to extract the first sensor ID from Device ID text
+    extractFirstSensorId(deviceIdText) {
+        console.log(`🔍 Extracting sensor ID from: "${deviceIdText}"`);
+        
+        if (!deviceIdText || deviceIdText.trim() === '') {
+            console.error('❌ Device ID text is empty');
+            return null;
+        }
+        
+        // Handle different formats:
+        // "13-tem • 14-hum • 15-gas" -> "13"
+        // "13,14,15" -> "13"
+        // "13" -> "13"
+        
+        let firstId = null;
+        
+        // Try bullet point separator first (•)
+        if (deviceIdText.includes('•')) {
+            const parts = deviceIdText.split('•');
+            const firstPart = parts[0].trim();
+            // Extract number from "13-tem" -> "13"
+            const match = firstPart.match(/^(\d+)/);
+            if (match) {
+                firstId = match[1];
+            }
+        }
+        // Try comma separator
+        else if (deviceIdText.includes(',')) {
+            const parts = deviceIdText.split(',');
+            firstId = parts[0].trim();
+        }
+        // Try to extract number from single value
+        else {
+            const match = deviceIdText.match(/^(\d+)/);
+            if (match) {
+                firstId = match[1];
+            }
+        }
+        
+        console.log(`🔍 Extracted sensor ID: "${firstId}"`);
+        return firstId;
+    }
+
     showToast(message) {
-        // Create toast notification
+        // Create toast notification with support for multi-line messages
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed;
@@ -987,22 +1387,40 @@ class DeviceManagementManager {
             right: 20px;
             background: #3b7bfa;
             color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
+            padding: 20px 25px;
+            border-radius: 12px;
             z-index: 10000;
             font-size: 14px;
             font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            max-width: 300px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            line-height: 1.5;
+            white-space: pre-line;
+            border-left: 4px solid #2ecc71;
         `;
+        
+        // Handle different message types with appropriate styling
+        if (message.includes('✅')) {
+            toast.style.background = '#27ae60';
+            toast.style.borderLeftColor = '#2ecc71';
+        } else if (message.includes('❌')) {
+            toast.style.background = '#e74c3c';
+            toast.style.borderLeftColor = '#c0392b';
+        } else if (message.includes('⚠️')) {
+            toast.style.background = '#f39c12';
+            toast.style.borderLeftColor = '#e67e22';
+        }
+        
         toast.textContent = message;
         document.body.appendChild(toast);
         
+        // Auto-remove after 5 seconds for longer messages
+        const duration = message.includes('\n') ? 5000 : 3000;
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.parentNode.removeChild(toast);
             }
-        }, 3000);
+        }, duration);
     }
 }
 

@@ -468,8 +468,110 @@
 .modal .btn-secondary { background: transparent; border: 1px solid #2a3b6d; color:#e0e6f6; }
 .modal .btn-secondary:hover { background: #152240; }
 
-#confirmModal .modal-content { max-width: 420px; }
-#addDeviceModal .modal-content { max-width: 600px; }
+#confirmModal .modal-content { 
+  max-width: 460px; 
+  background: #0f172a;
+  border: 1px solid #1f2a46;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+#confirmModal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: none;
+  padding: 24px 24px 20px 24px;
+  background: linear-gradient(135deg, #1a2340 0%, #14224a 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+#confirmModal .modal-header h3 {
+  color: #fff;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+#confirmModal .modal-body {
+  color: #e0e6f6;
+  padding: 24px;
+  background: #0f172a;
+}
+
+#confirmModal .modal-footer {
+  border-top: 1px solid #1f2a46;
+  padding: 20px 24px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #0f172a;
+}
+
+/* Enhanced button hover effects */
+#confirmModal .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 123, 250, 0.4) !important;
+}
+
+#confirmModal .btn-secondary:hover {
+  background: #1a2340 !important;
+  border-color: #3b7bfa !important;
+  color: #fff !important;
+}
+#addDeviceModal .modal-content { 
+  max-width: 520px; 
+  background: #0f172a;
+  border: 1px solid #1f2a46;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+#addDeviceModal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: none;
+  padding: 24px 24px 20px 24px;
+  background: linear-gradient(135deg, #1a2340 0%, #14224a 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+#addDeviceModal .modal-header h3 {
+  color: #fff;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+#addDeviceModal .modal-body {
+  color: #e0e6f6;
+  padding: 24px;
+  background: #0f172a;
+}
+
+#addDeviceModal .modal-footer {
+  border-top: 1px solid #1f2a46;
+  padding: 20px 24px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #0f172a;
+}
+
+/* Enhanced button hover effects for Add Device modal */
+#addDeviceModal .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 123, 250, 0.4) !important;
+}
+
+#addDeviceModal .btn-secondary:hover {
+  background: #1a2340 !important;
+  border-color: #3b7bfa !important;
+  color: #fff !important;
+}
 #mlTrainingDataModal .modal-content { max-width: 600px; }
 
 /* ML Training Data Modal Specific Styling */

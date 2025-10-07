@@ -237,14 +237,48 @@ function showDeviceManagement() {
     const deviceManagementContainer = document.querySelector('.device-management-container');
     console.log('🔍 Device Management container after update:', deviceManagementContainer);
     
+    // Check if action buttons exist in the new DOM
+    const actionButtons = document.querySelectorAll('.device-action-btn');
+    console.log('🔍 Action buttons found in new DOM:', actionButtons.length);
+    actionButtons.forEach((btn, index) => {
+      console.log(`🔍 Button ${index}:`, {
+        textContent: btn.textContent,
+        'data-user-email': btn.getAttribute('data-user-email'),
+        'data-sensor-ids': btn.getAttribute('data-sensor-ids')
+      });
+    });
+    
     // Initialize device management functionality
     if (window.deviceManagementManager) {
       console.log('🔄 Re-initializing existing device management manager');
+      console.log('🔄 Manager state before rebind:', {
+        listenersBound: window.deviceManagementManager.listenersBound,
+        deviceDataLength: window.deviceManagementManager.deviceData ? window.deviceManagementManager.deviceData.length : 0
+      });
+      
       // Rebind event listeners to the newly injected DOM and refresh
       if (window.deviceManagementManager.rebindUI) {
         window.deviceManagementManager.rebindUI();
       }
-      window.deviceManagementManager.refreshData();
+      
+      console.log('🔄 Manager state after rebind:', {
+        listenersBound: window.deviceManagementManager.listenersBound,
+        deviceDataLength: window.deviceManagementManager.deviceData ? window.deviceManagementManager.deviceData.length : 0
+      });
+      
+      // Check buttons again after rebind
+      setTimeout(() => {
+        const actionButtonsAfterRebind = document.querySelectorAll('.device-action-btn');
+        console.log('🔍 Action buttons after rebind:', actionButtonsAfterRebind.length);
+        actionButtonsAfterRebind.forEach((btn, index) => {
+          console.log(`🔍 Button ${index} after rebind:`, {
+            textContent: btn.textContent,
+            'data-user-email': btn.getAttribute('data-user-email'),
+            'data-sensor-ids': btn.getAttribute('data-sensor-ids')
+          });
+        });
+      }, 500);
+      
     } else {
       console.log('🚀 Creating new device management manager');
       // Wait for DOM to be ready and check if DeviceManagementManager class exists

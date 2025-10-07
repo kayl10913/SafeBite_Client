@@ -1300,19 +1300,35 @@
   </style>
 </div>
 
-<!-- Confirm Modal -->
+<!-- Enhanced Confirm Modal -->
 <div id="confirmModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:420px;">
-    <div class="modal-header">
-      <h3 id="confirmTitle">Confirm</h3>
-      <span class="close" id="confirmClose" style="cursor:pointer;">&times;</span>
+  <div class="modal-content" style="max-width:460px;">
+    <div class="modal-header" style="padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 8px 8px 0 0;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div id="confirmIcon" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 123, 250, 0.15); border: 2px solid rgba(59, 123, 250, 0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px);">
+          ⚠️
+        </div>
+        <div>
+          <h3 id="confirmTitle" style="margin: 0; color: #fff; font-size: 18px; font-weight: 700;">Confirm Action</h3>
+          <p style="margin: 4px 0 0 0; color: #bfc9da; font-size: 13px; font-weight: 400;">Please review the details below</p>
+        </div>
+      </div>
+      <span class="close" id="confirmClose" style="cursor:pointer; color: #bfc9da; font-size: 20px; opacity: 0.7; transition: all 0.2s; padding: 8px; border-radius: 6px;" onmouseover="this.style.opacity='1'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.opacity='0.7'; this.style.background='transparent'">&times;</span>
     </div>
-    <div class="modal-body">
-      <div id="confirmMessage" style="color:#e0e6f6;">Are you sure?</div>
+    <div class="modal-body" style="padding: 24px;">
+      <div id="confirmMessage" style="color: #e0e6f6; line-height: 1.6; font-size: 15px; margin-bottom: 20px; font-weight: 500;"></div>
+      <div id="confirmDetails" style="background: linear-gradient(135deg, #181f36 0%, #1a2340 100%); border-radius: 10px; padding: 18px; border: 1px solid #2a3b6d; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #3b7bfa 0%, #667eea 100%);"></div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b7bfa; box-shadow: 0 0 8px rgba(59, 123, 250, 0.5);"></div>
+          <span style="color: #3b7bfa; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Action Details</span>
+        </div>
+        <div id="confirmActionDetails" style="color: #e0e6f6; font-size: 14px; line-height: 1.5; font-weight: 400;"></div>
+      </div>
     </div>
-    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
-      <button type="button" class="btn btn-secondary" id="confirmCancel">Cancel</button>
-      <button type="button" class="btn btn-primary" id="confirmOk">OK</button>
+    <div class="modal-footer" style="display:flex;gap:12px;justify-content:flex-end;padding:20px 24px 24px 24px; background: #0f172a;">
+      <button type="button" class="btn btn-secondary" id="confirmCancel" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: all 0.2s;">Cancel</button>
+      <button type="button" class="btn btn-primary" id="confirmOk" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%); border: none; box-shadow: 0 4px 12px rgba(59, 123, 250, 0.3); transition: all 0.2s;">Confirm</button>
     </div>
   </div>
 </div>
@@ -1358,45 +1374,87 @@
   </style>
 </div>
 <!-- Add Device Modal -->
-<div id="addDeviceModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:560px;">
-    <div class="modal-header">
-      <h3>Add Device</h3>
-      <span class="close" id="addDeviceClose" style="cursor:pointer;">&times;</span>
-    </div>
-    <div class="modal-body">
-      <div class="form-row" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px;">
-        <div class="form-group">
-          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
-            <span style="color:#ff6b6b;">🌡️</span>
-            <span>Temperature Sensor ID</span>
-          </label>
-          <input id="tempSensorId" placeholder="Enter temperature sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
+    <!-- Enhanced Add Device Modal -->
+    <style>
+      #addDeviceModal input {
+        background: #0f172a !important;
+        color: #e0e6f6 !important;
+        -webkit-text-fill-color: #e0e6f6 !important;
+        -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+        box-shadow: 0 0 0 1000px #0f172a inset !important;
+      }
+      #addDeviceModal input:focus {
+        background: #0f172a !important;
+        color: #e0e6f6 !important;
+        -webkit-text-fill-color: #e0e6f6 !important;
+        -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+        box-shadow: 0 0 0 1000px #0f172a inset !important;
+      }
+      #addDeviceModal input::placeholder {
+        color: #64748b !important;
+        -webkit-text-fill-color: #64748b !important;
+      }
+    </style>
+    <div id="addDeviceModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:520px;">
+    <div class="modal-header" style="padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 12px 12px 0 0;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 123, 250, 0.15); border: 2px solid rgba(59, 123, 250, 0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px);">
+          ➕
         </div>
-        <div class="form-group">
-          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
-            <span style="color:#6bc1ff;">💧</span>
-            <span>Humidity Sensor ID</span>
-          </label>
-          <input id="humSensorId" placeholder="Enter humidity sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
-        </div>
-        <div class="form-group">
-          <label style="display:flex;align-items:center;gap:8px;color:#cfe0ff;font-weight:600;margin-bottom:6px;">
-            <span style="color:#ffd166;">⚡</span>
-            <span>Gas Sensor ID</span>
-          </label>
-          <input id="gasSensorId" placeholder="Enter gas sensor ID" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;outline:none;">
-      </div>
-        </div>
-      <div class="form-row" style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:8px;">
-        <div class="form-group"><label style="color:#cfe0ff;font-weight:600;margin-bottom:6px;">Account</label>
-          <input id="adAccount" placeholder="Enter account" style="display:block;width:100%;max-width:100%;box-sizing:border-box;background:#202b4a;color:#e6ecff;border:1px solid #31426f;border-radius:10px;padding:12px 14px;">
+        <div>
+          <h3 style="margin: 0; color: #fff; font-size: 18px; font-weight: 700;">Add Device</h3>
+          <p style="margin: 4px 0 0 0; color: #bfc9da; font-size: 13px; font-weight: 400;">Configure new sensor device for user</p>
         </div>
       </div>
+      <span class="close" id="addDeviceClose" style="cursor:pointer; color: #bfc9da; font-size: 20px; opacity: 0.7; transition: all 0.2s; padding: 8px; border-radius: 6px;" onmouseover="this.style.opacity='1'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.opacity='0.7'; this.style.background='transparent'">&times;</span>
     </div>
-    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
-      <button type="button" class="btn btn-secondary" id="addDeviceCancel">Cancel</button>
-      <button type="button" class="btn btn-primary" id="addDeviceSave">Add Device</button>
+    <div class="modal-body" style="padding: 24px;">
+      <div style="background: linear-gradient(135deg, #181f36 0%, #1a2340 100%); border-radius: 10px; padding: 20px; border: 1px solid #2a3b6d; position: relative; overflow: hidden; margin-bottom: 20px;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #3b7bfa 0%, #667eea 100%);"></div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b7bfa; box-shadow: 0 0 8px rgba(59, 123, 250, 0.5);"></div>
+          <span style="color: #3b7bfa; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Sensor Configuration</span>
+        </div>
+        
+        <div style="display: grid; gap: 16px; max-width: 400px;">
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px; color: #e0e6f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+              <span style="width: 20px; height: 20px; border-radius: 6px; background: rgba(255, 107, 107, 0.2); display: flex; align-items: center; justify-content: center; font-size: 12px;">🌡️</span>
+              <span>Temperature Sensor ID</span>
+            </label>
+            <input id="tempSensorId" placeholder="Enter temperature sensor ID" style="width: 100%; background: #0f172a !important; color: #e0e6f6 !important; border: 1px solid #2a3b6d; border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'; this.style.color='#e0e6f6';" onblur="this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6';">
+          </div>
+          
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px; color: #e0e6f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+              <span style="width: 20px; height: 20px; border-radius: 6px; background: rgba(107, 193, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 12px;">💧</span>
+              <span>Humidity Sensor ID</span>
+            </label>
+            <input id="humSensorId" placeholder="Enter humidity sensor ID" style="width: 100%; background: #0f172a !important; color: #e0e6f6 !important; border: 1px solid #2a3b6d; border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'; this.style.color='#e0e6f6';" onblur="this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6';">
+          </div>
+          
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px; color: #e0e6f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+              <span style="width: 20px; height: 20px; border-radius: 6px; background: rgba(255, 209, 102, 0.2); display: flex; align-items: center; justify-content: center; font-size: 12px;">⚡</span>
+              <span>Gas Sensor ID</span>
+            </label>
+            <input id="gasSensorId" placeholder="Enter gas sensor ID" style="width: 100%; background: #0f172a !important; color: #e0e6f6 !important; border: 1px solid #2a3b6d; border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'; this.style.color='#e0e6f6';" onblur="this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6';">
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group" style="max-width: 400px;">
+        <label style="display: flex; align-items: center; gap: 10px; color: #e0e6f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+          <span style="width: 20px; height: 20px; border-radius: 6px; background: rgba(59, 123, 250, 0.2); display: flex; align-items: center; justify-content: center; font-size: 12px;">👤</span>
+          <span>User Account</span>
+        </label>
+        <input id="adAccount" placeholder="Enter user email address" style="width: 100%; background: #0f172a !important; color: #e0e6f6 !important; border: 1px solid #2a3b6d; border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; -webkit-text-fill-color: #e0e6f6 !important; -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important; box-shadow: 0 0 0 1000px #0f172a inset !important;" onfocus="this.style.borderColor='#3b7bfa'; this.style.color='#e0e6f6'; this.style.webkitTextFillColor='#e0e6f6';" onblur="this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6'; this.style.webkitTextFillColor='#e0e6f6';" oninput="this.style.color='#e0e6f6'; this.style.webkitTextFillColor='#e0e6f6';">
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:12px;justify-content:flex-end;padding:20px 24px 24px 24px; background: #0f172a;">
+      <button type="button" class="btn btn-secondary" id="addDeviceCancel" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: all 0.2s;">Cancel</button>
+      <button type="button" class="btn btn-primary" id="addDeviceSave" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%); border: none; box-shadow: 0 4px 12px rgba(59, 123, 250, 0.3); transition: all 0.2s;">Add Device</button>
     </div>
   </div>
 </div>
@@ -1802,7 +1860,7 @@ function handleAdminPassFormSubmit(e) {
       }
       if (context.action === 'DELETE') {
         if (page === 'users') return 'Deleted: User';
-        if (page === 'devices') return 'Deleted: Device';
+        if (page === 'devices') return 'Deactivated: Device';
         return 'Deleted';
       }
       return extra || '';
@@ -1847,7 +1905,7 @@ function handleAdminPassFormSubmit(e) {
       var el = e.target.closest('button, a');
       if (!el) return;
       var txt = (el.textContent || '').toLowerCase();
-      if (txt.includes('delete') || el.classList.contains('delete') || el.id.toLowerCase().includes('delete')) {
+      if (txt.includes('delete') || txt.includes('deactivate') || el.classList.contains('delete') || el.classList.contains('deactivate') || el.id.toLowerCase().includes('delete') || el.id.toLowerCase().includes('deactivate')) {
         logAdminActivity('DELETE', { page: 'devices' });
       } else if (txt.includes('add') || txt.startsWith('+') || el.classList.contains('add') || el.id.toLowerCase().includes('add')) {
         // Try to infer context
