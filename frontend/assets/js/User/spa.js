@@ -190,6 +190,57 @@ function showFeedback() {
     if (window.FeedbackCenter) {
       window.feedbackCenter = new FeedbackCenter();
     }
+    
+    // Re-attach feedback event listeners after content is loaded
+    setTimeout(() => {
+      console.log('SPA: Setting up feedback page...');
+      
+      // Clean up any existing event listeners first
+      if (window.cleanupFeedbackEventListeners) {
+        window.cleanupFeedbackEventListeners();
+      }
+      
+      // Switch to History tab to show pagination
+      const historyTab = document.querySelector('[data-tab="history"]');
+      const submitTab = document.querySelector('[data-tab="submit"]');
+      const historyContent = document.getElementById('historyTabContent');
+      const submitContent = document.getElementById('submitTabContent');
+      
+      if (historyTab && submitTab && historyContent && submitContent) {
+        console.log('SPA: Switching to History tab...');
+        // Remove active class from submit tab
+        submitTab.classList.remove('active');
+        submitContent.classList.remove('active');
+        // Add active class to history tab
+        historyTab.classList.add('active');
+        historyContent.classList.add('active');
+        
+        // Ensure table view is active by default (with pagination)
+        const tableContainer = document.getElementById('feedbackTableContainer');
+        const cardsContainer = document.getElementById('feedbackCardsContainer');
+        const tablePagination = document.getElementById('feedbackPagination');
+        const cardsPagination = document.getElementById('feedbackCardsPagination');
+        
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (cardsContainer) cardsContainer.style.display = 'none';
+        if (tablePagination) tablePagination.style.display = 'block';
+        if (cardsPagination) cardsPagination.style.display = 'none';
+      }
+      
+      if (window.attachFeedbackEventListeners) {
+        console.log('SPA: Re-attaching feedback event listeners...');
+        window.attachFeedbackEventListeners();
+      }
+      // Initialize feedback data with additional delay to ensure DOM is ready
+      setTimeout(() => {
+        if (window.initializeFeedbackData) {
+          console.log('SPA: Initializing feedback data...');
+          window.initializeFeedbackData();
+        } else {
+          console.error('SPA: initializeFeedbackData function not found!');
+        }
+      }, 100);
+    }, 100);
   }
 }
 
@@ -205,6 +256,8 @@ let __currentPage = null;
 const __pageScrollTop = {};
 
 function switchPage(page) {
+    console.log('SPA: Switching to page:', page, 'from:', __currentPage);
+    
     // Notify listeners before we change the page (for cleanup)
     try {
       window.dispatchEvent(new CustomEvent('spa:navigate:before', { detail: { from: __currentPage, to: page }}));
@@ -228,9 +281,13 @@ function switchPage(page) {
     if (page === 'user-log') sidebarPage = 'user-logs';
     if (page === 'feedback') sidebarPage = 'feedbacks';
     
+    console.log('SPA: Setting sidebar active state for:', sidebarPage);
     const activeLink = document.querySelector(`.nav-link[data-page="${sidebarPage}"]`);
     if (activeLink) {
         activeLink.closest('.nav-item').classList.add('active');
+        console.log('SPA: Sidebar active state set successfully');
+    } else {
+        console.warn('SPA: No sidebar link found for page:', sidebarPage);
     }
 
     // Remove config assets if navigating away
@@ -305,6 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sidebarTarget) {
             event.preventDefault(); // Prevent default link behavior
             const page = sidebarTarget.getAttribute('data-page');
+            console.log('Sidebar navigation clicked:', page);
             if(page) {
                 switchPage(page);
             }

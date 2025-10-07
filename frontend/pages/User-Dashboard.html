@@ -231,7 +231,7 @@
 <aside class="sidebar expanded" id="sidebar">
   <div class="sidebar-header">
     <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">S</span>
-    <span class="sidebar-title user-name">User-name</span>
+    <span class="sidebar-title user-name"></span>
   </div>
   <nav class="sidebar-nav">
     <!-- Main Navigation -->
@@ -249,13 +249,13 @@
     <div class="nav-section">
       <div class="nav-section-title">Reports & Analysis</div>
       <ul>
-      <li class="nav-item">
+      <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="spoilage-report" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128200;</span>
           <span class="nav-text">Spoilage Reports</span>
         </a>
       </li>
-      <li class="nav-item">
+      <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128229;</span>
           <span class="nav-text">Reports Generator</span>
@@ -274,13 +274,13 @@
     <div class="nav-section">
       <div class="nav-section-title">Account & Support</div>
       <ul>
-      <li class="nav-item">
+      <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="user-logs" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128273;</span>
           <span class="nav-text">User Logs / History</span>
         </a>
       </li>
-      <li class="nav-item">
+      <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
           <span class="nav-icon">&#128172;</span>
             <span class="nav-text">Feedbacks / Support</span>
@@ -289,7 +289,7 @@
   </ul>
     </div>
 </nav>
-  <div class="sidebar-account" id="sidebarAccount" style="cursor:pointer;" onclick="openEditAccountModal()">
+  <div class="sidebar-account" id="sidebarAccount" style="cursor:pointer;">
     <span class="account-icon">&#128100;</span>
     <span class="account-text" id="accountText">Profile</span>
     <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
@@ -1910,9 +1910,7 @@
             <label for="userLogActivityType">Activity Type</label>
             <select id="userLogActivityType" class="report-select">
               <option value="all">All Activities</option>
-              <option value="add">Add</option>
               <option value="update">Update</option>
-              <option value="delete">Delete</option>
               <option value="login">Login</option>
               <option value="logout">Logout</option>
             </select>
@@ -2010,22 +2008,22 @@
       <div class="feedback-stat-card">
         <div class="stat-icon stat-blue">💬</div>
         <div class="stat-label">Total Feedback</div>
-        <div class="stat-value" id="totalFeedback">5</div>
+        <div class="stat-value" id="totalFeedback">0</div>
       </div>
       <div class="feedback-stat-card">
         <div class="stat-icon stat-orange">🕐</div>
         <div class="stat-label">Active Issues</div>
-        <div class="stat-value" id="activeIssues">4</div>
+        <div class="stat-value" id="activeIssues">0</div>
       </div>
       <div class="feedback-stat-card">
         <div class="stat-icon stat-green">✅</div>
         <div class="stat-label">Resolved</div>
-        <div class="stat-value" id="resolvedIssues">1</div>
+        <div class="stat-value" id="resolvedIssues">0</div>
       </div>
       <div class="feedback-stat-card">
         <div class="stat-icon stat-yellow">⭐</div>
         <div class="stat-label">Average Rating</div>
-        <div class="stat-value" id="averageRating">3.8</div>
+        <div class="stat-value" id="averageRating">0.0</div>
       </div>
     </div>
     
@@ -2143,6 +2141,13 @@
               <option value="Resolved">Resolved</option>
               <option value="Archived">Archived</option>
             </select>
+            
+            <select id="feedbackRecordsPerPage" class="feedback-filter">
+              <option value="6" selected>6 per page</option>
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
           </div>
           
           <div class="feedback-view-toggle">
@@ -2156,6 +2161,11 @@
         <div id="feedbackCardsContainer" class="feedback-cards-container" style="display: none;">
           <div class="feedback-cards-grid" id="feedbackCardsGrid">
             <!-- Cards will be rendered here by JavaScript -->
+          </div>
+          
+          <!-- Cards Pagination Container -->
+          <div id="feedbackCardsPagination" class="pagination-container" style="display:none;">
+            <!-- Pagination will be rendered here by JavaScript -->
           </div>
         </div>
         
@@ -2286,8 +2296,32 @@
               </tr>
             </tbody>
           </table>
+          
+          <!-- Pagination Container -->
+          <div id="feedbackPagination" class="pagination-container" style="display:none;">
+            <!-- Pagination will be rendered here by JavaScript -->
+          </div>
         </div>
         </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Feedback View Modal -->
+  <div id="feedbackViewModal" class="config-modal" style="display: none;">
+    <div class="config-modal-backdrop"></div>
+    <div class="config-modal-content">
+      <div class="config-modal-header">
+        <h2 class="config-modal-title">Feedback Details</h2>
+        <button class="config-modal-close">&times;</button>
+      </div>
+      <div class="config-modal-body">
+        <div id="feedbackViewContent">
+          <!-- Feedback details will be loaded here -->
+        </div>
+      </div>
+      <div class="config-modal-footer">
+        <button class="config-modal-btn config-modal-btn-secondary" onclick="closeFeedbackView()">Close</button>
       </div>
     </div>
   </div>
@@ -2775,12 +2809,31 @@
     });
   };
   
-  // Logout is centrally handled in assets/js/User/user-auth.js to avoid double binding
-  // Prevent logout click from triggering parent profile click (which opens Edit modal)
+  // Sidebar account section event handling
   document.addEventListener('DOMContentLoaded', function() {
+    const sidebarAccount = document.getElementById('sidebarAccount');
     const logoutBtn = document.getElementById('logoutBtn');
+    
+    // Handle profile click (open edit modal)
+    if (sidebarAccount) {
+      sidebarAccount.addEventListener('click', function(e) {
+        // Only open modal if not clicking on logout button
+        if (!e.target.closest('.logout-btn')) {
+          e.preventDefault();
+          e.stopPropagation();
+          openEditAccountModal();
+        }
+      });
+    }
+    
+    // Handle logout button click
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Logout functionality is handled in user-auth.js
+        console.log('Logout button clicked');
+      });
     }
 
     // Handle view recommendations buttons
@@ -3145,6 +3198,821 @@
   window.addAlert = addAlert;
   window.updateAlertsDisplay = updateAlertsDisplay;
   window.addAlertEventListeners = addAlertEventListeners;
+
+  // Function to check if text is truncated and add tooltip accordingly
+  function checkTextTruncation() {
+    const navItems = document.querySelectorAll('.nav-item.is-truncated .nav-text');
+    navItems.forEach(navText => {
+      const isTruncated = navText.scrollWidth > navText.clientWidth;
+      if (isTruncated) {
+        navText.setAttribute('data-truncated', 'true');
+        navText.setAttribute('data-tooltip', navText.textContent);
+      } else {
+        navText.removeAttribute('data-truncated');
+        navText.removeAttribute('data-tooltip');
+      }
+    });
+  }
+
+  // Check truncation on page load and window resize
+  document.addEventListener('DOMContentLoaded', function() {
+    checkTextTruncation();
+    
+    // Initialize feedback system
+    initializeFeedbackData();
+    
+    // Add event listeners for feedback filters
+    const feedbackSearch = document.getElementById('feedbackSearch');
+    const feedbackTypeFilter = document.getElementById('feedbackTypeFilter');
+    const feedbackPriorityFilter = document.getElementById('feedbackPriorityFilter');
+    const feedbackStatusFilter = document.getElementById('feedbackStatusFilter');
+    const feedbackRecordsPerPage = document.getElementById('feedbackRecordsPerPage');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    
+    console.log('Setting up feedback event listeners...');
+    console.log('Elements found:', {
+      feedbackSearch: !!feedbackSearch,
+      feedbackTypeFilter: !!feedbackTypeFilter,
+      feedbackPriorityFilter: !!feedbackPriorityFilter,
+      feedbackStatusFilter: !!feedbackStatusFilter,
+      feedbackRecordsPerPage: !!feedbackRecordsPerPage,
+      clearFiltersBtn: !!clearFiltersBtn
+    });
+    
+    // Note: Feedback event listeners are now handled in attachFeedbackEventListeners()
+    // to prevent SPA conflicts and duplicate event attachments
+  });
+
+  // Listen for SPA navigation events
+  window.addEventListener('spa:navigate:after', function(event) {
+    const page = event.detail.to;
+    console.log('SPA navigation to:', page);
+    
+    if (page === 'feedback' || page === 'feedbacks') {
+      console.log('Feedback page loaded via SPA, setting up...');
+      // Use a longer delay to ensure DOM is fully ready
+      setTimeout(() => {
+        if (window.attachFeedbackEventListeners) {
+          console.log('SPA: Attaching feedback event listeners...');
+          window.attachFeedbackEventListeners();
+        }
+        // Initialize feedback data
+        if (window.initializeFeedbackData) {
+          console.log('SPA: Initializing feedback data...');
+          window.initializeFeedbackData();
+        }
+      }, 150);
+    }
+  });
+
+  window.addEventListener('resize', function() {
+    checkTextTruncation();
+  });
+
+  // Make function globally available
+  window.checkTextTruncation = checkTextTruncation;
+
+  // Feedback Pagination System
+  let feedbackCurrentPage = 1;
+  let feedbackItemsPerPage = 6;
+  let feedbackAllData = [];
+  let feedbackFilteredData = [];
+
+  // Feedback data (will be loaded from API)
+  const sampleFeedbackData = [];
+
+  // Initialize feedback data
+  function initializeFeedbackData() {
+    console.log('Initializing feedback data...');
+    
+    // Show loading state
+    showFeedbackLoadingState();
+    
+    // Load feedback data from API
+    loadFeedbackData().then(() => {
+      console.log('Feedback data loaded from API');
+      hideFeedbackLoadingState();
+      updateFeedbackStats();
+      renderFeedbackTable();
+      renderFeedbackCards();
+      renderFeedbackPagination();
+    }).catch(error => {
+      console.error('Failed to load feedback data:', error);
+      hideFeedbackLoadingState();
+      // Fallback to empty state
+      feedbackAllData = [];
+      feedbackFilteredData = [];
+      updateFeedbackStats();
+      renderFeedbackTable();
+      renderFeedbackCards();
+      renderFeedbackPagination();
+    });
+  }
+
+  // Show loading state
+  function showFeedbackLoadingState() {
+    const tbody = document.getElementById('feedbackTableBody');
+    const cardsGrid = document.getElementById('feedbackCardsGrid');
+    
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 40px; color: #bfc9da;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+              <div style="font-size: 24px; animation: spin 1s linear infinite;">⏳</div>
+              <div style="font-size: 16px; font-weight: 500;">Loading feedback data...</div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    if (cardsGrid) {
+      cardsGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #bfc9da;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+            <div style="font-size: 24px; animation: spin 1s linear infinite;">⏳</div>
+            <div style="font-size: 16px; font-weight: 500;">Loading feedback data...</div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Hide loading state
+  function hideFeedbackLoadingState() {
+    // Loading state will be replaced by actual data rendering
+  }
+
+  // Load feedback data from API
+  async function loadFeedbackData() {
+    try {
+      const response = await fetch('/api/feedbacks/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('API response:', data);
+      console.log('API response structure:', {
+        hasSuccess: 'success' in data,
+        hasData: 'data' in data,
+        dataType: Array.isArray(data.data) ? 'array' : typeof data.data,
+        dataLength: Array.isArray(data.data) ? data.data.length : 'not array'
+      });
+      
+      if (data.success && data.data && Array.isArray(data.data)) {
+        console.log('Raw API data sample:', data.data[0]);
+        console.log('Available fields in API response:', Object.keys(data.data[0] || {}));
+        
+        // Map API data to expected format
+        feedbackAllData = data.data.map((item, index) => {
+          console.log(`Processing item ${index}:`, item);
+          console.log(`Raw admin_notes:`, item.admin_notes);
+          console.log(`Raw response_text:`, item.response_text);
+          console.log(`Available fields:`, Object.keys(item));
+          
+          // Try multiple field name variations
+          const mappedItem = {
+            id: item.feedback_id || item.id || item.feedbackId || 0,
+            name: item['CUSTOMER NAME'] || item.customer_name || item.customerName || item.name || item.user_name || 'Unknown',
+            description: item['FEEDBACK TEXT'] || item.feedback_text || item.feedbackText || item.description || item.message || 'No description',
+            type: item['FEEDBACK TYPE'] || item.feedback_type || item.feedbackType || item.type || 'General Feedback',
+            priority: item.PRIORITY || item.priority || item.priority_level || 'Low',
+            status: item.STATUS || item.status || item.feedback_status || 'Active',
+            rating: parseInt(item['STAR RATE']) || parseInt(item.star_rating) || parseInt(item.starRating) || parseInt(item.rating) || 3,
+            date: item.created_at || item.date || item.submission_date || new Date().toLocaleDateString(),
+            // Admin response fields - try multiple variations
+            admin_notes: item.admin_notes || item.adminNotes || item['ADMIN NOTES'] || '',
+            response_text: item.response_text || item.responseText || item['RESPONSE TEXT'] || ''
+          };
+          
+          console.log(`Mapped item ${index}:`, mappedItem);
+          console.log(`Final admin_notes:`, mappedItem.admin_notes);
+          console.log(`Final response_text:`, mappedItem.response_text);
+          console.log(`Has admin response:`, !!(mappedItem.admin_notes || mappedItem.response_text));
+          return mappedItem;
+        });
+        
+        feedbackFilteredData = [...feedbackAllData];
+        console.log('Feedback data loaded:', feedbackAllData.length, 'items');
+        console.log('Sample feedback item:', feedbackAllData[0]);
+      } else {
+        console.error('Invalid API response format:', {
+          success: data.success,
+          hasData: !!data.data,
+          dataIsArray: Array.isArray(data.data),
+          dataLength: data.data ? data.data.length : 'no data'
+        });
+        throw new Error('Invalid API response format');
+      }
+    } catch (error) {
+      console.error('Error loading feedback data:', error);
+      // Use sample data as fallback for development
+      feedbackAllData = [];
+      feedbackFilteredData = [];
+    }
+  }
+
+  // Update feedback statistics
+  function updateFeedbackStats() {
+    const totalFeedback = feedbackAllData.length;
+    const activeIssues = feedbackAllData.filter(item => item.status === 'Active').length;
+    const resolvedIssues = feedbackAllData.filter(item => item.status === 'Resolved').length;
+    const averageRating = feedbackAllData.length > 0 
+      ? (feedbackAllData.reduce((sum, item) => sum + item.rating, 0) / feedbackAllData.length).toFixed(1)
+      : 0;
+
+    // Update the stat cards
+    const totalFeedbackEl = document.getElementById('totalFeedback');
+    const activeIssuesEl = document.getElementById('activeIssues');
+    const resolvedIssuesEl = document.getElementById('resolvedIssues');
+    const averageRatingEl = document.getElementById('averageRating');
+
+    if (totalFeedbackEl) totalFeedbackEl.textContent = totalFeedback;
+    if (activeIssuesEl) activeIssuesEl.textContent = activeIssues;
+    if (resolvedIssuesEl) resolvedIssuesEl.textContent = resolvedIssues;
+    if (averageRatingEl) averageRatingEl.textContent = averageRating;
+  }
+
+  // Render feedback table
+  function renderFeedbackTable() {
+    const tbody = document.getElementById('feedbackTableBody');
+    if (!tbody) return;
+
+    const startIndex = (feedbackCurrentPage - 1) * feedbackItemsPerPage;
+    const endIndex = startIndex + feedbackItemsPerPage;
+    const pageData = feedbackFilteredData.slice(startIndex, endIndex);
+
+    if (pageData.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <div class="empty-state-content">
+              <div class="empty-state-icon">💬</div>
+              <div class="empty-state-title">No Feedback Found</div>
+              <div class="empty-state-desc">No feedback matches your current filters.</div>
+            </div>
+          </td>
+        </tr>
+      `;
+      // Hide pagination when no data
+      const paginationContainer = document.getElementById('feedbackPagination');
+      if (paginationContainer) {
+        paginationContainer.style.display = 'none';
+      }
+      return;
+    }
+
+    tbody.innerHTML = pageData.map(item => {
+      // Defensive programming - ensure all properties exist
+      const safeItem = {
+        id: item.id || 0,
+        name: item.name || 'Unknown',
+        description: item.description || 'No description',
+        type: item.type || 'General Feedback',
+        priority: item.priority || 'Low',
+        status: item.status || 'Active',
+        rating: parseInt(item.rating) || 3,
+        date: item.date || new Date().toLocaleDateString()
+      };
+      
+      return `
+        <tr>
+          <td>
+            <div class="customer-info">
+              <div class="customer-name">${safeItem.name}</div>
+              <div class="customer-desc">${safeItem.description}</div>
+            </div>
+          </td>
+          <td><span class="type-badge">${safeItem.type}</span></td>
+          <td><span class="priority-badge priority-${safeItem.priority.toLowerCase()}">${safeItem.priority}</span></td>
+          <td><span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '🕐' : '✅'} ${safeItem.status}</span></td>
+          <td>
+            <div class="rating-stars">
+              ${Array.from({length: 5}, (_, i) => 
+                `<span class="star ${i < safeItem.rating ? 'filled' : ''}">⭐</span>`
+              ).join('')}
+            </div>
+          </td>
+          <td>${safeItem.date}</td>
+          <td><button class="action-btn" onclick="viewFeedback(${safeItem.id})">View</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Render feedback cards
+  function renderFeedbackCards() {
+    const cardsGrid = document.getElementById('feedbackCardsGrid');
+    if (!cardsGrid) return;
+
+    const startIndex = (feedbackCurrentPage - 1) * feedbackItemsPerPage;
+    const endIndex = startIndex + feedbackItemsPerPage;
+    const pageData = feedbackFilteredData.slice(startIndex, endIndex);
+
+    if (pageData.length === 0) {
+      cardsGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #bfc9da;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+            <div style="font-size: 48px; opacity: 0.5;">📝</div>
+            <div style="font-size: 18px; font-weight: 500;">No feedback entries found</div>
+            <div style="font-size: 14px; opacity: 0.7;">Try adjusting your search or filter criteria</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    cardsGrid.innerHTML = pageData.map(item => {
+      // Defensive programming - ensure all properties exist
+      const safeItem = {
+        id: item.id || 0,
+        name: item.name || 'Unknown',
+        description: item.description || 'No description',
+        type: item.type || 'General Feedback',
+        priority: item.priority || 'Low',
+        status: item.status || 'Active',
+        rating: parseInt(item.rating) || 3,
+        date: item.date || new Date().toLocaleDateString()
+      };
+      
+      return `
+        <div class="feedback-card">
+          <div class="feedback-card-header">
+            <div class="feedback-card-customer">
+              <div class="feedback-card-name">${safeItem.name}</div>
+              <div class="feedback-card-date">${safeItem.date}</div>
+            </div>
+            <div class="feedback-card-rating">
+              <div class="rating-stars">
+                ${Array.from({length: 5}, (_, i) => 
+                  `<span class="star ${i < safeItem.rating ? 'filled' : ''}">⭐</span>`
+                ).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="feedback-card-body">
+            <div class="feedback-card-description">${safeItem.description}</div>
+          </div>
+          <div class="feedback-card-footer">
+            <div class="feedback-card-badges">
+              <span class="type-badge">${safeItem.type}</span>
+              <span class="priority-badge priority-${safeItem.priority.toLowerCase()}">${safeItem.priority}</span>
+              <span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '🕐' : '✅'} ${safeItem.status}</span>
+            </div>
+            <div class="feedback-card-actions">
+              <button class="action-btn" onclick="viewFeedback(${safeItem.id})">View</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render feedback pagination
+  function renderFeedbackPagination() {
+    const tablePaginationContainer = document.getElementById('feedbackPagination');
+    const cardsPaginationContainer = document.getElementById('feedbackCardsPagination');
+    
+    const totalItems = feedbackFilteredData.length;
+    const totalPages = Math.ceil(totalItems / feedbackItemsPerPage);
+
+    console.log('Rendering pagination:', {
+      totalItems,
+      feedbackItemsPerPage,
+      totalPages,
+      currentPage: feedbackCurrentPage,
+      tableContainerFound: !!tablePaginationContainer,
+      cardsContainerFound: !!cardsPaginationContainer
+    });
+
+    // Hide pagination only if no data
+    if (totalItems === 0) {
+      console.log('Hiding pagination - no data');
+      if (tablePaginationContainer) tablePaginationContainer.style.display = 'none';
+      if (cardsPaginationContainer) cardsPaginationContainer.style.display = 'none';
+      return;
+    }
+
+    // Show pagination when there's data (even if only one page)
+    console.log('Showing pagination - data exists');
+    if (tablePaginationContainer) tablePaginationContainer.style.display = 'block';
+    if (cardsPaginationContainer) cardsPaginationContainer.style.display = 'block';
+
+    const startItem = (feedbackCurrentPage - 1) * feedbackItemsPerPage + 1;
+    const endItem = Math.min(feedbackCurrentPage * feedbackItemsPerPage, totalItems);
+
+    let paginationHTML = `
+      <div class="pagination-info">
+        Showing ${startItem}-${endItem} of ${totalItems} feedback entries | Page ${feedbackCurrentPage} of ${totalPages}
+      </div>
+    `;
+
+    // Always show pagination controls when there's data
+    paginationHTML += `<div class="pagination-controls">`;
+
+    // Previous button
+    if (feedbackCurrentPage > 1) {
+      paginationHTML += `<button class="pagination-btn" onclick="goToFeedbackPage(${feedbackCurrentPage - 1})">‹</button>`;
+    }
+
+    // Page numbers
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, feedbackCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    if (startPage > 1) {
+      paginationHTML += `<button class="pagination-btn" onclick="goToFeedbackPage(1)">1</button>`;
+      if (startPage > 2) {
+        paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      if (i === feedbackCurrentPage) {
+        paginationHTML += `<span class="pagination-current">${i}</span>`;
+      } else {
+        paginationHTML += `<button class="pagination-btn" onclick="goToFeedbackPage(${i})">${i}</button>`;
+      }
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+      }
+      paginationHTML += `<button class="pagination-btn" onclick="goToFeedbackPage(${totalPages})">${totalPages}</button>`;
+    }
+
+    // Next button
+    if (feedbackCurrentPage < totalPages) {
+      paginationHTML += `<button class="pagination-btn" onclick="goToFeedbackPage(${feedbackCurrentPage + 1})">›</button>`;
+    }
+
+    paginationHTML += `</div>`;
+
+    // Apply pagination to both containers
+    if (tablePaginationContainer) {
+      tablePaginationContainer.innerHTML = paginationHTML;
+    }
+    if (cardsPaginationContainer) {
+      cardsPaginationContainer.innerHTML = paginationHTML;
+    }
+  }
+
+  // Go to specific page
+  function goToFeedbackPage(page) {
+    const totalPages = Math.ceil(feedbackFilteredData.length / feedbackItemsPerPage);
+    if (page >= 1 && page <= totalPages) {
+      feedbackCurrentPage = page;
+      renderFeedbackTable();
+      renderFeedbackCards();
+      renderFeedbackPagination();
+    }
+  }
+
+  // Change records per page
+  function changeFeedbackRecordsPerPage(newPerPage) {
+    console.log('Changing records per page to:', newPerPage);
+    feedbackItemsPerPage = parseInt(newPerPage);
+    feedbackCurrentPage = 1; // Reset to first page
+    console.log('New items per page:', feedbackItemsPerPage);
+    renderFeedbackTable();
+    renderFeedbackCards();
+    renderFeedbackPagination();
+  }
+
+  // Apply filters
+  function applyFeedbackFilters() {
+    const searchTerm = document.getElementById('feedbackSearch')?.value.toLowerCase() || '';
+    const typeFilter = document.getElementById('feedbackTypeFilter')?.value || '';
+    const priorityFilter = document.getElementById('feedbackPriorityFilter')?.value || '';
+    const statusFilter = document.getElementById('feedbackStatusFilter')?.value || '';
+
+    feedbackFilteredData = feedbackAllData.filter(item => {
+      const matchesSearch = !searchTerm || 
+        item.name.toLowerCase().includes(searchTerm) || 
+        item.description.toLowerCase().includes(searchTerm);
+      const matchesType = !typeFilter || item.type === typeFilter;
+      const matchesPriority = !priorityFilter || item.priority === priorityFilter;
+      const matchesStatus = !statusFilter || item.status === statusFilter;
+
+      return matchesSearch && matchesType && matchesPriority && matchesStatus;
+    });
+
+    feedbackCurrentPage = 1; // Reset to first page
+    renderFeedbackTable();
+    renderFeedbackCards();
+    renderFeedbackPagination();
+  }
+
+  // Clear filters
+  function clearFeedbackFilters() {
+    document.getElementById('feedbackSearch').value = '';
+    document.getElementById('feedbackTypeFilter').value = '';
+    document.getElementById('feedbackPriorityFilter').value = '';
+    document.getElementById('feedbackStatusFilter').value = '';
+    document.getElementById('feedbackRecordsPerPage').value = '6';
+    
+    feedbackItemsPerPage = 6;
+    feedbackCurrentPage = 1;
+    feedbackFilteredData = [...feedbackAllData];
+    renderFeedbackTable();
+    renderFeedbackCards();
+    renderFeedbackPagination();
+  }
+
+  // Refresh feedback data
+  function refreshFeedbackData() {
+    console.log('Refreshing feedback data...');
+    initializeFeedbackData();
+  }
+
+  // View feedback details
+  function viewFeedback(feedbackId) {
+    console.log('Viewing feedback:', feedbackId);
+    
+    // Find the feedback item
+    const feedbackItem = feedbackAllData.find(item => item.id == feedbackId);
+    if (!feedbackItem) {
+      console.error('Feedback item not found:', feedbackId);
+      return;
+    }
+    
+    // Debug admin response data
+    console.log('Admin response data for feedback:', feedbackItem.id);
+    console.log('Admin notes:', feedbackItem.admin_notes);
+    console.log('Response text:', feedbackItem.response_text);
+    console.log('Has admin response:', !!(feedbackItem.admin_notes || feedbackItem.response_text));
+    
+    // Add friendly message if no admin response exists
+    if (!feedbackItem.response_text) {
+      feedbackItem.response_text = 'We typically respond to feedback within 24 hours. Thank you for your patience!';
+      console.log('Added friendly no-response message');
+    }
+    
+    // Create feedback details HTML
+    const feedbackDetailsHTML = `
+      <div class="feedback-details">
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Customer Name:</div>
+          <div class="feedback-detail-value">${feedbackItem.name}</div>
+        </div>
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Feedback Type:</div>
+          <div class="feedback-detail-value">
+            <span class="type-badge">${feedbackItem.type}</span>
+          </div>
+        </div>
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Priority:</div>
+          <div class="feedback-detail-value">
+            <span class="priority-badge priority-${feedbackItem.priority.toLowerCase()}">${feedbackItem.priority}</span>
+          </div>
+        </div>
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Status:</div>
+          <div class="feedback-detail-value">
+            <span class="status-badge status-${feedbackItem.status.toLowerCase()}">${feedbackItem.status === 'Active' ? '🕐' : '✅'} ${feedbackItem.status}</span>
+          </div>
+        </div>
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Rating:</div>
+          <div class="feedback-detail-value">
+            <div class="rating-stars">
+              ${Array.from({length: 5}, (_, i) => 
+                `<span class="star ${i < feedbackItem.rating ? 'filled' : ''}">⭐</span>`
+              ).join('')}
+              <span class="rating-text">(${feedbackItem.rating}/5)</span>
+            </div>
+          </div>
+        </div>
+        <div class="feedback-detail-row">
+          <div class="feedback-detail-label">Date:</div>
+          <div class="feedback-detail-value">${feedbackItem.date}</div>
+        </div>
+        <div class="feedback-detail-row feedback-detail-full">
+          <div class="feedback-detail-label">Description:</div>
+          <div class="feedback-detail-value feedback-description">${feedbackItem.description}</div>
+        </div>
+        
+        <!-- Admin Response Section -->
+        <div class="admin-response-section">
+          <div class="feedback-detail-row feedback-detail-full">
+            <div class="feedback-detail-label">Admin Response:</div>
+            <div class="feedback-detail-value feedback-description">${feedbackItem.response_text}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Load content into modal
+    const contentDiv = document.getElementById('feedbackViewContent');
+    if (contentDiv) {
+      contentDiv.innerHTML = feedbackDetailsHTML;
+    }
+    
+    // Show modal
+    const modal = document.getElementById('feedbackViewModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+
+  // Close feedback view modal
+  function closeFeedbackView() {
+    const modal = document.getElementById('feedbackViewModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  // Make functions globally available
+  window.goToFeedbackPage = goToFeedbackPage;
+  window.changeFeedbackRecordsPerPage = changeFeedbackRecordsPerPage;
+  window.applyFeedbackFilters = applyFeedbackFilters;
+  window.clearFeedbackFilters = clearFeedbackFilters;
+  window.initializeFeedbackData = initializeFeedbackData;
+  window.refreshFeedbackData = refreshFeedbackData;
+  window.viewFeedback = viewFeedback;
+  window.closeFeedbackView = closeFeedbackView;
+  
+  // Test function for debugging
+  window.testFeedbackPageFilter = function(value) {
+    console.log('Testing page filter with value:', value);
+    changeFeedbackRecordsPerPage(value);
+  };
+  
+  // Force render pagination function
+  window.forceRenderFeedbackPagination = function() {
+    console.log('Force rendering feedback pagination...');
+    renderFeedbackPagination();
+  };
+  
+  // Cleanup function to remove all feedback event listeners
+  window.cleanupFeedbackEventListeners = function() {
+    console.log('Cleaning up feedback event listeners...');
+    // Remove all event listeners by cloning elements
+    const elementsToClean = [
+      '.feedback-tab',
+      '.view-toggle-btn', 
+      '#feedbackSearch',
+      '#feedbackTypeFilter',
+      '#feedbackPriorityFilter', 
+      '#feedbackStatusFilter',
+      '#feedbackRecordsPerPage',
+      '#clearFiltersBtn'
+    ];
+    
+    elementsToClean.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => {
+        element.replaceWith(element.cloneNode(true));
+      });
+    });
+  };
+  
+  // Function to re-attach feedback event listeners (for SPA navigation)
+  window.attachFeedbackEventListeners = function() {
+    console.log('Re-attaching feedback event listeners...');
+    
+    // Remove existing event listeners to prevent duplicates
+    const existingTabButtons = document.querySelectorAll('.feedback-tab');
+    existingTabButtons.forEach(button => {
+      button.replaceWith(button.cloneNode(true));
+    });
+    
+    const existingViewButtons = document.querySelectorAll('.view-toggle-btn');
+    existingViewButtons.forEach(button => {
+      button.replaceWith(button.cloneNode(true));
+    });
+    
+    // Add tab switching functionality
+    const tabButtons = document.querySelectorAll('.feedback-tab');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const targetTab = this.getAttribute('data-tab');
+        console.log('Switching to tab:', targetTab);
+        
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.feedback-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.feedback-tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Show corresponding content
+        if (targetTab === 'submit') {
+          document.getElementById('submitTabContent').classList.add('active');
+        } else if (targetTab === 'history') {
+          document.getElementById('historyTabContent').classList.add('active');
+          // Re-render pagination when switching to history tab
+          setTimeout(() => {
+            console.log('Re-rendering pagination after tab switch...');
+            renderFeedbackPagination();
+          }, 50);
+        }
+      });
+    });
+
+    // Add view toggle functionality (cards/table)
+    const viewToggleButtons = document.querySelectorAll('.view-toggle-btn');
+    viewToggleButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const targetView = this.getAttribute('data-view');
+        console.log('Switching to view:', targetView);
+        
+        // Remove active class from all view buttons
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show/hide containers based on view
+        const cardsContainer = document.getElementById('feedbackCardsContainer');
+        const tableContainer = document.getElementById('feedbackTableContainer');
+        const cardsPagination = document.getElementById('feedbackCardsPagination');
+        const tablePagination = document.getElementById('feedbackPagination');
+        
+        if (targetView === 'cards') {
+          if (cardsContainer) cardsContainer.style.display = 'block';
+          if (tableContainer) tableContainer.style.display = 'none';
+          // Show cards pagination, hide table pagination
+          if (cardsPagination) cardsPagination.style.display = 'block';
+          if (tablePagination) tablePagination.style.display = 'none';
+          // Re-render cards when switching to card view
+          setTimeout(() => {
+            console.log('Re-rendering cards after view switch...');
+            renderFeedbackCards();
+          }, 50);
+        } else if (targetView === 'table') {
+          if (cardsContainer) cardsContainer.style.display = 'none';
+          if (tableContainer) tableContainer.style.display = 'block';
+          // Show table pagination, hide cards pagination
+          if (tablePagination) tablePagination.style.display = 'block';
+          if (cardsPagination) cardsPagination.style.display = 'none';
+          // Re-render table when switching to table view
+          setTimeout(() => {
+            console.log('Re-rendering table after view switch...');
+            renderFeedbackTable();
+          }, 50);
+        }
+      });
+    });
+    
+    const feedbackSearch = document.getElementById('feedbackSearch');
+    const feedbackTypeFilter = document.getElementById('feedbackTypeFilter');
+    const feedbackPriorityFilter = document.getElementById('feedbackPriorityFilter');
+    const feedbackStatusFilter = document.getElementById('feedbackStatusFilter');
+    const feedbackRecordsPerPage = document.getElementById('feedbackRecordsPerPage');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    
+    console.log('Elements found on re-attach:', {
+      feedbackSearch: !!feedbackSearch,
+      feedbackTypeFilter: !!feedbackTypeFilter,
+      feedbackPriorityFilter: !!feedbackPriorityFilter,
+      feedbackStatusFilter: !!feedbackStatusFilter,
+      feedbackRecordsPerPage: !!feedbackRecordsPerPage,
+      clearFiltersBtn: !!clearFiltersBtn
+    });
+    
+    if (feedbackSearch) feedbackSearch.addEventListener('input', applyFeedbackFilters);
+    if (feedbackTypeFilter) feedbackTypeFilter.addEventListener('change', applyFeedbackFilters);
+    if (feedbackPriorityFilter) feedbackPriorityFilter.addEventListener('change', applyFeedbackFilters);
+    if (feedbackStatusFilter) feedbackStatusFilter.addEventListener('change', applyFeedbackFilters);
+    if (feedbackRecordsPerPage) {
+      console.log('Re-attaching records per page event listener');
+      feedbackRecordsPerPage.addEventListener('change', function() {
+        console.log('Records per page changed to:', this.value);
+        changeFeedbackRecordsPerPage(this.value);
+      });
+    } else {
+      console.error('feedbackRecordsPerPage element not found on re-attach');
+    }
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFeedbackFilters);
+    
+    // Add feedback view modal event listeners
+    const feedbackViewModal = document.getElementById('feedbackViewModal');
+    const feedbackViewBackdrop = feedbackViewModal?.querySelector('.config-modal-backdrop');
+    const feedbackViewClose = feedbackViewModal?.querySelector('.config-modal-close');
+    
+    if (feedbackViewBackdrop) {
+      feedbackViewBackdrop.addEventListener('click', closeFeedbackView);
+    }
+    
+    if (feedbackViewClose) {
+      feedbackViewClose.addEventListener('click', closeFeedbackView);
+    }
+  };
 </script>
 </body>
 </html>

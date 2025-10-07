@@ -151,8 +151,9 @@
   position: relative;
 }
 
-.nav-item.is-truncated:hover .nav-text::after {
-  content: attr(data-fulltext);
+/* Only show tooltip when text is actually truncated */
+.nav-item.is-truncated:hover .nav-text[data-truncated="true"]::after {
+  content: attr(data-tooltip);
   position: absolute;
   left: 100%;
   top: 50%;
@@ -165,6 +166,10 @@
   white-space: nowrap;
   z-index: 1000;
   font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar-divider {

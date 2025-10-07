@@ -464,12 +464,8 @@ window.initUserLogPage = function() {
             return activity === 'login' || activity === 'session' || details.includes('login');
           case 'logout':
             return activity === 'logout' || details.includes('logout');
-          case 'add':
-            return details.includes('add') || details.includes('created') || details.includes('added');
           case 'update':
             return details.includes('update') || details.includes('edit') || details.includes('changed') || details.includes('updated');
-          case 'delete':
-            return details.includes('delete') || details.includes('deleted');
           default:
             return true;
         }
@@ -584,7 +580,7 @@ window.initUserLogPage = function() {
       }
       return;
     }
-    const allowed = ['login','logout','update','delete','add'];
+    const allowed = ['login','logout','update'];
     data.forEach(item => {
       const row = document.createElement('tr');
       
@@ -659,7 +655,8 @@ window.initUserLogPage = function() {
     const paginationContainer = document.getElementById('userLogPagination');
     if (!paginationContainer) return;
     
-    if (totalPages <= 1 || totalRecords === 0) {
+    // Hide pagination only if no data
+    if (totalRecords === 0) {
       paginationContainer.innerHTML = '';
       paginationContainer.style.display = 'none';
       return;
@@ -670,7 +667,7 @@ window.initUserLogPage = function() {
     
     let paginationHTML = `
       <div class="pagination-info">
-        Showing ${startRecord} to ${endRecord} of ${totalRecords} records
+        Showing ${startRecord} to ${endRecord} of ${totalRecords} records | Page ${currentPage} of ${totalPages}
       </div>
       <div class="pagination-controls">
     `;
