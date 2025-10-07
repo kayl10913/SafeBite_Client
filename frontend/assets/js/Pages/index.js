@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initScrollIndicators();
     initScrollSnapping();
     initScrollProgress();
+    initUserStatistics();
+    initFeedbacks();
 });
 
 // Navigation functionality
@@ -385,10 +387,29 @@ function initCounters() {
 }
 
 function animateCounter(element) {
-    const target = parseInt(element.textContent.replace(/[^\d]/g, ''));
+    const originalText = element.textContent;
+    const target = parseInt(originalText.replace(/[^\d]/g, ''));
     const duration = 2000;
     const increment = target / (duration / 16);
     let current = 0;
+    
+    // Handle special cases for different formats
+    let formatFunction;
+    if (originalText.includes('99.9%')) {
+        formatFunction = (val) => '99.9%';
+    } else if (originalText.includes('24/7')) {
+        formatFunction = (val) => '24/7';
+    } else if (originalText.includes('+')) {
+        // Handle dynamic user count (e.g., "1000+", "5+", etc.)
+        const suffix = originalText.replace(/[\d]/g, '');
+        formatFunction = (val) => Math.floor(val) + suffix;
+    } else if (originalText.includes('80%')) {
+        formatFunction = (val) => '80%';
+    } else {
+        // Default behavior for other counters
+        const suffix = originalText.replace(/[\d]/g, '');
+        formatFunction = (val) => Math.floor(val) + suffix;
+    }
     
     const timer = setInterval(() => {
         current += increment;
@@ -397,8 +418,7 @@ function animateCounter(element) {
             clearInterval(timer);
         }
         
-        const suffix = element.textContent.replace(/[\d]/g, '');
-        element.textContent = Math.floor(current) + suffix;
+        element.textContent = formatFunction(current);
     }, 16);
 }
 
@@ -803,4 +823,132 @@ if ('serviceWorker' in navigator) {
                 console.log('ServiceWorker registration failed');
             });
     });
+}
+
+// Initialize user statistics from database
+function initUserStatistics() {
+    // Fetch user count from the API
+    fetch('/api/statistics/user-count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const userCount = data.data.totalActiveUsers;
+                
+                // Update desktop user count (the "Users" section you selected)
+                const desktopUserStat = document.querySelector('.hero-stats .stat:last-child .stat-number');
+                if (desktopUserStat) {
+                    desktopUserStat.textContent = userCount + '+';
+                }
+                
+                // Update mobile user count
+                const mobileUserStat = document.querySelector('.hero-stats-mobile .stat:last-child .stat-number');
+                if (mobileUserStat) {
+                    mobileUserStat.textContent = userCount + '+';
+                }
+                
+                // Update testimonials section "Happy Users" count
+                const happyUsersStat = document.querySelector('.stats-section .stat-item:first-child .stat-number');
+                if (happyUsersStat) {
+                    happyUsersStat.textContent = userCount + '+';
+                }
+            }
+        })
+        .catch(error => {
+            // Keep the default values if API call fails
+        });
+}
+
+// Initialize feedbacks from database
+function initFeedbacks() {
+    // Fetch feedbacks from the API
+    fetch('/api/statistics/feedbacks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const feedbacks = data.data.feedbacks;
+                const totalFeedbacks = data.data.totalFeedbacks;
+                
+                // Update testimonials section with real feedbacks
+                updateTestimonials(feedbacks);
+                
+                // Update feedback count in statistics
+                updateFeedbackCount(totalFeedbacks);
+            }
+        })
+        .catch(error => {
+            // Keep the default testimonials if API call fails
+        });
+}
+
+// Update testimonials section with real feedbacks
+function updateTestimonials(feedbacks) {
+    const testimonialCards = document.querySelectorAll('.testimonial-card');
+    
+    // First, hide all testimonial cards
+    testimonialCards.forEach(card => {
+        card.style.display = 'none';
+    });
+    
+    // Then show and update only the cards with real feedback data
+    feedbacks.forEach((feedback, index) => {
+        if (testimonialCards[index]) {
+            const card = testimonialCards[index];
+            
+            // Show this card since we have real data for it
+            card.style.display = 'block';
+            
+            // Update testimonial text
+            const textElement = card.querySelector('.testimonial-text');
+            if (textElement) {
+                textElement.textContent = feedback.text;
+            }
+            
+            // Update star rating
+            const ratingElement = card.querySelector('.rating');
+            if (ratingElement) {
+                ratingElement.innerHTML = '';
+                for (let i = 0; i < feedback.starRating; i++) {
+                    ratingElement.innerHTML += '<i class="fas fa-star"></i>';
+                }
+            }
+            
+            // Update user name
+            const nameElement = card.querySelector('.user-name');
+            if (nameElement) {
+                nameElement.textContent = feedback.customerName;
+            }
+            
+            // Update user role with tester type information
+            const roleElement = card.querySelector('.user-role');
+            if (roleElement) {
+                if (feedback.testerTypeId) {
+                    roleElement.textContent = `Tester Type ${feedback.testerTypeId}`;
+                } else {
+                    roleElement.textContent = 'SafeBite User';
+                }
+            }
+            
+            // Update company (you can customize this based on your data)
+            const companyElement = card.querySelector('.user-company');
+            if (companyElement) {
+                companyElement.textContent = 'Verified Customer';
+            }
+            
+            // Remove profile avatar completely
+            const avatarElement = card.querySelector('.user-avatar');
+            if (avatarElement) {
+                avatarElement.style.display = 'none';
+            }
+            
+        }
+    });
+}
+
+// Update feedback count in statistics section
+function updateFeedbackCount(totalFeedbacks) {
+    // Hide the entire statistics section
+    const statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+        statsSection.style.display = 'none';
+    }
 }

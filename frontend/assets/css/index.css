@@ -410,7 +410,7 @@ body {
     background: #ffffff;
     margin: 3px 0;
     transition: 0.3s;
-    border-radius: 2px;
+    border-radius: 1px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -786,10 +786,10 @@ body {
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
+    width: 120px;
+    height: 2px;
     background: linear-gradient(90deg, #6EB1D6, #89CFF1);
-    border-radius: 2px;
+    border-radius: 1px;
 }
 
 .section-description {
@@ -1007,12 +1007,89 @@ body {
     padding: 8rem 0;
     background: linear-gradient(135deg, rgba(0, 58, 107, 0.7) 0%, rgba(27, 88, 134, 0.7) 50%, rgba(55, 118, 161, 0.7) 100%);
     position: relative;
+    overflow: hidden;
+}
+
+/* Background Design Elements */
+.testimonials::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 5%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(110, 177, 214, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.testimonials::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    right: 8%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(89, 207, 241, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Additional decorative circles */
+.testimonials .container::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: 15%;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(110, 177, 214, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.testimonials .container::after {
+    content: '';
+    position: absolute;
+    bottom: 25%;
+    left: 20%;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(89, 207, 241, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Curved background shapes */
+.testimonials-grid::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -30px;
+    width: 300px;
+    height: 200px;
+    background: linear-gradient(45deg, rgba(110, 177, 214, 0.03) 0%, transparent 50%);
+    border-radius: 50% 20% 60% 30%;
+    z-index: 1;
+}
+
+.testimonials-grid::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    right: -20px;
+    width: 250px;
+    height: 150px;
+    background: linear-gradient(-45deg, rgba(89, 207, 241, 0.04) 0%, transparent 50%);
+    border-radius: 30% 60% 20% 50%;
+    z-index: 1;
 }
 
 .testimonials .section-title {
     position: relative;
     display: inline-block;
     color: #ffffff;
+    z-index: 2;
 }
 
 .testimonials .section-title::after {
@@ -1021,14 +1098,16 @@ body {
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
+    width: 120px;
+    height: 2px;
     background: linear-gradient(90deg, #6EB1D6, #89CFF1);
-    border-radius: 2px;
+    border-radius: 1px;
 }
 
 .testimonials .section-description {
     color: #ffffff;
+    position: relative;
+    z-index: 2;
 }
 
 .testimonials-grid {
@@ -1037,76 +1116,100 @@ body {
     gap: 1.5rem;
     margin-bottom: 4rem;
     position: relative;
-    z-index: 1;
+    z-index: 2;
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
 }
 
 .testimonial-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    padding: 1.5rem;
-    border-radius: 16px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2.5rem 2rem 2.5rem 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 58, 107, 0.3);
     position: relative;
     transition: all 0.3s ease;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
+    margin: 2rem 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: visible;
 }
 
 .testimonial-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(110, 177, 214, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(110, 177, 214, 0.4);
 }
 
-.quote-icon {
+
+/* Curved line connecting the quote icons */
+.testimonial-card::before {
+    content: '';
     position: absolute;
-    top: -12px;
-    left: 25px;
-    width: 35px;
-    height: 35px;
-    background: #6EB1D6;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1rem;
-    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid transparent;
+    border-top-color: rgba(110, 177, 214, 0.6);
+    border-right-color: rgba(110, 177, 214, 0.6);
+    border-radius: 20px;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .testimonial-text {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
     color: #ffffff;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
     margin-top: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .rating {
     display: flex;
     gap: 0.25rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
+    justify-content: flex-end;
+    flex-shrink: 0;
 }
 
 .rating i {
-    color: #fbbf24;
-    font-size: 1rem;
+    color: #89CFF1;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-info {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(110, 177, 214, 0.3);
 }
 
 .user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
+    border: 2px solid rgba(110, 177, 214, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #89CFF1;
+    font-size: 1.5rem;
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -1122,22 +1225,25 @@ body {
 }
 
 .user-name {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: #ffffff;
     margin-bottom: 0.25rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-role {
-    font-size: 0.8rem;
-    color: #6EB1D6;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-company {
-    font-size: 0.75rem;
-    color: #ffffff;
+    font-size: 0.8rem;
+    color: #89CFF1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .stats-section {
@@ -1979,23 +2085,27 @@ body {
     }
 
     .testimonial-text {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         line-height: 1.4;
         margin-bottom: 0.75rem;
     }
 
     .user-name {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         margin-bottom: 0.25rem;
     }
 
     .user-role {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         margin-bottom: 0.25rem;
     }
 
     .user-company {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
+    }
+
+    .rating i {
+        font-size: 0.8rem;
     }
 
     .quote-icon {
@@ -2192,23 +2302,27 @@ body {
     }
 
     .testimonial-text {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         line-height: 1.3;
         margin-bottom: 0.6rem;
     }
 
     .user-name {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         margin-bottom: 0.2rem;
     }
 
     .user-role {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         margin-bottom: 0.2rem;
     }
 
     .user-company {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
+    }
+
+    .rating i {
+        font-size: 0.75rem;
     }
 
     .quote-icon {
@@ -2339,23 +2453,27 @@ body {
     }
 
     .testimonial-text {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         line-height: 1.2;
         margin-bottom: 0.5rem;
     }
 
     .user-name {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         margin-bottom: 0.15rem;
     }
 
     .user-role {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         margin-bottom: 0.15rem;
     }
 
     .user-company {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
+    }
+
+    .rating i {
+        font-size: 0.7rem;
     }
 
     .quote-icon {
@@ -2555,23 +2673,27 @@ body {
     }
 
     .testimonial-text {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         line-height: 1.1;
         margin-bottom: 0.4rem;
     }
 
     .user-name {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         margin-bottom: 0.1rem;
     }
 
     .user-role {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         margin-bottom: 0.1rem;
     }
 
     .user-company {
-        font-size: 0.5rem;
+        font-size: 0.45rem;
+    }
+
+    .rating i {
+        font-size: 0.65rem;
     }
 
     .quote-icon {
@@ -2834,7 +2956,7 @@ body {
         background: #ffffff;
         margin: 3px 0;
         transition: 0.3s;
-        border-radius: 2px;
+        border-radius: 1px;
     }
     
     .nav-menu {
