@@ -25,7 +25,6 @@ class FeedbackCenter {
   updateRecordsPerPage(newValue) {
     this.recordsPerPage = parseInt(newValue) || 6;
     this.currentPage = 1; // Reset to first page
-    console.log('Records per page updated to:', this.recordsPerPage);
     
     // Refresh the current view
     this.renderTable();
@@ -641,14 +640,6 @@ class FeedbackCenter {
     const totalPages = Math.ceil(totalRecords / this.recordsPerPage);
     const paginationContainer = document.getElementById('feedbackPagination');
     
-    console.log('Rendering pagination:', {
-      totalRecords,
-      totalPages,
-      currentPage: this.currentPage,
-      recordsPerPage: this.recordsPerPage,
-      containerFound: !!paginationContainer
-    });
-    
     if (!paginationContainer || totalRecords === 0) {
       if (paginationContainer) paginationContainer.style.display = 'none';
       return;
@@ -672,7 +663,6 @@ class FeedbackCenter {
     paginationContainer.appendChild(pageInfo);
 
     // Always show pagination controls (even for single page)
-    console.log('Creating pagination controls...');
     const controlsContainer = document.createElement('div');
     controlsContainer.className = 'pagination-controls';
     controlsContainer.style.display = 'flex';
@@ -723,7 +713,6 @@ class FeedbackCenter {
     controlsContainer.appendChild(nextBtn);
     
     paginationContainer.appendChild(controlsContainer);
-    console.log('Pagination controls added to container');
   }
 
 
