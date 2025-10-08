@@ -2,7 +2,7 @@
 class FeedbackCenter {
   constructor() {
     this.currentPage = 1;
-    this.recordsPerPage = 25;
+    this.recordsPerPage = this.getRecordsPerPageFromUI();
     this.currentFilters = {
       search: '',
       type: '',
@@ -12,6 +12,28 @@ class FeedbackCenter {
     this.feedbackData = [];
     
     this.init();
+  }
+
+  getRecordsPerPageFromUI() {
+    const recordsPerPageSelect = document.getElementById('feedbackRecordsPerPage');
+    if (recordsPerPageSelect) {
+      return parseInt(recordsPerPageSelect.value) || 6;
+    }
+    return 6; // Default to 6 if not found
+  }
+
+  updateRecordsPerPage(newValue) {
+    this.recordsPerPage = parseInt(newValue) || 6;
+    this.currentPage = 1; // Reset to first page
+    console.log('Records per page updated to:', this.recordsPerPage);
+    
+    // Refresh the current view
+    this.renderTable();
+    this.renderCards();
+    
+    // Re-render pagination
+    const filteredData = this.getFilteredData();
+    this.renderPagination(filteredData.length);
   }
 
   async init() {
@@ -97,6 +119,23 @@ class FeedbackCenter {
       });
     }
 
+    // Records per page functionality
+    const recordsPerPageSelect = document.getElementById('feedbackRecordsPerPage');
+    if (recordsPerPageSelect) {
+      recordsPerPageSelect.addEventListener('change', (e) => {
+        this.updateRecordsPerPage(e.target.value);
+      });
+      
+      // Also sync with the existing global function
+      if (window.changeFeedbackRecordsPerPage) {
+        const originalFunction = window.changeFeedbackRecordsPerPage;
+        window.changeFeedbackRecordsPerPage = (newPerPage) => {
+          originalFunction(newPerPage);
+          this.updateRecordsPerPage(newPerPage);
+        };
+      }
+    }
+
     // View toggle
     const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
     viewToggleBtns.forEach(btn => {
@@ -159,6 +198,12 @@ class FeedbackCenter {
     if (tabName === 'history') {
       const activeView = document.querySelector('.view-toggle-btn.active').dataset.view;
       this.switchView(activeView);
+      
+      // Ensure pagination is rendered when switching to history
+      setTimeout(() => {
+        const filteredData = this.getFilteredData();
+        this.renderPagination(filteredData.length);
+      }, 100);
     }
   }
 
@@ -179,11 +224,21 @@ class FeedbackCenter {
 
   async submitFeedbackForm(form) {
     const formData = new FormData(form);
-    const rating = parseInt(formData.get('rating')) || null;
+    const rawRating = formData.get('rating');
+    const rating = (rawRating && rawRating !== '' && rawRating !== null) ? parseInt(rawRating) : 0;
     const feedback_type = formData.get('type') || '';
     const priority = formData.get('priority') || '';
     const feedback_text = formData.get('description') || '';
     const sentiment = rating >= 4 ? 'Positive' : (rating >= 3 ? 'Neutral' : 'Negative');
+    
+    console.log('Feedback submission data:', {
+      rawRating,
+      rating,
+      feedback_type,
+      priority,
+      feedback_text,
+      sentiment
+    });
 
     const token = this.getAuthToken();
     if (!token) {
@@ -208,9 +263,30 @@ class FeedbackCenter {
       });
       const json = await res.json();
       if (res.ok && json && json.success) {
+        // Clear existing data to force fresh load
+        this.feedbackData = [];
+        this.currentPage = 1;
+        
+        // Reload feedback data from server
         await Promise.all([this.loadFeedbacks(), this.loadStats()]);
+        
+        // Force refresh of the display
+        this.renderTable();
+        this.renderCards();
+        
+        // Ensure pagination is rendered after data reload
+        const filteredData = this.getFilteredData();
+        this.renderPagination(filteredData.length);
+        
         this.switchTab('history');
+        
+        // Preserve Name and Email fields, only reset other fields
+        const nameValue = form.querySelector('#feedbackName').value;
+        const emailValue = form.querySelector('#feedbackEmail').value;
         form.reset();
+        form.querySelector('#feedbackName').value = nameValue;
+        form.querySelector('#feedbackEmail').value = emailValue;
+        
         this.resetStarDisplay();
         this.clearFormValidation();
         this.showNotification('Feedback submitted successfully!', 'success');
@@ -324,7 +400,9 @@ class FeedbackCenter {
       if (!currentUser || !currentUser.user_id) {
         return;
       }
-      const res = await fetch(`/api/feedbacks/user/${encodeURIComponent(currentUser.user_id)}`);
+      // Add cache-busting parameter to ensure fresh data
+      const timestamp = new Date().getTime();
+      const res = await fetch(`/api/feedbacks/user/${encodeURIComponent(currentUser.user_id)}?t=${timestamp}`);
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         this.feedbackData = json.data.map(r => ({
@@ -335,7 +413,7 @@ class FeedbackCenter {
           type: r['FEEDBACK TYPE'] || r.feedback_type || '',
           priority: r['PRIORITY'] || r.priority || 'Low',
           status: r['STATUS'] || r.status || 'Active',
-          rating: Number(r['STAR RATE'] || r.star_rating || 0),
+          rating: Number(r['STAR RATE'] || r.star_rating || r.rating || 0),
           date: this.formatDate(r.created_at)
         }));
         this.renderTable();
@@ -368,7 +446,7 @@ class FeedbackCenter {
 
   updateStats() {
     const totalFeedback = Array.isArray(this.feedbackData) ? this.feedbackData.length : 0;
-    const activeIssues = (this.feedbackData || []).filter(f => (f.status || '').toLowerCase() === 'active').length;
+    const activeIssues = (this.feedbackData || []).filter(f => (f.status || '').toLowerCase() === 'active' && (f.type || '').toLowerCase() !== 'general feedback').length;
     const resolvedIssues = (this.feedbackData || []).filter(f => (f.status || '').toLowerCase() === 'resolved').length;
     const sumRatings = (this.feedbackData || []).reduce((sum, f) => sum + (Number(f.rating) || 0), 0);
     const averageRating = totalFeedback > 0 ? (sumRatings / totalFeedback).toFixed(1) : '0.0';
@@ -532,9 +610,12 @@ class FeedbackCenter {
   }
 
   renderStars(rating) {
+    // Ensure rating is a valid number
+    const numRating = Number(rating) || 0;
+    console.log('Rendering stars for rating:', numRating);
     let stars = '';
     for (let i = 1; i <= 5; i++) {
-      const filled = i <= rating ? 'filled' : '';
+      const filled = i <= numRating ? 'filled' : '';
       stars += `<span class="star ${filled}">⭐</span>`;
     }
     return stars;
@@ -555,17 +636,50 @@ class FeedbackCenter {
     return 'negative';
   }
 
+
   renderPagination(totalRecords) {
     const totalPages = Math.ceil(totalRecords / this.recordsPerPage);
     const paginationContainer = document.getElementById('feedbackPagination');
     
-    if (!paginationContainer || totalPages <= 1 || totalRecords === 0) {
+    console.log('Rendering pagination:', {
+      totalRecords,
+      totalPages,
+      currentPage: this.currentPage,
+      recordsPerPage: this.recordsPerPage,
+      containerFound: !!paginationContainer
+    });
+    
+    if (!paginationContainer || totalRecords === 0) {
       if (paginationContainer) paginationContainer.style.display = 'none';
       return;
     }
 
+    // Show pagination if there are records
     paginationContainer.style.display = 'flex';
+    paginationContainer.style.flexDirection = 'column';
+    paginationContainer.style.gap = '15px';
     paginationContainer.innerHTML = '';
+
+    // Show page info on the left (like default system)
+    const startItem = (this.currentPage - 1) * this.recordsPerPage + 1;
+    const endItem = Math.min(this.currentPage * this.recordsPerPage, totalRecords);
+    const pageInfo = document.createElement('div');
+    pageInfo.className = 'pagination-info';
+    pageInfo.style.textAlign = 'left';
+    pageInfo.style.alignSelf = 'flex-start';
+    pageInfo.style.width = '100%';
+    pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalRecords} feedback entries | Page ${this.currentPage} of ${totalPages}`;
+    paginationContainer.appendChild(pageInfo);
+
+    // Always show pagination controls (even for single page)
+    console.log('Creating pagination controls...');
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'pagination-controls';
+    controlsContainer.style.display = 'flex';
+    controlsContainer.style.justifyContent = 'center';
+    controlsContainer.style.alignItems = 'center';
+    controlsContainer.style.gap = '8px';
+    controlsContainer.style.flexWrap = 'wrap';
 
     // Previous button
     const prevBtn = document.createElement('button');
@@ -578,7 +692,7 @@ class FeedbackCenter {
         this.renderTable();
       }
     });
-    paginationContainer.appendChild(prevBtn);
+    controlsContainer.appendChild(prevBtn);
 
     // Page numbers
     const startPage = Math.max(1, this.currentPage - 2);
@@ -592,7 +706,7 @@ class FeedbackCenter {
         this.currentPage = i;
         this.renderTable();
       });
-      paginationContainer.appendChild(pageBtn);
+      controlsContainer.appendChild(pageBtn);
     }
 
     // Next button
@@ -606,7 +720,10 @@ class FeedbackCenter {
         this.renderTable();
       }
     });
-    paginationContainer.appendChild(nextBtn);
+    controlsContainer.appendChild(nextBtn);
+    
+    paginationContainer.appendChild(controlsContainer);
+    console.log('Pagination controls added to container');
   }
 
 

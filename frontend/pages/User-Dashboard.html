@@ -3278,12 +3278,16 @@
   let feedbackAllData = [];
   let feedbackFilteredData = [];
 
-  // Feedback data (will be loaded from API)
-  const sampleFeedbackData = [];
+  // Feedback data will be loaded from API
 
   // Initialize feedback data
   function initializeFeedbackData() {
     console.log('Initializing feedback data...');
+    
+    // Clear existing data to force fresh load
+    feedbackAllData = [];
+    feedbackFilteredData = [];
+    feedbackCurrentPage = 1;
     
     // Show loading state
     showFeedbackLoadingState();
@@ -3347,7 +3351,9 @@
   // Load feedback data from API
   async function loadFeedbackData() {
     try {
-      const response = await fetch('/api/feedbacks/', {
+      // Add cache-busting parameter to ensure fresh data
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/feedbacks/?t=${timestamp}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -3369,7 +3375,7 @@
       });
       
       if (data.success && data.data && Array.isArray(data.data)) {
-        console.log('Raw API data sample:', data.data[0]);
+        console.log('Raw API data received:', data.data.length, 'items');
         console.log('Available fields in API response:', Object.keys(data.data[0] || {}));
         
         // Map API data to expected format
@@ -3377,6 +3383,17 @@
           console.log(`Processing item ${index}:`, item);
           console.log(`Raw admin_notes:`, item.admin_notes);
           console.log(`Raw response_text:`, item.response_text);
+          const finalRating = parseInt(item['STAR RATE']) || parseInt(item.star_rating) || parseInt(item.starRating) || parseInt(item.rating) || 0;
+          console.log(`Rating data for item ${index}:`, {
+            'STAR RATE': item['STAR RATE'],
+            'star_rating': item.star_rating,
+            'starRating': item.starRating,
+            'rating': item.rating,
+            'final_rating': finalRating,
+            'type_star_rating': typeof item.star_rating,
+            'type_final': typeof finalRating,
+            'raw_item': item
+          });
           console.log(`Available fields:`, Object.keys(item));
           
           // Try multiple field name variations
@@ -3387,7 +3404,7 @@
             type: item['FEEDBACK TYPE'] || item.feedback_type || item.feedbackType || item.type || 'General Feedback',
             priority: item.PRIORITY || item.priority || item.priority_level || 'Low',
             status: item.STATUS || item.status || item.feedback_status || 'Active',
-            rating: parseInt(item['STAR RATE']) || parseInt(item.star_rating) || parseInt(item.starRating) || parseInt(item.rating) || 3,
+            rating: finalRating,
             date: item.created_at || item.date || item.submission_date || new Date().toLocaleDateString(),
             // Admin response fields - try multiple variations
             admin_notes: item.admin_notes || item.adminNotes || item['ADMIN NOTES'] || '',
@@ -3415,7 +3432,7 @@
       }
     } catch (error) {
       console.error('Error loading feedback data:', error);
-      // Use sample data as fallback for development
+      // Set empty arrays on error
       feedbackAllData = [];
       feedbackFilteredData = [];
     }
@@ -3424,7 +3441,7 @@
   // Update feedback statistics
   function updateFeedbackStats() {
     const totalFeedback = feedbackAllData.length;
-    const activeIssues = feedbackAllData.filter(item => item.status === 'Active').length;
+    const activeIssues = feedbackAllData.filter(item => item.status === 'Active' && item.type !== 'General Feedback').length;
     const resolvedIssues = feedbackAllData.filter(item => item.status === 'Resolved').length;
     const averageRating = feedbackAllData.length > 0 
       ? (feedbackAllData.reduce((sum, item) => sum + item.rating, 0) / feedbackAllData.length).toFixed(1)
@@ -3480,7 +3497,7 @@
         type: item.type || 'General Feedback',
         priority: item.priority || 'Low',
         status: item.status || 'Active',
-        rating: parseInt(item.rating) || 3,
+        rating: parseInt(item.rating) || 0,
         date: item.date || new Date().toLocaleDateString()
       };
       
@@ -3501,6 +3518,7 @@
                 `<span class="star ${i < safeItem.rating ? 'filled' : ''}">⭐</span>`
               ).join('')}
             </div>
+            <div style="font-size: 10px; color: #666;">(${safeItem.rating})</div>
           </td>
           <td>${safeItem.date}</td>
           <td><button class="action-btn" onclick="viewFeedback(${safeItem.id})">View</button></td>
@@ -3540,7 +3558,7 @@
         type: item.type || 'General Feedback',
         priority: item.priority || 'Low',
         status: item.status || 'Active',
-        rating: parseInt(item.rating) || 3,
+        rating: parseInt(item.rating) || 0,
         date: item.date || new Date().toLocaleDateString()
       };
       

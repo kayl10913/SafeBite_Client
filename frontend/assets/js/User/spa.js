@@ -188,7 +188,14 @@ function showFeedback() {
     
     // Initialize feedback center functionality
     if (window.FeedbackCenter) {
-      window.feedbackCenter = new FeedbackCenter();
+      try {
+        window.feedbackCenter = new FeedbackCenter();
+        console.log('SPA: FeedbackCenter initialized successfully');
+      } catch (error) {
+        console.error('SPA: Error initializing FeedbackCenter:', error);
+      }
+    } else {
+      console.warn('SPA: FeedbackCenter class not found');
     }
     
     // Re-attach feedback event listeners after content is loaded
@@ -200,46 +207,29 @@ function showFeedback() {
         window.cleanupFeedbackEventListeners();
       }
       
-      // Switch to History tab to show pagination
-      const historyTab = document.querySelector('[data-tab="history"]');
+      // Keep the default Submit tab active (don't auto-switch to History)
       const submitTab = document.querySelector('[data-tab="submit"]');
-      const historyContent = document.getElementById('historyTabContent');
       const submitContent = document.getElementById('submitTabContent');
       
-      if (historyTab && submitTab && historyContent && submitContent) {
-        console.log('SPA: Switching to History tab...');
-        // Remove active class from submit tab
-        submitTab.classList.remove('active');
-        submitContent.classList.remove('active');
-        // Add active class to history tab
-        historyTab.classList.add('active');
-        historyContent.classList.add('active');
+      if (submitTab && submitContent) {
+        console.log('SPA: Keeping Submit tab active by default...');
+        // Ensure submit tab is active by default
+        submitTab.classList.add('active');
+        submitContent.classList.add('active');
         
-        // Ensure table view is active by default (with pagination)
-        const tableContainer = document.getElementById('feedbackTableContainer');
-        const cardsContainer = document.getElementById('feedbackCardsContainer');
-        const tablePagination = document.getElementById('feedbackPagination');
-        const cardsPagination = document.getElementById('feedbackCardsPagination');
-        
-        if (tableContainer) tableContainer.style.display = 'block';
-        if (cardsContainer) cardsContainer.style.display = 'none';
-        if (tablePagination) tablePagination.style.display = 'block';
-        if (cardsPagination) cardsPagination.style.display = 'none';
+        // Remove active class from history tab if it exists
+        const historyTab = document.querySelector('[data-tab="history"]');
+        const historyContent = document.getElementById('historyTabContent');
+        if (historyTab) historyTab.classList.remove('active');
+        if (historyContent) historyContent.classList.remove('active');
       }
       
-      if (window.attachFeedbackEventListeners) {
-        console.log('SPA: Re-attaching feedback event listeners...');
-        window.attachFeedbackEventListeners();
-      }
-      // Initialize feedback data with additional delay to ensure DOM is ready
-      setTimeout(() => {
-        if (window.initializeFeedbackData) {
-          console.log('SPA: Initializing feedback data...');
-          window.initializeFeedbackData();
-        } else {
-          console.error('SPA: initializeFeedbackData function not found!');
-        }
-      }, 100);
+      // Wait for functions to be available before calling them
+      let attempts = 0;
+      const maxAttempts = 20; // 1 second max wait time
+      
+      // Let User-Dashboard.html system handle feedback functionality
+      console.log('SPA: Feedback page loaded, User-Dashboard.html system will handle initialization');
     }, 100);
   }
 }
