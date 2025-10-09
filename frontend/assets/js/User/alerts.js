@@ -113,10 +113,12 @@ class AlertsManager {
     if (alertsToShow.length === 0) {
       console.log('📭 No active alerts to show');
       container.innerHTML = `
-        <div class="no-alerts">
-          <div class="no-alerts-icon">🥬</div>
-          <div class="no-alerts-title">No Food Spoilage Alerts</div>
-          <div class="no-alerts-message">All your food items are fresh and safe to consume. Our SmartSense system is continuously monitoring for any signs of spoilage.</div>
+        <div class="alerts-result-card">
+          <div class="no-alerts">
+            <div class="no-alerts-icon">🥬</div>
+            <div class="no-alerts-title">No Food Spoilage Alerts</div>
+            <div class="no-alerts-message">All your food items are fresh and safe to consume. Our SmartSense system is continuously monitoring for any signs of spoilage.</div>
+          </div>
         </div>
       `;
       return;

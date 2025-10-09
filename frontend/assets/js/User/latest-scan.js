@@ -58,6 +58,18 @@ class LatestScanManager {
      */
     async loadLatestScanResult() {
         try {
+            // First, check localStorage for SmartSense Scanner data (priority)
+            console.log('🔍 Checking localStorage first for SmartSense Scanner data');
+            const hasSmartScannerData = this.checkForSmartScannerData();
+            
+            if (hasSmartScannerData) {
+                console.log('✅ Found SmartSense Scanner data, using localStorage');
+                this.loadFromLocalStorage();
+                return;
+            }
+            
+            // If no SmartSense Scanner data, try API
+            console.log('🔍 No SmartSense Scanner data, trying API');
             const token = this.getAuthToken();
             
             if (!token) {
@@ -95,12 +107,180 @@ class LatestScanManager {
                 this.latestScanData = result.data;
                 this.renderLatestScanResult();
             } else {
+                console.log('🔍 No API data available');
                 this.renderNoData();
             }
 
         } catch (error) {
             console.error('Error loading latest scan result:', error);
             this.renderError();
+        }
+    }
+
+    /**
+     * Check if SmartSense Scanner data exists in localStorage
+     */
+    checkForSmartScannerData() {
+        try {
+            const mlPredictions = localStorage.getItem('ml_predictions');
+            if (mlPredictions) {
+                const predictions = JSON.parse(mlPredictions);
+                if (Array.isArray(predictions) && predictions.length > 0) {
+                    console.log('🔍 SmartSense Scanner data found in localStorage:', predictions.length, 'predictions');
+                    return true;
+                }
+            }
+            console.log('🔍 No SmartSense Scanner data in localStorage');
+            return false;
+        } catch (error) {
+            console.error('Error checking localStorage:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Load SmartSense Scanner data from localStorage
+     */
+    loadFromLocalStorage() {
+        try {
+            console.log('🔍 Loading SmartSense Scanner data from localStorage');
+            
+            // Check for ml_predictions in localStorage
+            const mlPredictions = localStorage.getItem('ml_predictions');
+            if (mlPredictions) {
+                const predictions = JSON.parse(mlPredictions);
+                if (Array.isArray(predictions) && predictions.length > 0) {
+                    // Get the most recent prediction
+                    const latestPrediction = predictions[0];
+                    console.log('🔍 Found SmartSense Scanner data:', latestPrediction);
+                    
+                    // Convert SmartSense Scanner data to latestScanData format
+                    const parsedRecommendations = this.parseRecommendations(latestPrediction.recommendations);
+                    console.log('🔍 Parsed Smart Scanner recommendations:', parsedRecommendations);
+                    
+                    this.latestScanData = {
+                        id: latestPrediction.id || 'smartscan_' + Date.now(),
+                        name: latestPrediction.food_name || 'Scanned Food',
+                        category: latestPrediction.food_category || 'Unknown',
+                        status: latestPrediction.prediction_status || 'analyzed',
+                        statusClass: this.mapStatusToClass(latestPrediction.prediction_status),
+                        riskScore: latestPrediction.spoilage_probability || 50,
+                        confidenceScore: latestPrediction.confidence_score || 75,
+                        sensors: {
+                            temperature: `${latestPrediction.temperature || latestPrediction.tempValue || 0}°C`,
+                            humidity: `${latestPrediction.humidity || latestPrediction.humidityValue || 0}%`,
+                            gas: `${latestPrediction.gas_level || latestPrediction.gasValue || 0} ppm`
+                        },
+                        expiryDate: latestPrediction.expiration_date || null,
+                        expiryStatus: 'Unknown',
+                        daysLeft: 0,
+                        recommendations: parsedRecommendations,
+                        createdAt: latestPrediction.created_at || new Date().toISOString()
+                    };
+                    
+                    console.log('🔍 Converted SmartSense Scanner data:', this.latestScanData);
+                    this.renderLatestScanResult();
+                    return;
+                }
+            }
+            
+            // If no SmartSense Scanner data, show no data
+            console.log('🔍 No SmartSense Scanner data found in localStorage');
+            this.renderNoData();
+            
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            this.renderError();
+        }
+    }
+
+    /**
+     * Map SmartSense Scanner status to CSS class
+     */
+    mapStatusToClass(status) {
+        if (!status) return 'unknown';
+        const statusLower = String(status).toLowerCase();
+        console.log('🔍 Mapping status to class:', status, '→', statusLower);
+        
+        if (statusLower.includes('safe') || statusLower.includes('fresh')) return 'safe';
+        if (statusLower.includes('unsafe') || statusLower.includes('spoiled')) return 'danger';
+        if (statusLower.includes('caution') || statusLower.includes('risk') || statusLower.includes('at risk')) return 'warning';
+        return 'unknown';
+    }
+
+    /**
+     * Parse recommendations from SmartSense Scanner data
+     */
+    parseRecommendations(recommendations) {
+        if (!recommendations) return ['No recommendations available'];
+        
+        console.log('🔍 parseRecommendations input:', recommendations);
+        console.log('🔍 parseRecommendations type:', typeof recommendations);
+        
+        try {
+            console.log('🔍 Parsing recommendations:', recommendations);
+            
+            // Handle string format (JSON)
+            if (typeof recommendations === 'string') {
+                const parsed = JSON.parse(recommendations);
+                console.log('🔍 Parsed JSON recommendations:', parsed);
+                
+                // Smart Scanner format: { main: "...", details: [...] }
+                if (parsed && typeof parsed === 'object' && parsed.details && Array.isArray(parsed.details)) {
+                    // Return structured format instead of flattening
+                    const result = {
+                        main: parsed.main,
+                        details: parsed.details
+                    };
+                    console.log('🔍 Smart Scanner format detected (structured):', result);
+                    return result;
+                }
+                
+                // Array format
+                if (Array.isArray(parsed)) {
+                    console.log('🔍 Array format detected:', parsed);
+                    return parsed;
+                }
+            }
+            
+            // Handle object format directly
+            if (typeof recommendations === 'object' && !Array.isArray(recommendations)) {
+                console.log('🔍 Object format detected:', recommendations);
+                
+                // Smart Scanner format: { main: "...", details: [...] }
+                if (recommendations.details && Array.isArray(recommendations.details)) {
+                    const result = {
+                        main: recommendations.main,
+                        details: recommendations.details
+                    };
+                    console.log('🔍 Smart Scanner object format (structured):', result);
+                    return result;
+                }
+                
+                // Handle other object formats - convert to string
+                if (recommendations.main) {
+                    console.log('🔍 Object with main property:', recommendations.main);
+                    return [recommendations.main];
+                }
+                
+                // Fallback: convert entire object to string
+                console.log('🔍 Converting object to string:', recommendations);
+                return [JSON.stringify(recommendations)];
+            }
+            
+            // Handle array format directly
+            if (Array.isArray(recommendations)) {
+                console.log('🔍 Direct array format:', recommendations);
+                return recommendations;
+            }
+            
+            // Fallback to string
+            console.log('🔍 Fallback to string:', String(recommendations));
+            return [String(recommendations)];
+            
+        } catch (e) {
+            console.error('❌ Error parsing recommendations:', e);
+            return [String(recommendations)];
         }
     }
 
@@ -329,7 +509,6 @@ class LatestScanManager {
                 opacity: 0.7;
                 z-index: 10;
             `;
-            container.style.position = 'relative';
             container.appendChild(indicator);
         }
         indicator.style.display = 'block';
@@ -471,7 +650,7 @@ class LatestScanManager {
             </div>
             
             <div class="scan-actions">
-                <button class="view-recommendations-btn" onclick="latestScanManager.showRecommendations()">
+                <button class="view-recommendations-btn" onclick="console.log('🔍 View button clicked'); if (window.latestScanManager) { window.latestScanManager.showRecommendations(); } else { console.error('❌ latestScanManager not available'); alert('System not ready. Please refresh the page.'); }">
                     <i class="bi bi-lightbulb"></i>
                     View Recommendations
                 </button>
@@ -498,10 +677,6 @@ class LatestScanManager {
                 </div>
                 <h3>No Scan Results</h3>
                 <p>No food items have been scanned yet. Start by scanning a food item to see results here.</p>
-                <button class="scan-food-btn" onclick="window.location.href='../pages/scan-food.html'">
-                    <i class="bi bi-camera"></i>
-                    Scan Food Item
-                </button>
             </div>
         `;
     }
@@ -566,18 +741,49 @@ class LatestScanManager {
      * Show recommendations modal
      */
     showRecommendations() {
+        console.log('🔍 showRecommendations called');
+        console.log('🔍 latestScanData:', this.latestScanData);
+        
         if (!this.latestScanData) {
+            console.error('❌ No scan data available');
             alert('No scan data available. Please try refreshing the page.');
             return;
         }
 
         if (!this.latestScanData.recommendations || this.latestScanData.recommendations.length === 0) {
+            console.error('❌ No recommendations available');
+            console.log('🔍 Recommendations:', this.latestScanData.recommendations);
             alert('No recommendations available for this scan result.');
             return;
         }
+        
+        console.log('✅ Opening recommendations modal');
 
         const recommendations = this.latestScanData.recommendations;
         const foodName = this.latestScanData.name || 'Unknown Food';
+        
+        console.log('🔍 Recommendations in showRecommendations:', recommendations);
+        console.log('🔍 Recommendations type:', typeof recommendations);
+        
+        // Handle structured format (Smart Scanner) vs array format
+        let mainRecommendation = '';
+        let detailRecommendations = [];
+        
+        if (recommendations && typeof recommendations === 'object' && !Array.isArray(recommendations)) {
+            // Structured format: { main: "...", details: [...] }
+            mainRecommendation = recommendations.main || '';
+            detailRecommendations = Array.isArray(recommendations.details) ? recommendations.details : [];
+            console.log('🔍 Structured format detected - main:', mainRecommendation, 'details:', detailRecommendations);
+        } else if (Array.isArray(recommendations)) {
+            // Array format: ["rec1", "rec2", ...]
+            mainRecommendation = recommendations[0] || '';
+            detailRecommendations = recommendations.slice(1);
+            console.log('🔍 Array format detected - main:', mainRecommendation, 'details:', detailRecommendations);
+        } else {
+            // Fallback
+            mainRecommendation = String(recommendations || 'No recommendations available');
+            detailRecommendations = [];
+        }
         
         // Create modal HTML using previous design
         const modalHTML = `
@@ -611,14 +817,31 @@ class LatestScanManager {
                                 Recommendations
                             </h4>
                             <div class="recommendations-list" style="margin-bottom:24px;">
-                                ${recommendations.map((rec, index) => `
-                                    <div class="recommendation-item" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:14px;margin-bottom:10px;transition:all 0.2s ease;">
-                                        <div style="display:flex;align-items:flex-start;gap:12px;">
-                                            <div style="background:linear-gradient(135deg,#4a9eff 0%,#667eea 100%);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;box-shadow:0 2px 4px rgba(74,158,255,0.3);">${index + 1}</div>
-                                            <div style="color:#e0e6f6;font-size:14px;line-height:1.5;flex:1;padding-top:2px;">${rec}</div>
+                                ${mainRecommendation ? `
+                                    <div class="main-recommendation" style="background:linear-gradient(135deg,#f59e0b 0%,#f97316 100%);border:1px solid #f59e0b;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 4px 12px rgba(245,158,11,0.2);">
+                                        <div style="display:flex;align-items:center;gap:12px;">
+                                            <div style="background:rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;">⚠️</div>
+                                            <div style="color:#fff;font-size:16px;font-weight:600;line-height:1.4;flex:1;">${mainRecommendation}</div>
                                         </div>
                                     </div>
-                                `).join('')}
+                                ` : ''}
+                                
+                                ${detailRecommendations.length > 0 ? `
+                                    <div class="detail-recommendations" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:16px;">
+                                        <div style="color:#b8c5e8;font-size:12px;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Detailed Actions:</div>
+                                        <ul style="margin:0;padding:0;list-style:none;">
+                                            ${detailRecommendations.map((detail, index) => {
+                                                const detailText = typeof detail === 'object' ? JSON.stringify(detail) : String(detail);
+                                                return `
+                                                <li style="display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;padding:8px 0;border-bottom:1px solid #3a4a6b;">
+                                                    <div style="background:linear-gradient(135deg,#4a9eff 0%,#667eea 100%);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:2px;">${index + 1}</div>
+                                                    <div style="color:#e0e6f6;font-size:14px;line-height:1.5;flex:1;">${detailText}</div>
+                                                </li>
+                                                `;
+                                            }).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
                             </div>
                             
                             <div class="sensor-details-section">

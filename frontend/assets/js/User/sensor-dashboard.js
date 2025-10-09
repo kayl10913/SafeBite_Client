@@ -1474,7 +1474,7 @@ class SensorDashboard {
       // Remove existing listener to prevent duplicates
       refreshFoodListBtn.removeEventListener('click', this.refreshFoodList);
       refreshFoodListBtn.addEventListener('click', async () => {
-        console.log('Refreshing food list...');
+        console.log('Refreshing food list from API...');
         await this.populateMLFoodDropdown();
       });
     }
@@ -1508,8 +1508,8 @@ class SensorDashboard {
     
     modal.style.display = 'flex';
     
-    // Populate the food dropdown when modal opens
-    this.populateMLFoodDropdown();
+    // Populate the food dropdown when modal opens with fresh API data
+    await this.populateMLFoodDropdown();
     
     // Bind close buttons
     const closeBtn = modal.querySelector('.config-modal-close');
@@ -1535,13 +1535,13 @@ class SensorDashboard {
       foodSelect.addEventListener('focus', () => {
         if (foodSelect.options.length <= 1) {
           console.log('Refreshing food items on focus...');
-          this.populateFoodDropdown();
+          this.populateMLFoodDropdown();
         }
       });
     }
     
     // Add global refresh function
-    window.refreshMLScannerFoods = () => this.populateFoodDropdown();
+    window.refreshMLScannerFoods = () => this.populateMLFoodDropdown();
   }
 
   // Global method to ensure modal works across SPA navigation
@@ -1819,7 +1819,7 @@ class SensorDashboard {
         statusElement.classList.add('status-at-risk');
       }
 
-      // Create scanner alert for caution/unsafe conditions using logged-in user
+      // Create scanner alert for caution/unsafe conditions using ML prediction data
       try {
         const isCaution = status.includes('caution') || status.includes('risk');
         const isUnsafe = status.includes('unsafe') || status.includes('spoiled');
@@ -1827,43 +1827,88 @@ class SensorDashboard {
           const token = localStorage.getItem('jwt_token') || 
                         localStorage.getItem('sessionToken') || 
                         localStorage.getItem('session_token');
-          if (token) {
-            const spoilageScore = prediction?.spoilage_probability || prediction?.riskScore || prediction?.confidence_score || 75;
-            const body = {
-              food_id: prediction?.food_id || null,
-              message: `SmartSense: ${foodName} is ${isUnsafe ? 'UNSAFE' : 'CAUTION'}`,
-              alert_level: isUnsafe ? 'High' : 'Medium',
-              alert_type: 'sensor',
-              ml_prediction_id: prediction?.prediction_id || null,
-              spoilage_probability: Math.max(0, Math.min(100, Math.round(spoilageScore))),
-              recommended_action: isUnsafe ? 'Discard immediately and sanitize storage area.' : 'Consume soon or improve storage conditions.',
-              is_ml_generated: false,
-              confidence_score: Math.max(0, Math.min(100, Math.round(spoilageScore))),
-              alert_data: JSON.stringify({
-                source: 'smartsense_scanner',
-                condition: isUnsafe ? 'unsafe' : 'caution',
-                sensor_readings: {
-                  temperature: prediction.temperature ?? prediction.tempValue ?? null,
-                  humidity: prediction.humidity ?? prediction.humidityValue ?? null,
-                  gas_level: prediction.gas_level ?? prediction.gasValue ?? null
-                },
-                timestamp: new Date().toISOString()
-              })
+          if (token && prediction?.prediction_id) {
+            // Fetch ML prediction data using prediction ID
+            const fetchMLPredictionData = async () => {
+              try {
+                const response = await fetch(`/api/ml-prediction/${prediction.prediction_id}`, {
+                  method: 'GET',
+                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                  const mlData = await response.json();
+                  console.log('📊 Fetched ML prediction data:', mlData);
+                  
+                  // Use actual ML prediction data for alert
+                  const actualSpoilageStatus = mlData.data?.spoilage_status || prediction?.spoilage_status || status;
+                  const actualSpoilageProbability = mlData.data?.spoilage_probability || prediction?.spoilage_probability || 75;
+                  const actualConfidenceScore = mlData.data?.confidence_score || prediction?.confidence_score || 75;
+                  
+                  // Only create alert if ML prediction shows unsafe or caution
+                  if (actualSpoilageStatus === 'unsafe' || actualSpoilageStatus === 'caution') {
+                    const body = {
+                      food_id: prediction?.food_id || null,
+                      message: `ML Prediction: ${foodName} is ${actualSpoilageStatus.toUpperCase()} (${Math.round(actualSpoilageProbability)}% probability)`,
+                      alert_level: actualSpoilageStatus === 'unsafe' ? 'High' : 'Medium',
+                      alert_type: 'ml_prediction',
+                      ml_prediction_id: prediction.prediction_id,
+                      spoilage_probability: Math.max(0, Math.min(100, Math.round(actualSpoilageProbability))),
+                      recommended_action: actualSpoilageStatus === 'unsafe' ? 'Discard immediately and sanitize storage area.' : 'Consume soon or improve storage conditions.',
+                      is_ml_generated: true,
+                      confidence_score: Math.max(0, Math.min(100, Math.round(actualConfidenceScore))),
+                      alert_data: JSON.stringify({
+                        source: 'ml_prediction',
+                        condition: actualSpoilageStatus,
+                        sensor_readings: {
+                          temperature: prediction.temperature ?? prediction.tempValue ?? null,
+                          humidity: prediction.humidity ?? prediction.humidityValue ?? null,
+                          gas_level: prediction.gas_level ?? prediction.gasValue ?? null
+                        },
+                        spoilage_score: actualSpoilageProbability,
+                        confidence_score: actualConfidenceScore,
+                        ml_model: mlData.data?.model || prediction?.model || 'default',
+                        prediction_id: prediction.prediction_id,
+                        timestamp: new Date().toISOString()
+                      })
+                    };
+                    
+                    const alertResponse = await fetch('/api/alerts', {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify(body)
+                    });
+                    
+                    if (!alertResponse.ok) {
+                      console.warn('ML prediction alert insert failed with status:', alertResponse.status);
+                    } else {
+                      console.log('✅ ML prediction alert created successfully for', actualSpoilageStatus);
+                    }
+                  } else {
+                    console.log('✅ No alert needed - ML prediction shows safe status:', actualSpoilageStatus);
+                  }
+                } else {
+                  console.warn('Failed to fetch ML prediction data, using fallback');
+                  // Fallback to original logic if ML prediction fetch fails
+                  this.createFallbackAlert(foodName, prediction, token, isUnsafe);
+                }
+              } catch (error) {
+                console.warn('Error fetching ML prediction data:', error);
+                // Fallback to original logic
+                this.createFallbackAlert(foodName, prediction, token, isUnsafe);
+              }
             };
-            fetch('/api/alerts', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(body)
-            }).then(r => {
-              if (!r.ok) console.warn('Scanner alert insert failed with status:', r.status);
-              return null;
-            }).catch(err => console.warn('Scanner alert insert error:', err.message));
+            
+            fetchMLPredictionData();
           } else {
-            console.warn('Skipping scanner alert: no auth token present');
+            console.warn('Skipping ML prediction alert: no auth token or prediction ID');
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        console.warn('Error in ML prediction alert creation:', error);
+      }
     }
+    
     if (confidenceElement) confidenceElement.textContent = `${prediction.confidence_score || prediction.confidence || '-'}%`;
     if (recommendationElement) {
       // Handle recommendations - could be string, array, or object
@@ -2756,6 +2801,52 @@ class SensorDashboard {
       lastUpdateEl.textContent = now.toLocaleTimeString();
     }
   }
+
+  // Fallback alert creation method
+  createFallbackAlert(foodName, prediction, token, isUnsafe) {
+    // Only create alert if status is unsafe or caution
+    if (!isUnsafe && prediction?.spoilage_status !== 'caution' && prediction?.spoilage_status !== 'unsafe') {
+      console.log('✅ No fallback alert needed - status is safe');
+      return;
+    }
+    
+    const spoilageScore = prediction?.spoilage_probability || prediction?.riskScore || prediction?.confidence_score || 75;
+    const spoilageStatus = prediction?.spoilage_status || (isUnsafe ? 'unsafe' : 'caution');
+    
+    const body = {
+      food_id: prediction?.food_id || null,
+      message: `ML Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageScore)}% probability)`,
+      alert_level: spoilageStatus === 'unsafe' ? 'High' : 'Medium',
+      alert_type: 'ml_prediction',
+      ml_prediction_id: prediction?.prediction_id || null,
+      spoilage_probability: Math.max(0, Math.min(100, Math.round(spoilageScore))),
+      recommended_action: spoilageStatus === 'unsafe' ? 'Discard immediately and sanitize storage area.' : 'Consume soon or improve storage conditions.',
+      is_ml_generated: true,
+      confidence_score: Math.max(0, Math.min(100, Math.round(spoilageScore))),
+      alert_data: JSON.stringify({
+        source: 'ml_prediction',
+        condition: spoilageStatus,
+        sensor_readings: {
+          temperature: prediction.temperature ?? prediction.tempValue ?? null,
+          humidity: prediction.humidity ?? prediction.humidityValue ?? null,
+          gas_level: prediction.gas_level ?? prediction.gasValue ?? null
+        },
+        spoilage_score: spoilageScore,
+        confidence_score: prediction?.confidence_score || prediction?.confidence || spoilageScore,
+        ml_model: prediction?.model || 'default',
+        timestamp: new Date().toISOString()
+      })
+    };
+    
+    fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(r => {
+      if (!r.ok) console.warn('Fallback alert insert failed with status:', r.status);
+      return null;
+    }).catch(err => console.warn('Fallback alert insert error:', err.message));
+  }
 }
 
 // Initialize dashboard when DOM is loaded
@@ -3122,3 +3213,4 @@ window.setGaugeValue = function(gauge, value, unit) {
     lastSensorValues[sensorType] = currentValue;
   }
 };
+

@@ -154,25 +154,70 @@ class FeedbackCenter {
       });
     }
 
-    // Action buttons (de-duplicate across SPA inits)
+    // Action buttons - restore event handling for view buttons
     if (window.__feedbackClickHandler) {
       document.removeEventListener('click', window.__feedbackClickHandler);
     }
+    
     const feedbackClickHandler = (e) => {
+      console.log('🔍 Click detected on:', e.target);
+      console.log('🔍 Target classes:', e.target.classList);
+      
       if (e.target.classList.contains('action-btn') || e.target.classList.contains('feedback-card-action')) {
+        console.log('✅ View button clicked!');
+        e.preventDefault(); // Prevent default action
+        e.stopPropagation(); // Stop event bubbling
+        
         let feedbackId;
-        if (e.target.classList.contains('action-btn')) {
-          const row = e.target.closest('tr');
-          feedbackId = row.dataset.feedbackId;
-        } else {
-          const card = e.target.closest('.feedback-card');
-          feedbackId = card.dataset.feedbackId;
+        
+        // First try to get feedbackId from onclick attribute (primary method)
+        const onclickAttr = e.target.getAttribute('onclick');
+        if (onclickAttr) {
+          const match = onclickAttr.match(/viewFeedback\((\d+)\)/);
+          if (match && match[1]) {
+            feedbackId = match[1];
+            console.log('🔍 Extracted feedbackId from onclick:', feedbackId);
+          }
         }
-        this.showFeedbackDetails(feedbackId);
+        
+        // If onclick method failed, try dataset method
+        if (!feedbackId) {
+          if (e.target.classList.contains('action-btn')) {
+            const row = e.target.closest('tr');
+            feedbackId = row.dataset.feedbackId;
+            console.log('🔍 Table row feedbackId:', feedbackId);
+          } else {
+            const card = e.target.closest('.feedback-card');
+            feedbackId = card.dataset.feedbackId;
+            console.log('🔍 Card feedbackId:', feedbackId);
+          }
+        }
+        
+        if (feedbackId) {
+          console.log('🚀 Calling viewFeedback with ID:', feedbackId);
+          // Use the existing viewFeedback function from the HTML template
+          if (typeof window.viewFeedback === 'function') {
+            window.viewFeedback(feedbackId);
+          } else {
+            console.error('❌ viewFeedback function not found');
+          }
+        } else {
+          console.error('❌ No feedbackId found in onclick or dataset!');
+        }
       }
     };
+    
     window.__feedbackClickHandler = feedbackClickHandler;
     document.addEventListener('click', feedbackClickHandler);
+    console.log('✅ Event handler restored for view buttons');
+  }
+
+  cleanupEventListeners() {
+    // Remove existing global click handler if it exists
+    if (window.__feedbackClickHandler) {
+      document.removeEventListener('click', window.__feedbackClickHandler);
+      window.__feedbackClickHandler = null;
+    }
   }
 
   switchTab(tabName) {
@@ -396,25 +441,42 @@ class FeedbackCenter {
   async loadFeedbacks() {
     try {
       const currentUser = this.getCurrentUser();
+      console.log('🔍 Current user:', currentUser);
       if (!currentUser || !currentUser.user_id) {
+        console.log('❌ No current user or user_id found');
         return;
       }
       // Add cache-busting parameter to ensure fresh data
       const timestamp = new Date().getTime();
-      const res = await fetch(`/api/feedbacks/user/${encodeURIComponent(currentUser.user_id)}?t=${timestamp}`);
+      const apiUrl = `/api/feedbacks/user/${encodeURIComponent(currentUser.user_id)}?t=${timestamp}`;
+      console.log('🔍 Fetching feedback data from:', apiUrl);
+      const res = await fetch(apiUrl);
+      console.log('🔍 API response status:', res.status);
       const json = await res.json();
+      console.log('🔍 API response:', json);
       if (json && json.success && Array.isArray(json.data)) {
-        this.feedbackData = json.data.map(r => ({
-          id: r.feedback_id || r['FEEDBACK ID'] || Date.now(),
-          customer: r['CUSTOMER NAME'] || currentUser.full_name || currentUser.username || 'You',
-          email: r['CUSTOMER EMAIL'] || currentUser.email || '',
-          description: r['FEEDBACK TEXT'] || r.feedback_text || '',
-          type: r['FEEDBACK TYPE'] || r.feedback_type || '',
-          priority: r['PRIORITY'] || r.priority || 'Low',
-          status: r['STATUS'] || r.status || 'Active',
-          rating: Number(r['STAR RATE'] || r.star_rating || r.rating || 0),
-          date: this.formatDate(r.created_at)
-        }));
+        console.log('🔍 Raw API data:', json.data);
+        this.feedbackData = json.data.map(r => {
+          const mappedData = {
+            id: r.feedback_id || r['FEEDBACK ID'] || Date.now(),
+            customer: r['CUSTOMER NAME'] || currentUser.full_name || currentUser.username || 'You',
+            email: r['CUSTOMER EMAIL'] || currentUser.email || '',
+            description: r['FEEDBACK TEXT'] || r.feedback_text || '',
+            type: r['FEEDBACK TYPE'] || r.feedback_type || '',
+            priority: r['PRIORITY'] || r.priority || 'Low',
+            status: r['STATUS'] || r.status || 'Active',
+            rating: Number(r['STAR RATE'] || r.star_rating || r.rating || 0),
+            date: this.formatDate(r.created_at),
+            // Admin response fields
+            adminResponse: r['ADMIN RESPONSE'] || r.admin_response || r.response_text || '',
+            adminNotes: r['ADMIN NOTES'] || r.admin_notes || '',
+            responseDate: r['RESPONSE DATE'] || r.response_date || r.updated_at || '',
+            hasAdminResponse: !!(r['ADMIN RESPONSE'] || r.admin_response || r.response_text)
+          };
+          console.log('🔍 Mapped feedback data:', mappedData);
+          return mappedData;
+        });
+        console.log('🔍 Final feedbackData after mapping:', this.feedbackData);
         this.renderTable();
     this.updateStats();
       }
@@ -485,10 +547,13 @@ class FeedbackCenter {
   }
 
   renderTable() {
+    console.log('🔍 renderTable called with feedbackData:', this.feedbackData);
     const filteredData = this.getFilteredData();
+    console.log('🔍 filteredData for table:', filteredData);
     const startIndex = (this.currentPage - 1) * this.recordsPerPage;
     const endIndex = startIndex + this.recordsPerPage;
     const paginatedData = filteredData.slice(startIndex, endIndex);
+    console.log('🔍 paginatedData for table:', paginatedData);
 
     const tbody = document.getElementById('feedbackTableBody');
     if (!tbody) return;
@@ -510,6 +575,7 @@ class FeedbackCenter {
     paginatedData.forEach(feedback => {
       const row = document.createElement('tr');
       row.dataset.feedbackId = feedback.id;
+      console.log('🔍 Setting row feedbackId:', feedback.id, 'for feedback:', feedback);
       
       const stars = this.renderStars(feedback.rating);
       const priorityClass = `priority-${feedback.priority.toLowerCase()}`;
@@ -565,6 +631,7 @@ class FeedbackCenter {
       const card = document.createElement('div');
       card.className = 'feedback-card';
       card.dataset.feedbackId = feedback.id;
+      console.log('🔍 Setting card feedbackId:', feedback.id, 'for feedback:', feedback);
       
       const stars = this.renderStars(feedback.rating);
       const priorityClass = `priority-${feedback.priority.toLowerCase()}`;
@@ -716,106 +783,166 @@ class FeedbackCenter {
   }
 
 
-  showFeedbackDetails(feedbackId) {
+  // showFeedbackDetails(feedbackId) {
+  // Commented out - using existing viewFeedback function from HTML template
+  _showFeedbackDetails(feedbackId) {
+    console.log('🎯 showFeedbackDetails called with ID:', feedbackId);
+    console.log('🎯 Available feedback data:', this.feedbackData);
+    
     const feedback = this.feedbackData.find(f => f.id == feedbackId);
-    if (!feedback) return;
+    console.log('🎯 Found feedback:', feedback);
+    
+    if (!feedback) {
+      console.error('❌ Feedback not found for ID:', feedbackId);
+      return;
+    }
 
-    // Add admin response if not exists
-    if (!feedback.adminResponse) {
+    // Use actual admin response from API, or add default if none exists
+    if (!feedback.adminResponse || feedback.adminResponse.trim() === '') {
       feedback.adminResponse = feedback.status === 'Resolved' ? 
         'Thank you for your feedback. We have reviewed your concern and implemented the necessary changes. We appreciate your patience and continued support.' : 
         'We have received your feedback and our team is currently reviewing it. We will provide an update within 24-48 hours.';
     }
+    
+    console.log('🔍 Admin response data:', {
+      hasAdminResponse: feedback.hasAdminResponse,
+      adminResponse: feedback.adminResponse,
+      adminNotes: feedback.adminNotes,
+      responseDate: feedback.responseDate
+    });
 
     const modal = document.createElement('div');
-    modal.className = 'feedback-modal';
+    modal.className = 'feedback-details-modal';
     modal.innerHTML = `
-      <div class="feedback-modal-backdrop"></div>
-      <div class="feedback-modal-content">
-        <div class="feedback-modal-header">
-          <h3>Feedback Details</h3>
-          <button class="feedback-modal-close">&times;</button>
+      <div class="feedback-details-modal-backdrop"></div>
+      <div class="feedback-details-modal-content">
+        <div class="feedback-details-modal-header">
+          <h3 class="feedback-details-modal-title">Feedback Details</h3>
+          <button class="feedback-details-modal-close">&times;</button>
         </div>
-        <div class="feedback-details">
-          <div class="detail-section">
-            <h4 class="detail-section-title">Customer Information</h4>
-            <div class="detail-row">
-              <label>Customer:</label>
-              <span>${feedback.customer}</span>
+        <div class="feedback-details-modal-body">
+          <div class="feedback-detail-card">
+            <div class="feedback-detail-card-header">
+              <h4 class="feedback-detail-card-title">Customer Information</h4>
             </div>
-            <div class="detail-row">
-              <label>Email:</label>
-              <span>${feedback.email || 'Not provided'}</span>
+            <div class="feedback-detail-card-content">
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Customer:</label>
+                <span class="feedback-detail-value">${feedback.customer}</span>
             </div>
-            <div class="detail-row">
-              <label>Date Submitted:</label>
-              <span>${feedback.date}</span>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <h4 class="detail-section-title">Feedback Details</h4>
-            <div class="detail-row">
-              <label>Type:</label>
-              <span class="type-badge">${feedback.type}</span>
-            </div>
-            <div class="detail-row">
-              <label>Priority:</label>
-              <span class="priority-badge priority-${feedback.priority.toLowerCase()}">${feedback.priority}</span>
-            </div>
-            <div class="detail-row">
-              <label>Status:</label>
-              <span class="status-badge status-${feedback.status.toLowerCase()}">${this.getStatusIcon(feedback.status)} ${feedback.status}</span>
-            </div>
-            <div class="detail-row">
-              <label>Rating:</label>
-              <div class="rating-stars">
-                ${this.renderStars(feedback.rating)}
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Email:</label>
+                <span class="feedback-detail-value">${feedback.email || 'Not provided'}</span>
+              </div>
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Date Submitted:</label>
+                <span class="feedback-detail-value">${feedback.date}</span>
               </div>
             </div>
           </div>
 
-          <div class="detail-section">
-            <h4 class="detail-section-title">Customer Feedback</h4>
-            <div class="feedback-description">
-              ${feedback.description}
+          <div class="feedback-detail-card">
+            <div class="feedback-detail-card-header">
+              <h4 class="feedback-detail-card-title">Details</h4>
+            </div>
+            <div class="feedback-detail-card-content">
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Type:</label>
+                <span class="feedback-detail-value">
+                  <span class="feedback-badge type-badge">${feedback.type}</span>
+                </span>
+            </div>
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Priority:</label>
+                <span class="feedback-detail-value">
+                  <span class="feedback-badge priority-${feedback.priority.toLowerCase()}">${feedback.priority}</span>
+                </span>
+            </div>
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Status:</label>
+                <span class="feedback-detail-value">
+                  <span class="feedback-badge status-${feedback.status.toLowerCase()}">${this.getStatusIcon(feedback.status)} ${feedback.status}</span>
+                </span>
+              </div>
+              <div class="feedback-detail-row">
+                <label class="feedback-detail-label">Rating:</label>
+                <span class="feedback-detail-value">
+                  <div class="feedback-rating-stars">
+                ${this.renderStars(feedback.rating)}
+                  </div>
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="detail-section">
-            <h4 class="detail-section-title">Admin Response</h4>
-            <div class="admin-response">
+          <div class="feedback-detail-card">
+            <div class="feedback-detail-card-header">
+              <h4 class="feedback-detail-card-title">Customer Feedback</h4>
+            </div>
+            <div class="feedback-detail-card-content">
+              <div class="feedback-description-area">
+              ${feedback.description}
+              </div>
+            </div>
+          </div>
+
+          <div class="feedback-detail-card">
+            <div class="feedback-detail-card-header">
+              <h4 class="feedback-detail-card-title">Admin Response</h4>
+            </div>
+            <div class="feedback-detail-card-content">
+              <div class="admin-response-area">
               <div class="admin-response-header">
                 <span class="admin-label">Admin Response</span>
-                <span class="response-date">${feedback.status === 'Resolved' ? 'Resolved on ' + feedback.date : 'Pending'}</span>
+                <span class="response-date">${feedback.responseDate ? 'Responded on ' + this.formatDate(feedback.responseDate) : (feedback.status === 'Resolved' ? 'Resolved on ' + feedback.date : 'Pending')}</span>
               </div>
               <div class="admin-response-content">
                 ${feedback.adminResponse}
+                ${feedback.adminNotes ? `<div class="admin-notes" style="margin-top: 12px; padding: 8px; background: rgba(74, 158, 255, 0.1); border-radius: 6px; font-size: 0.9rem; color: #bfc9da;"><strong>Admin Notes:</strong> ${feedback.adminNotes}</div>` : ''}
               </div>
             </div>
           </div>
         </div>
-        <div class="feedback-modal-footer">
-          <button type="button" class="feedback-modal-close">Close</button>
+        </div>
+        <div class="feedback-details-modal-footer">
+          <button type="button" class="feedback-details-modal-btn feedback-details-modal-btn-close">Close</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
+    console.log('✅ Modal added to DOM');
+    
+    // Show the modal
+    modal.classList.add('active');
+    // Force display as fallback
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '9999';
+    console.log('✅ Modal active class added');
+    console.log('🔍 Modal element:', modal);
+    console.log('🔍 Modal display style:', modal.style.display);
+    console.log('🔍 Modal classes:', modal.classList);
 
     // Close modal events
-    const backdrop = modal.querySelector('.feedback-modal-backdrop');
-    const content = modal.querySelector('.feedback-modal-content');
+    const backdrop = modal.querySelector('.feedback-details-modal-backdrop');
+    const content = modal.querySelector('.feedback-details-modal-content');
 
     const closeModal = () => {
       if (modal && document.body.contains(modal)) {
+        modal.classList.remove('active');
+        // Add a small delay before removing to allow for transition
+        setTimeout(() => {
+      if (modal && document.body.contains(modal)) {
         document.body.removeChild(modal);
+          }
+        }, 300);
       }
       document.removeEventListener('keydown', escHandler);
     };
 
     // Bind all close buttons (header X and footer Close)
-    modal.querySelectorAll('.feedback-modal-close').forEach((btn) => {
+    modal.querySelectorAll('.feedback-details-modal-close, .feedback-details-modal-btn-close').forEach((btn) => {
       btn.addEventListener('click', closeModal);
     });
 
@@ -826,6 +953,16 @@ class FeedbackCenter {
     // Escape key to close
     const escHandler = (e) => { if (e.key === 'Escape') closeModal(); };
     document.addEventListener('keydown', escHandler);
+    
+    // Ensure modal is visible after a short delay
+    setTimeout(() => {
+      console.log('🔍 Modal visibility check after delay:');
+      console.log('🔍 Modal display:', modal.style.display);
+      console.log('🔍 Modal opacity:', modal.style.opacity);
+      console.log('🔍 Modal z-index:', modal.style.zIndex);
+      console.log('🔍 Modal classes:', modal.classList);
+      console.log('🔍 Modal in DOM:', document.body.contains(modal));
+    }, 100);
   }
 
   showNotification(message, type = 'info') {
@@ -870,226 +1007,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Add CSS for modal and notifications
-const style = document.createElement('style');
-style.textContent = `
-  .feedback-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .feedback-modal-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-  }
-
-  .feedback-modal-content {
-    background: #212c4d;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 700px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    z-index: 1001;
-    border: 1px solid #3a4a6b;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-
-  .feedback-modal-header {
-    padding: 24px;
-    border-bottom: 1px solid #3a4a6b;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .feedback-modal-header h3 {
-    margin: 0;
-    color: #ffffff;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-
-  .feedback-modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #bfc9da;
-    transition: color 0.2s ease;
-  }
-
-  .feedback-modal-close:hover {
-    color: #ffffff;
-  }
-
-  .feedback-details {
-    padding: 24px;
-  }
-
-  .detail-section {
-    margin-bottom: 32px;
-  }
-
-  .detail-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .detail-section-title {
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 16px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #4a9eff;
-  }
-
-  .detail-row {
-    display: flex;
-    margin-bottom: 12px;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .detail-row label {
-    font-weight: 600;
-    min-width: 120px;
-    color: #e0e6f6;
-    font-size: 0.95rem;
-  }
-
-  .detail-row span {
-    color: #ffffff;
-  }
-
-  .feedback-description {
-    background: #2a3658;
-    border: 1px solid #3a4a6b;
-    border-radius: 8px;
-    padding: 16px;
-    color: #bfc9da;
-    line-height: 1.6;
-    font-size: 0.95rem;
-  }
-
-  .admin-response {
-    background: #1e3a8a;
-    border: 1px solid #3b82f6;
-    border-radius: 8px;
-    padding: 16px;
-  }
-
-  .admin-response-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .admin-label {
-    color: #60a5fa;
-    font-weight: 600;
-    font-size: 0.95rem;
-  }
-
-  .response-date {
-    color: #bfc9da;
-    font-size: 0.85rem;
-  }
-
-  .admin-response-content {
-    color: #ffffff;
-    line-height: 1.6;
-    font-size: 0.95rem;
-  }
-
-  .feedback-modal-footer {
-    padding: 24px;
-    border-top: 1px solid #3a4a6b;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .feedback-modal-footer .feedback-modal-close {
-    background: #4a9eff;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-  }
-
-  .feedback-modal-footer .feedback-modal-close:hover {
-    background: #3b82f6;
-  }
-
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
-  }
-
-  .pagination-btn {
-    padding: 8px 12px;
-    border: 1px solid #3a4a6b;
-    background: #2a3658;
-    color: #ffffff;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-  }
-
-  .pagination-btn:hover:not(:disabled) {
-    background: #3a4a6b;
-  }
-
-  .pagination-btn.active {
-    background: #4a9eff;
-    color: white;
-    border-color: #4a9eff;
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideOut {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-  }
-`;
-document.head.appendChild(style);
+// CSS is now properly located in config.css file

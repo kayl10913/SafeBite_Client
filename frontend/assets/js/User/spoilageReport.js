@@ -936,7 +936,10 @@ function formatRecommendations(recommendations) {
         let formatted = `<div class="recommendations-content">
           <div class="recommendations-main">${recData.main}</div>
           <div class="recommendations-details">
-            <ul>${recData.details.map(detail => `<li>${detail}</li>`).join('')}</ul>
+            <ul>${recData.details.map(detail => {
+              const detailText = typeof detail === 'object' ? JSON.stringify(detail) : String(detail);
+              return `<li>${detailText}</li>`;
+            }).join('')}</ul>
           </div>
         </div>`;
         return formatted;
@@ -949,7 +952,10 @@ function formatRecommendations(recommendations) {
         // Only details array
         return `<div class="recommendations-content">
           <div class="recommendations-details">
-            <ul>${recData.details.map(detail => `<li>${detail}</li>`).join('')}</ul>
+            <ul>${recData.details.map(detail => {
+              const detailText = typeof detail === 'object' ? JSON.stringify(detail) : String(detail);
+              return `<li>${detailText}</li>`;
+            }).join('')}</ul>
           </div>
         </div>`;
       }
@@ -959,7 +965,10 @@ function formatRecommendations(recommendations) {
     if (Array.isArray(recData) && recData.length > 0) {
       return `<div class="recommendations-content">
         <div class="recommendations-details">
-          <ul>${recData.map(rec => `<li>${rec}</li>`).join('')}</ul>
+          <ul>${recData.map(rec => {
+            const recText = typeof rec === 'object' ? JSON.stringify(rec) : String(rec);
+            return `<li>${recText}</li>`;
+          }).join('')}</ul>
         </div>
       </div>`;
     }

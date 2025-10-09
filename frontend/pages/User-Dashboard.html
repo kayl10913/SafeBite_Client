@@ -2308,20 +2308,20 @@
   </div>
   
   <!-- Feedback View Modal -->
-  <div id="feedbackViewModal" class="config-modal" style="display: none;">
-    <div class="config-modal-backdrop"></div>
-    <div class="config-modal-content">
-      <div class="config-modal-header">
-        <h2 class="config-modal-title">Feedback Details</h2>
-        <button class="config-modal-close">&times;</button>
+  <div id="feedbackViewModal" class="feedback-view-modal" style="display: none;">
+    <div class="feedback-view-backdrop"></div>
+    <div class="feedback-view-content">
+      <div class="feedback-view-header">
+        <h2 class="feedback-view-title">Feedback Details</h2>
+        <button class="feedback-view-close">&times;</button>
       </div>
-      <div class="config-modal-body">
+      <div class="feedback-view-body">
         <div id="feedbackViewContent">
           <!-- Feedback details will be loaded here -->
         </div>
       </div>
-      <div class="config-modal-footer">
-        <button class="config-modal-btn config-modal-btn-secondary" onclick="closeFeedbackView()">Close</button>
+      <div class="feedback-view-footer">
+        <button class="feedback-view-btn feedback-view-btn-close" onclick="closeFeedbackView()">Close</button>
       </div>
     </div>
   </div>
@@ -4020,8 +4020,8 @@
     
     // Add feedback view modal event listeners
     const feedbackViewModal = document.getElementById('feedbackViewModal');
-    const feedbackViewBackdrop = feedbackViewModal?.querySelector('.config-modal-backdrop');
-    const feedbackViewClose = feedbackViewModal?.querySelector('.config-modal-close');
+    const feedbackViewBackdrop = feedbackViewModal?.querySelector('.feedback-view-backdrop');
+    const feedbackViewClose = feedbackViewModal?.querySelector('.feedback-view-close');
     
     if (feedbackViewBackdrop) {
       feedbackViewBackdrop.addEventListener('click', closeFeedbackView);

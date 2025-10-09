@@ -22,35 +22,35 @@ class FoodSelection {
 
   // Gas emission threshold analysis function
   analyzeGasEmissionThresholds(gasLevel) {
-    if (gasLevel >= 251) {
-      // High Risk (251+ ppm) - Spoilage Detected
+    if (gasLevel >= 400) {
+      // High Risk (400+ ppm) - Spoilage Detected
       return {
         riskLevel: 'high',
         status: 'unsafe',
         probability: 95,
         confidence: 90,
-        recommendation: 'High Risk: Spoilage Detected (251+ ppm). Do not consume. Dispose of the food to avoid foodborne illness. Sanitize storage area to prevent cross-contamination.',
-        threshold: '251+ ppm'
+        recommendation: 'High Risk: Spoilage Detected (400+ ppm). Do not consume. Dispose of the food to avoid foodborne illness. Sanitize storage area to prevent cross-contamination.',
+        threshold: '400+ ppm'
       };
-    } else if (gasLevel >= 121) {
-      // Medium Risk (121-250 ppm) - Early Spoilage Signs
+    } else if (gasLevel >= 200) {
+      // Medium Risk (200-399 ppm) - Early Spoilage Signs
       return {
         riskLevel: 'medium',
         status: 'caution',
         probability: 75,
         confidence: 85,
-        recommendation: 'Medium Risk: Early Spoilage Signs (121-250 ppm). Consume soon (within 1–2 days). Refrigerate immediately if not yet stored. Check for changes in smell, texture, or color.',
-        threshold: '121-250 ppm'
+        recommendation: 'Medium Risk: Early Spoilage Signs (200-399 ppm). Consume soon (within 1–2 days). Refrigerate immediately if not yet stored. Check for changes in smell, texture, or color.',
+        threshold: '200-399 ppm'
       };
     } else if (gasLevel >= 0) {
-      // Low Risk (0-120 ppm) - Fresh/Safe
+      // Low Risk (0-199 ppm) - Fresh/Safe
       return {
         riskLevel: 'low',
         status: 'safe',
-        probability: gasLevel > 80 ? 60 : 20,
+        probability: gasLevel > 150 ? 60 : 20,
         confidence: 90,
-        recommendation: 'Low Risk: Fresh/Safe (0-120 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
-        threshold: '0-120 ppm'
+        recommendation: 'Low Risk: Fresh/Safe (0-199 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
+        threshold: '0-199 ppm'
       };
     }
     
@@ -210,6 +210,7 @@ class FoodSelection {
         this.closeFoodSelectedConfirmation();
       }, 'okFoodSelected');
     }
+
 
     // Modal backdrop click to close
     const modalBackdrop = document.querySelector('.food-selection-modal-backdrop');
@@ -665,18 +666,27 @@ class FoodSelection {
     }
   }
 
-  // Create an alert for SmartSense Scanner when condition is caution/unsafe
-  async createScannerAlert(foodName, tableCondition, sensorData, spoilageScore) {
+  // Create an alert for SmartSense Scanner using ML prediction data
+  async createScannerAlert(foodName, mlPredictionData, sensorData) {
     try {
-      console.log('🚨 Alert Creation Check:');
+      console.log('🚨 ML-Based Alert Creation Check:');
       console.log('  Food Name:', foodName);
-      console.log('  Table Condition:', tableCondition);
-      console.log('  Should Create Alert:', tableCondition && tableCondition !== 'safe');
+      console.log('  ML Prediction Data:', mlPredictionData);
       
-      if (!tableCondition || tableCondition === 'safe') {
-        console.log('✅ Skipping alert creation - condition is safe or empty');
+      // Use ML prediction spoilage status instead of table condition
+      const spoilageStatus = mlPredictionData?.spoilage_status || mlPredictionData?.status;
+      const spoilageProbability = mlPredictionData?.spoilage_probability || mlPredictionData?.probability || 0;
+      const confidenceScore = mlPredictionData?.confidence_score || mlPredictionData?.confidence || 0;
+      
+      console.log('  ML Spoilage Status:', spoilageStatus);
+      console.log('  ML Probability:', spoilageProbability);
+      console.log('  Should Create Alert:', spoilageStatus && spoilageStatus !== 'safe');
+      
+      if (!spoilageStatus || spoilageStatus === 'safe') {
+        console.log('✅ Skipping alert creation - ML prediction shows safe');
         return;
       }
+      
       const sessionToken = localStorage.getItem('jwt_token') || 
                            localStorage.getItem('sessionToken') || 
                            localStorage.getItem('session_token');
@@ -685,27 +695,28 @@ class FoodSelection {
         return;
       }
 
-      const alertLevel = tableCondition === 'unsafe' ? 'High' : 'Medium';
-      const recommendedAction = tableCondition === 'unsafe'
+      const alertLevel = spoilageStatus === 'unsafe' ? 'High' : 'Medium';
+      const recommendedAction = spoilageStatus === 'unsafe'
         ? 'Discard immediately and sanitize storage area.'
         : 'Consume soon or improve storage conditions.';
-      const probability = typeof spoilageScore === 'number' ? Math.max(0, Math.min(100, Math.round(spoilageScore))) : undefined;
 
       const body = {
-        food_id: null,
-        message: `SmartSense: ${foodName} is ${tableCondition.toUpperCase()}`,
+        food_id: mlPredictionData?.food_id || null,
+        message: `ML Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageProbability)}% probability)`,
         alert_level: alertLevel,
-        alert_type: 'sensor',
-        ml_prediction_id: null,
-        spoilage_probability: probability,
+        alert_type: 'ml_prediction',
+        ml_prediction_id: mlPredictionData?.prediction_id || null,
+        spoilage_probability: Math.max(0, Math.min(100, Math.round(spoilageProbability))),
         recommended_action: recommendedAction,
-        is_ml_generated: false,
-        confidence_score: probability,
+        is_ml_generated: true,
+        confidence_score: Math.max(0, Math.min(100, Math.round(confidenceScore))),
         alert_data: JSON.stringify({
-          source: 'smartsense_scanner',
-          condition: tableCondition,
+          source: 'ml_prediction',
+          condition: spoilageStatus,
           sensor_readings: sensorData,
-          spoilage_score: probability,
+          spoilage_score: spoilageProbability,
+          confidence_score: confidenceScore,
+          ml_model: mlPredictionData?.model || 'default',
           timestamp: new Date().toISOString()
         })
       };
@@ -832,8 +843,10 @@ class FoodSelection {
     this.isScanningCancelled = false;
     this.isScanningInProgress = false;
     this._pollingActive = false;
+    
     this._scanId = null;
   }
+
 
   resetModalState() {
     // Reset auto training status modal
@@ -1839,7 +1852,7 @@ class FoodSelection {
             status: 'scanned',
             time: this.getTimeAgo(new Date()),
             sensorData: sensorData,
-            timestamp: new Date()
+            timestamp: new Date().toISOString()
           });
         }
       }
@@ -1957,11 +1970,15 @@ class FoodSelection {
       existingBtn.remove();
     }
 
+    // Get scanner results to calculate total count
+    const scannerResults = this.getScannerResultsFromStorage();
+    const totalCount = scannerResults.length + this.foodHistory.length;
+
     // Add show all button
     const showAllBtn = document.createElement('button');
     showAllBtn.id = 'showAllHistoryBtn';
     showAllBtn.className = 'btn btn-outline-primary btn-sm mt-2';
-    showAllBtn.innerHTML = `<i class="bi bi-list-ul"></i> Show All (${this.foodHistory.length})`;
+    showAllBtn.innerHTML = `<i class="bi bi-list-ul"></i> Show All (${totalCount})`;
     showAllBtn.onclick = () => this.showAllHistory();
 
     const historyContainer = document.getElementById('foodHistoryList').parentElement;
@@ -1972,21 +1989,34 @@ class FoodSelection {
     const historyList = document.getElementById('foodHistoryList');
     if (!historyList) return;
 
-    // Show all items
-    const allHistoryHTML = this.foodHistory.map(item => `
-      <div class="food-history-item">
-        <div class="food-history-info">
-          <div class="food-history-details">
-            <h4>${item.foodName}</h4>
-            <p>Category: ${item.category || 'Unknown'}</p>
+    // Get scanner results from localStorage (same as renderFoodHistory)
+    const scannerResults = this.getScannerResultsFromStorage();
+    
+    // Combine scanner results with all food history items (not just recent 6)
+    const allResults = [...scannerResults, ...this.foodHistory];
+    
+    const allHistoryHTML = allResults.map(item => {
+      if (item.scannerData) {
+        // This is a scanner result
+        return this.renderScannerHistoryItem(item);
+      } else {
+        // This is a regular food history item
+        return `
+          <div class="food-history-item">
+            <div class="food-history-info">
+              <div class="food-history-details">
+                <h4>${item.foodName}</h4>
+                <p>Category: ${item.category || 'Unknown'}</p>
+              </div>
+            </div>
+            <div class="food-history-meta">
+              <div class="food-history-time">${item.time}</div>
+              <div class="food-history-status ${item.status}">${this.getStatusText(item.status, item.analysisResult)}</div>
+            </div>
           </div>
-        </div>
-        <div class="food-history-meta">
-          <div class="food-history-time">${item.time}</div>
-          <div class="food-history-status ${item.status}">${this.getStatusText(item.status, item.analysisResult)}</div>
-        </div>
-      </div>
-    `).join('');
+        `;
+      }
+    }).join('');
 
     historyList.innerHTML = allHistoryHTML;
     historyList.style.maxHeight = '500px';
@@ -1995,12 +2025,12 @@ class FoodSelection {
     // Update button to show "Show Recent"
     const showAllBtn = document.getElementById('showAllHistoryBtn');
     if (showAllBtn) {
-      showAllBtn.innerHTML = `<i class="bi bi-arrow-up"></i> Show Recent (5)`;
+      showAllBtn.innerHTML = `<i class="bi bi-arrow-up"></i> Show Recent (6)`;
       showAllBtn.onclick = () => this.showRecentHistory();
     }
 
-    // Update counter
-    this.updateHistoryCounter(this.foodHistory.length);
+    // Update counter with total items
+    this.updateHistoryCounter(allResults.length);
   }
 
   showRecentHistory() {
@@ -2661,19 +2691,8 @@ class FoodSelection {
         console.log('  Table Assessment:', assessed);
         console.log('  Final Table Condition:', tableCondition);
         
-        // Temporary fix: Override AI condition if sensor data indicates unsafe conditions
-        if (aiAnalysisResult.success && sensorData) {
-          const temp = sensorData.temperature?.value;
-          const humidity = sensorData.humidity?.value;
-          
-          // Check if temperature or humidity exceed safe thresholds
-          if ((temp && temp > 26) || (humidity && humidity > 60)) {
-            console.log('🔧 Overriding AI condition due to unsafe sensor readings');
-            console.log('  Temperature:', temp, '°C (threshold: 26°C)');
-            console.log('  Humidity:', humidity, '% (threshold: 60%)');
-            aiCondition = 'unsafe';
-          }
-        }
+        // Use AI analysis result as the primary source - no overrides
+        // The AI analysis already considers all sensor data and environmental factors
         
         // Use AI condition as primary source for consistency with modal display
         const finalCondition = aiAnalysisResult.success ? aiCondition : tableCondition;
@@ -2681,7 +2700,16 @@ class FoodSelection {
         // Fire alert immediately for caution/unsafe conditions
         if (finalCondition === 'caution' || finalCondition === 'unsafe') {
           console.log('Creating SmartSense alert for condition:', finalCondition, 'score:', assessed.spoilageScore);
-          await this.createScannerAlert(this.selectedFood.name, finalCondition, sensorData, assessed.spoilageScore);
+          // Create a temporary ML prediction data object for alert creation
+          const tempMLData = {
+            spoilage_status: finalCondition,
+            spoilage_probability: assessed.spoilageScore,
+            confidence_score: assessed.spoilageScore || 75,
+            food_id: foodId
+          };
+          await this.createScannerAlert(this.selectedFood.name, tempMLData, sensorData);
+        } else {
+          console.log('✅ No alert needed - AI analysis shows safe condition:', finalCondition);
         }
         
         // Check if scanning was cancelled before ML workflow
@@ -2717,6 +2745,57 @@ class FoodSelection {
           
           console.log('📊 Stored validated analysis result:', this._lastAnalysisResult);
           
+          // Create alert using actual ML prediction results by fetching from database
+          if (mlWorkflowResult.prediction_id) {
+            try {
+              const token = this.getAuthToken();
+              if (token) {
+                const response = await fetch(`/api/ml-prediction/${mlWorkflowResult.prediction_id}`, {
+                  method: 'GET',
+                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                  const mlData = await response.json();
+                  console.log('📊 Fetched ML prediction data for alert:', mlData);
+                  
+                  const mlPredictionData = {
+                    spoilage_status: mlData.data?.spoilage_status || mlWorkflowResult.spoilage_status,
+                    spoilage_probability: mlData.data?.spoilage_probability || mlWorkflowResult.spoilage_probability,
+                    confidence_score: mlData.data?.confidence_score || mlWorkflowResult.confidence_score,
+                    prediction_id: mlWorkflowResult.prediction_id,
+                    food_id: foodId,
+                    model: mlData.data?.model || 'ml_workflow'
+                  };
+                  
+                  // Only create alert if ML prediction indicates caution or unsafe
+                  if (mlPredictionData.spoilage_status === 'caution' || mlPredictionData.spoilage_status === 'unsafe') {
+                    console.log('Creating ML-based alert for spoilage status:', mlPredictionData.spoilage_status);
+                    await this.createScannerAlert(this.selectedFood.name, mlPredictionData, sensorData);
+                  }
+                } else {
+                  console.warn('Failed to fetch ML prediction data, using workflow result');
+                  // Fallback to workflow result
+                  const mlPredictionData = {
+                    spoilage_status: mlWorkflowResult.spoilage_status,
+                    spoilage_probability: mlWorkflowResult.spoilage_probability,
+                    confidence_score: mlWorkflowResult.confidence_score,
+                    prediction_id: mlWorkflowResult.prediction_id,
+                    food_id: foodId,
+                    model: 'ml_workflow'
+                  };
+                  
+                  if (mlWorkflowResult.spoilage_status === 'caution' || mlWorkflowResult.spoilage_status === 'unsafe') {
+                    console.log('Creating ML-based alert for spoilage status:', mlWorkflowResult.spoilage_status);
+                    await this.createScannerAlert(this.selectedFood.name, mlPredictionData, sensorData);
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('Error fetching ML prediction data:', error);
+            }
+          }
+          
           // Now start the step progression with validated results
           this.progressAnalysisSteps();
           
@@ -2728,15 +2807,23 @@ class FoodSelection {
           
           // Update the training status with ML workflow results
           if (trainingStatus) {
-            // Use the ACTUAL ML workflow result for consistency
-            const actualStatus = mlWorkflowResult.spoilage_status || 'safe';
+            // Use the ACTUAL training data status from the training data creation response
+            const actualStatus = mlWorkflowResult.training_data?.actual_spoilage_status || 
+                                 mlWorkflowResult.actual_spoilage_status || 
+                                 mlWorkflowResult.spoilage_status || 'safe';
             const actualConfidence = mlWorkflowResult.confidence_score || 75;
+            const gasRiskLevel = mlWorkflowResult.training_data?.gas_risk_level || 
+                                mlWorkflowResult.gas_risk_level || 'unknown';
             
             console.log('🔍 Modal Display Consistency Check:');
+            console.log('  Full ML Workflow Result:', mlWorkflowResult);
+            console.log('  Training Data Status:', mlWorkflowResult.training_data?.actual_spoilage_status);
+            console.log('  Gas Risk Level:', gasRiskLevel);
             console.log('  AI Analysis Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'N/A');
             console.log('  AI Mapped Status:', aiAnalysisResult.success ? 
               this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe');
             console.log('  ML Workflow Result Status:', actualStatus);
+            console.log('  ML Workflow Result Confidence:', actualConfidence);
             console.log('  Using for display:', actualStatus);
             
             const conditionIcon = actualStatus === 'safe' ? '🍎' : 
@@ -2779,6 +2866,7 @@ class FoodSelection {
                 </div>
               </div>
             `;
+            
           }
         } else {
           console.error('ML workflow failed:', mlWorkflowResult.error);
@@ -2861,9 +2949,9 @@ class FoodSelection {
 
   // Environmental conditions analysis based on baseline values
   analyzeEnvironmentalConditions(temperature, humidity) {
-    // Baseline environmental conditions
-    const baselineTemp = 27.5; // Average of 27-28°C
-    const baselineHumidity = 73.8; // Annual average
+    // Baseline environmental conditions for room temperature storage
+    const baselineTemp = 22; // Room temperature baseline
+    const baselineHumidity = 50; // Normal humidity baseline
     
     const tempDeviation = temperature - baselineTemp;
     const humidityDeviation = humidity - baselineHumidity;
@@ -2872,22 +2960,22 @@ class FoodSelection {
     let humidityRisk = 'normal';
     let overallRisk = 'normal';
     
-    // Temperature analysis
-    if (temperature > baselineTemp + 5) {
+    // Temperature analysis - more lenient for room temperature storage
+    if (temperature > 35) {
       tempRisk = 'high';
-    } else if (temperature > baselineTemp + 2) {
+    } else if (temperature > 30) {
       tempRisk = 'medium';
-    } else if (temperature < baselineTemp - 5) {
-      tempRisk = 'low'; // Cooler than baseline
+    } else if (temperature < 10) {
+      tempRisk = 'low'; // Very cold
     }
     
-    // Humidity analysis
-    if (humidity > baselineHumidity + 15) {
+    // Humidity analysis - more lenient for room temperature storage
+    if (humidity > 85) {
       humidityRisk = 'high';
-    } else if (humidity > baselineHumidity + 8) {
+    } else if (humidity > 75) {
       humidityRisk = 'medium';
-    } else if (humidity < baselineHumidity - 15) {
-      humidityRisk = 'low'; // Drier than baseline
+    } else if (humidity < 25) {
+      humidityRisk = 'low'; // Very dry
     }
     
     // Overall environmental risk
@@ -3197,6 +3285,13 @@ class FoodSelection {
       if (!trainingResult.success) {
         throw new Error('Failed to store training data: ' + trainingResult.error);
       }
+      
+      // Log the actual training data status for debugging
+      console.log('🔍 Training Data Collection Debug:');
+      console.log('  Training ID:', trainingResult.training_id);
+      console.log('  Actual Spoilage Status:', trainingResult.actual_spoilage_status);
+      console.log('  Gas Risk Level:', trainingResult.gas_risk_level);
+      console.log('  Provided Status:', spoilageStatus);
 
       // Step 2: Generate ML prediction
       console.log('Generating ML prediction...', {
@@ -3323,7 +3418,9 @@ class FoodSelection {
         spoilage_probability: validatedConfidence,
         confidence_score: validatedConfidence,
         ai_risk_level: validatedRiskLevel, // Include original risk level
-        display_override_status: spoilageStatus // Keep original for comparison
+        display_override_status: spoilageStatus, // Keep original for comparison
+        actual_spoilage_status: trainingResult.actual_spoilage_status, // Training data status
+        gas_risk_level: trainingResult.gas_risk_level // Gas emission risk level
       };
       
       // Store the analysis result for use in modal and history

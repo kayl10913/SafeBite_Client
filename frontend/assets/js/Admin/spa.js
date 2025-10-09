@@ -173,30 +173,34 @@ function showFeedbacks() {
     console.log('🔍 Feedbacks container after update:', feedbacksContainer);
     
     // Initialize feedbacks functionality
-    if (window.feedbacksManager) {
-      console.log('🔄 Re-initializing existing feedbacks manager');
-      window.feedbacksManager.loadFeedbacks();
-      window.feedbacksManager.loadStatistics();
+    if (window.feedbackCenter) {
+      console.log('🔄 Re-initializing existing feedback center');
+      // Clean up existing event listeners first
+      if (window.feedbackCenter.cleanupEventListeners) {
+        window.feedbackCenter.cleanupEventListeners();
+      }
+      // Re-initialize the feedback center
+      window.feedbackCenter.init();
     } else {
-      console.log('🚀 Creating new feedbacks manager');
-      // Wait for DOM to be ready and check if FeedbacksManager class exists
+      console.log('🚀 Creating new feedback center');
+      // Wait for DOM to be ready and check if FeedbackCenter class exists
       setTimeout(() => {
         const container = document.querySelector('.feedbacks-container');
         console.log('🔍 Feedbacks container after timeout:', container);
         
         if (container) {
-          if (typeof FeedbacksManager !== 'undefined') {
-            console.log('✅ FeedbacksManager class found, creating instance');
-            window.feedbacksManager = new FeedbacksManager();
+          if (typeof FeedbackCenter !== 'undefined') {
+            console.log('✅ FeedbackCenter class found, creating instance');
+            window.feedbackCenter = new FeedbackCenter();
           } else {
-            console.error('❌ FeedbacksManager class not defined yet, waiting...');
+            console.error('❌ FeedbackCenter class not defined yet, waiting...');
             // Try again after a longer delay
             setTimeout(() => {
-              if (typeof FeedbacksManager !== 'undefined') {
-                console.log('✅ FeedbacksManager class found on retry, creating instance');
-                window.feedbacksManager = new FeedbacksManager();
+              if (typeof FeedbackCenter !== 'undefined') {
+                console.log('✅ FeedbackCenter class found on retry, creating instance');
+                window.feedbackCenter = new FeedbackCenter();
               } else {
-                console.error('❌ FeedbacksManager class still not defined after retry');
+                console.error('❌ FeedbackCenter class still not defined after retry');
               }
             }, 500);
           }
