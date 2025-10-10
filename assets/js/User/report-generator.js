@@ -566,7 +566,7 @@ class ReportGenerator {
                 return;
             }
 
-            const response = await fetch(`/api/users/activity-report?page=${page}&limit=${limit}`, {
+            const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl(`/api/users/activity-report?page=${page}&limit=${limit}`) : `/api/users/activity-report?page=${page}&limit=${limit}`), {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${sessionToken}`,
@@ -620,7 +620,7 @@ class ReportGenerator {
 
             // Always fetch a larger window from activity logs, then filter + paginate client-side
             const apiParams = new URLSearchParams({ limit: '1000', offset: '0' });
-            const resp = await fetch(`/api/users/activity-report?${apiParams.toString()}`, {
+            const resp = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl(`/api/users/activity-report?${apiParams.toString()}`) : `/api/users/activity-report?${apiParams.toString()}`), {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }
             });
@@ -743,7 +743,7 @@ class ReportGenerator {
             });
             
             // Use the same endpoint as detailed report for consistency
-            const response = await fetch(`/api/users/detailed-spoilage-report?${params.toString()}`, {
+            const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl(`/api/users/detailed-spoilage-report?${params.toString()}`) : `/api/users/detailed-spoilage-report?${params.toString()}`), {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${sessionToken}`,
