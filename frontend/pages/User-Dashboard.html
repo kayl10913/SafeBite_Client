@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="../assets/css/User-assets/config.css">
   <link rel="stylesheet" href="../assets/css/User-assets/feedback.css">
   <link rel="stylesheet" href="../assets/css/User-assets/dashboard-inline-styles.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/modal-styles.css">
   <!-- <link rel="stylesheet" href="../assets/css/User-assets/alerts.css"> -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -32,14 +33,14 @@
 
 <aside class="sidebar expanded" id="sidebar">
   <div class="sidebar-header">
-    <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">S</span>
+    <span class="sidebar-logo" id="sidebarLogo">S</span>
     <span class="sidebar-title user-name"></span>
   </div>
   <nav class="sidebar-nav">
     <!-- Main Navigation -->
-    <ul style="padding: 0; margin: 0;">
-      <li class="nav-item active" style="margin: 4px 20px;">
-        <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+      <ul>
+      <li class="nav-item active">
+        <a href="#" class="nav-link" data-page="dashboard">
           <i class="bi bi-house-door nav-icon"></i>
           <span class="nav-text">Dashboard</span>
         </a>
@@ -50,21 +51,21 @@
     <!-- Reports & Analysis Section -->
     <div class="nav-section">
       <div class="nav-section-title">Reports & Analysis</div>
-      <ul style="padding: 0; margin: 0;">
+      <ul>
       <li class="nav-item is-truncated">
-        <a href="#" class="nav-link" data-page="spoilage-report" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+        <a href="#" class="nav-link" data-page="spoilage-report">
           <i class="bi bi-graph-up nav-icon"></i>
           <span class="nav-text">Spoilage Reports</span>
         </a>
       </li>
       <li class="nav-item is-truncated">
-        <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+        <a href="#" class="nav-link" data-page="report-generator">
           <i class="bi bi-file-earmark-text nav-icon"></i>
           <span class="nav-text">Reports Generator</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link" data-page="analysis" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+        <a href="#" class="nav-link" data-page="analysis">
           <i class="bi bi-search nav-icon"></i>
           <span class="nav-text">Analysis</span>
         </a>
@@ -75,15 +76,15 @@
     <!-- Account & Support Section -->
     <div class="nav-section">
       <div class="nav-section-title">Account & Support</div>
-      <ul style="padding: 0; margin: 0;">
+      <ul>
       <li class="nav-item is-truncated">
-        <a href="#" class="nav-link" data-page="user-logs" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+        <a href="#" class="nav-link" data-page="user-logs">
           <i class="bi bi-key nav-icon"></i>
           <span class="nav-text">User Logs / History</span>
         </a>
       </li>
       <li class="nav-item is-truncated">
-        <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
+        <a href="#" class="nav-link" data-page="feedbacks">
           <i class="bi bi-chat-dots nav-icon"></i>
             <span class="nav-text">Feedbacks / Support</span>
         </a>
@@ -91,10 +92,10 @@
   </ul>
     </div>
 </nav>
-  <div class="sidebar-account" id="sidebarAccount" style="cursor:pointer;">
+  <div class="sidebar-account" id="sidebarAccount">
     <i class="bi bi-person-circle account-icon"></i>
     <span class="account-text" id="accountText">Profile</span>
-    <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
   </div>
 </aside>
 <main id="main-content">
@@ -226,10 +227,10 @@
                 </select>
               </div>
             </div>
-            <div class="activity-counters d-flex flex-wrap gap-2 mb-2" style="margin-top:6px;">
-              <div class="badge rounded-pill" id="count-today" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Today: 0</div>
-              <div class="badge rounded-pill" id="count-7d" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Last 7d: 0</div>
-              <div class="badge rounded-pill" id="count-30d" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Last 30d: 0</div>
+            <div class="activity-counters d-flex flex-wrap gap-2 mb-2">
+              <div class="badge rounded-pill" id="count-today">Today: 0</div>
+              <div class="badge rounded-pill" id="count-7d">Last 7d: 0</div>
+              <div class="badge rounded-pill" id="count-30d">Last 30d: 0</div>
             </div>
               <div class="activity-chart-container">
                 <canvas id="activityChart"></canvas>
@@ -277,7 +278,7 @@
                       <option value="week">This Week</option>
                       <option value="month">This Month</option>
                     </select>
-                    <button id="clearFoodHistoryBtn" class="history-clear-btn" style="margin-left:8px;">
+                    <button id="clearFoodHistoryBtn" class="history-clear-btn">
                       <i class="bi bi-trash"></i>
                       Clear history
                     </button>
@@ -394,76 +395,76 @@
 </template>
 
 <!-- Dashboard Add Food Modal -->
-<div class="config-modal" id="dashboardAddFoodModal" style="display:none;">
+<div class="config-modal" id="dashboardAddFoodModal">
   <div class="config-modal-backdrop"></div>
-  <div class="config-modal-content" style="background:#003A6B;color:#e0e6f6;border:1px solid #1B5886;">
-    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
-      <span class="config-modal-title" style="color:#fff;">Add Food</span>
-      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+  <div class="config-modal-content">
+    <div class="config-modal-header">
+      <span class="config-modal-title">Add Food</span>
+      <button class="config-modal-close" aria-label="Close">&times;</button>
     </div>
     <form class="config-modal-form" id="dashboardAddFoodForm">
       <div class="config-modal-row">
         <div class="config-modal-group">
-          <label style="color:#e0e6f6;">Food Name *</label>
-          <input type="text" id="dashboardFoodName" required placeholder="e.g., Mango, Chicken" style="background:#1B5886;border:1px solid #3776A1;color:#fff;" />
+          <label>Food Name *</label>
+          <input type="text" id="dashboardFoodName" required placeholder="e.g., Mango, Chicken" />
         </div>
         <div class="config-modal-group">
-          <label style="color:#e0e6f6;">Category</label>
-          <select id="dashboardFoodCategory" style="background:#1B5886;border:1px solid #3776A1;color:#fff;"></select>
+          <label>Category</label>
+          <select id="dashboardFoodCategory" aria-label="Food Category"></select>
         </div>
       </div>
-      <div class="config-modal-footer" style="border-top:1px solid #1B5886;">
-        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#e0e6f6;border:1px solid #3776A1;">Cancel</button>
-        <button type="submit" class="config-modal-submit" style="background:#3776A1;">Add</button>
+      <div class="config-modal-footer">
+        <button type="button" class="config-modal-cancel">Cancel</button>
+        <button type="submit" class="config-modal-submit">Add</button>
       </div>
     </form>
   </div>
  </div>
 
 <!-- Dashboard Add Device Modal -->
-<div class="config-modal" id="dashboardAddDeviceModal" style="display:none;">
+<div class="config-modal" id="dashboardAddDeviceModal">
   <div class="config-modal-backdrop"></div>
-  <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:520px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
-      <span class="config-modal-title" style="color:#fff;">Connect Device</span>
-      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+  <div class="config-modal-content">
+    <div class="config-modal-header">
+      <span class="config-modal-title">Connect Device</span>
+      <button class="config-modal-close" aria-label="Close">&times;</button>
     </div>
     <form class="config-modal-form" id="dashboardAddDeviceForm">
       <div class="config-modal-row">
         <div class="config-modal-group">
-          <label style="color:#e0e6f6;">Sensor ID *</label>
-          <input type="text" id="dashboardDeviceId" required placeholder="e.g., SENSOR_001, TEMP_01" style="background:#1B5886;border:1px solid #3776A1;color:#fff;" />
+          <label>Sensor ID *</label>
+          <input type="text" id="dashboardDeviceId" required placeholder="e.g., SENSOR_001, TEMP_01" />
         </div>
         <div class="config-modal-group">
-          <label style="color:#e0e6f6;">Sensor Type *</label>
-          <select id="dashboardDeviceType" style="background:#1B5886;border:1px solid #3776A1;color:#fff;">
+          <label>Sensor Type *</label>
+          <select id="dashboardDeviceType" aria-label="Sensor Type">
             <option value="Temperature">Temperature</option>
             <option value="Humidity">Humidity</option>
             <option value="Gas">Gas</option>
           </select>
         </div>
       </div>
-      <div class="config-modal-footer" style="border-top:1px solid #1B5886;">
-        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#e0e6f6;border:1px solid #3776A1;">Cancel</button>
-        <button type="submit" class="config-modal-submit" style="background:#3776A1;">Connect</button>
+      <div class="config-modal-footer">
+        <button type="button" class="config-modal-cancel">Cancel</button>
+        <button type="submit" class="config-modal-submit">Connect</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- ML Food Scanner Modal -->
-<div class="config-modal" id="mlFoodScannerModal" style="display:none;">
+<div class="config-modal" id="mlFoodScannerModal">
   <div class="config-modal-backdrop"></div>
-  <div class="config-modal-content ml-scanner-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
-      <span class="config-modal-title" style="color:#fff;">
+  <div class="config-modal-content ml-scanner-modal">
+    <div class="config-modal-header">
+      <span class="config-modal-title">
         <i class="bi bi-cpu"></i> SmartSense Scanner
       </span>
-      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
+      <button class="config-modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="ml-scanner-body">
       <div class="ml-scanner-description">
-        <p style="color:#6EB1D6;margin:0 0 20px 0;font-size:0.9rem;">
+        <p>
           Select a food item and scan with sensors for AI-powered spoilage prediction
         </p>
       </div>
@@ -471,25 +472,25 @@
       <div class="ml-scanner-controls">
         <div class="ml-scanner-row">
           <div class="ml-scanner-group">
-            <div class="ml-scanner-group-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <label for="mlFoodSelect" style="color:#89CFF1;font-size:0.9rem;font-weight:500;margin:0;">
+            <div class="ml-scanner-group-header">
+              <label for="mlFoodSelect">
                 Choose from existing foods
               </label>
-              <button type="button" id="refreshFoodListBtn" class="btn btn-sm" style="background:#1B5886;color:#6EB1D6;border:1px solid #3776A1;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+              <button type="button" id="refreshFoodListBtn" class="btn btn-sm refresh-food-list-btn">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
               </button>
             </div>
-            <select id="mlFoodSelect" class="form-select" style="background:#1B5886;border:1px solid #3776A1;color:#fff;padding:8px 12px;border-radius:6px;width:100%;">
+            <select id="mlFoodSelect" class="form-select mlFoodSelect">
               <option value="">Select from available foods</option>
             </select>
-            <div class="sensor-info" style="margin-top:8px;color:#6EB1D6;font-size:0.8rem;">
+            <div class="sensor-info">
               <i class="bi bi-info-circle"></i> Will wait for new sensor data before running ML prediction
             </div>
           </div>
         </div>
         
         <!-- Sensor Data Waiting Indicator -->
-        <div id="sensorDataWaitIndicator" class="sensor-wait-indicator" style="display: none;">
+        <div id="sensorDataWaitIndicator" class="sensor-wait-indicator">
           <div class="waiting-content">
             <div class="spinner-border spinner-border-sm text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
@@ -497,18 +498,18 @@
             <span class="waiting-text">Waiting for new sensor data...</span>
           </div>
           <div class="waiting-progress">
-            <div class="progress" style="height: 4px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-label="Loading progress"></div>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="ml-scanner-footer" style="border-top:1px solid #1B5886;padding-top:16px;margin-top:20px;">
-        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#89CFF1;border:1px solid #3776A1;padding:8px 16px;border-radius:6px;margin-right:8px;">
+      <div class="ml-scanner-footer">
+        <button type="button" class="config-modal-cancel">
           Cancel
         </button>
-        <button type="button" id="readyScanBtn" class="config-modal-submit" style="background:#3776A1;color:#fff;border:none;padding:8px 16px;border-radius:6px;">
+        <button type="button" id="readyScanBtn" class="config-modal-submit">
           <i class="bi bi-scan"></i> Start Scanning
         </button>
       </div>
@@ -644,761 +645,6 @@
 </div>
 
 <!-- Modal System Styles -->
-<style>
-  /* Global Modal System */
-  .modal-system {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Config Modal System - Fixed Positioning */
-  .config-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .config-modal.show {
-    display: flex;
-  }
-
-  .config-modal-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-  }
-
-  .config-modal-content {
-    position: relative;
-    background: #212c4d;
-    border: 1px solid #2b3a66;
-    border-radius: 12px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    animation: modalSlideIn 0.3s ease-out;
-    z-index: 10001;
-  }
-
-  .config-modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #2b3a66;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .config-modal-title {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .config-modal-close {
-    background: none;
-    border: none;
-    color: #bfc9da;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-  }
-
-  .config-modal-close:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .config-modal-footer {
-    padding: 16px 24px 20px;
-    border-top: 1px solid #2b3a66;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-
-  .config-modal-submit {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .config-modal-cancel {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  /* Food Recommendations Modal Specific Styles */
-  #foodRecommendationsModal {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 10000 !important;
-    display: none !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  #foodRecommendationsModal.show {
-    display: flex !important;
-  }
-
-  #foodRecommendationsModal .config-modal-content {
-    position: relative !important;
-    z-index: 10001 !important;
-    background: #212c4d !important;
-    border: 1px solid #2b3a66 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4) !important;
-    max-width: 600px !important;
-    width: 90% !important;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    animation: modalSlideIn 0.3s ease-out !important;
-  }
-
-  /* Recommendations Modal Content Styles */
-  .recommendations-body {
-    padding: 20px;
-  }
-
-  .food-detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #2b3a66;
-  }
-
-  .food-detail-info h3 {
-    color: #ffffff;
-    margin: 0 0 8px 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-  }
-
-  .food-detail-meta {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  .detail-category {
-    background: #4a9eff;
-    color: #ffffff;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .detail-created {
-    color: #9fb8ff;
-    font-size: 0.9rem;
-  }
-
-  .food-detail-status {
-    text-align: right;
-  }
-
-  .detail-status-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 16px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .detail-status-badge.safe {
-    background: #28a745;
-    color: #ffffff;
-  }
-
-  .detail-status-badge.at-risk {
-    background: #ffc107;
-    color: #000000;
-  }
-
-  .detail-status-badge.spoiled {
-    background: #dc3545;
-    color: #ffffff;
-  }
-
-  .detail-risk-score {
-    color: #9fb8ff;
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .recommendations-content {
-    margin-top: 20px;
-  }
-
-  .recommendations-section h4 {
-    color: #ffffff;
-    margin: 0 0 12px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .recommendations-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .recommendation-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    background: #2a3658;
-    border: 1px solid #3a4a6b;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-  }
-
-  .recommendation-item:hover {
-    background: #2f3d63;
-    border-color: #4a5a7b;
-    transform: translateY(-1px);
-  }
-
-  .recommendation-icon {
-    font-size: 1.5rem;
-    flex-shrink: 0;
-  }
-
-  .recommendation-content {
-    flex: 1;
-  }
-
-  .recommendation-title {
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .recommendation-text {
-    color: #e0e6f6;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-
-  .sensor-details-section {
-    margin-top: 24px;
-  }
-
-  .sensor-details-section h4 {
-    color: #ffffff;
-    margin: 20px 0 12px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .sensor-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-  }
-
-  .sensor-detail-item {
-    background: #2a3658;
-    border: 1px solid #3a4a6b;
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-  }
-
-  .sensor-detail-label {
-    color: #9fb8ff;
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-
-  .sensor-detail-value {
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .sensor-detail-status {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .sensor-detail-status.good {
-    background: #28a745;
-    color: #ffffff;
-  }
-
-  .sensor-detail-status.warning {
-    background: #ffc107;
-    color: #000000;
-  }
-
-  .sensor-detail-status.danger {
-    background: #dc3545;
-    color: #ffffff;
-  }
-
-  /* Responsive adjustments for recommendations modal */
-  @media (max-width: 768px) {
-    #foodRecommendationsModal .config-modal-content {
-      width: 95% !important;
-      max-width: 95% !important;
-      margin: 20px;
-    }
-
-    .food-detail-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .food-detail-status {
-      text-align: left;
-    }
-
-    .sensor-details-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Additional floating improvements */
-  #foodRecommendationsModal {
-    backdrop-filter: blur(4px);
-  }
-
-  #foodRecommendationsModal .config-modal-content {
-    transform: translateY(0);
-    transition: all 0.3s ease-out;
-  }
-
-  #foodRecommendationsModal.show .config-modal-content {
-    animation: modalSlideIn 0.3s ease-out;
-  }
-
-  /* Ensure modal is always on top */
-  #foodRecommendationsModal {
-    z-index: 10000 !important;
-  }
-
-  #foodRecommendationsModal .config-modal-content {
-    z-index: 10001 !important;
-  }
-
-  /* Prevent body scroll when modal is open */
-  body.modal-open {
-    overflow: hidden;
-  }
-
-  /* Enhanced backdrop */
-  #foodRecommendationsModal .config-modal-backdrop {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(6px);
-  }
-
-  .modal-system.show {
-    display: flex;
-  }
-
-  .modal-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-  }
-
-  .modal-content {
-    position: relative;
-    background: #212c4d;
-    border: 1px solid #2b3a66;
-    border-radius: 12px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    animation: modalSlideIn 0.3s ease-out;
-  }
-
-  @keyframes modalSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  .modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #2b3a66;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .modal-title {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .modal-icon {
-    font-size: 20px;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: #bfc9da;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-  }
-
-  .modal-close:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .modal-body {
-    padding: 20px 24px;
-      color: #89CFF1;
-    line-height: 1.5;
-  }
-
-  .modal-footer {
-    padding: 16px 24px 20px;
-    border-top: 1px solid #2b3a66;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-
-  .modal-btn {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .modal-btn-primary {
-    background: #4a9eff;
-    color: #ffffff;
-  }
-
-  .modal-btn-primary:hover {
-    background: #3a8eef;
-    transform: translateY(-1px);
-  }
-
-  .modal-btn-secondary {
-    background: #2a3658;
-      color: #89CFF1;
-    border: 1px solid #3a4a6b;
-  }
-
-  .modal-btn-secondary:hover {
-    background: #3a4a6b;
-    border-color: #4a5a7b;
-  }
-
-  .modal-btn-danger {
-    background: #dc3545;
-    color: #ffffff;
-  }
-
-  .modal-btn-danger:hover {
-    background: #c82333;
-  }
-
-  .modal-btn-success {
-    background: #28a745;
-    color: #ffffff;
-  }
-
-  .modal-btn-success:hover {
-    background: #218838;
-  }
-
-  .modal-btn-warning {
-    background: #ffc107;
-    color: #212529;
-  }
-
-  .modal-btn-warning:hover {
-    background: #e0a800;
-  }
-
-  /* Modal Types */
-  .modal-success .modal-icon { color: #28a745; }
-  .modal-error .modal-icon { color: #dc3545; }
-  .modal-warning .modal-icon { color: #ffc107; }
-  .modal-info .modal-icon { color: #4a9eff; }
-
-  /* Edit Account Modal Styles */
-  #editAccountModal .edit-account-modal { background:#1b2540; border:1px solid #26345c; color:#e6ecff; box-shadow:0 20px 50px rgba(0,0,0,0.4); }
-  #editAccountModal .config-modal-header { border-bottom:1px solid #26345c; }
-  #editAccountModal .edit-account-avatar { background:linear-gradient(135deg,#4a9eff 0%,#7bb3ff 100%); box-shadow:0 6px 18px rgba(74,158,255,0.35); }
-  #editAccountModal .config-modal-title { color:#ffffff; }
-
-  /* Inputs */
-  #editAccountModal input[type="text"],
-  #editAccountModal input[type="email"],
-  #editAccountModal input[type="tel"],
-  #editAccountModal input[type="password"],
-  #editAccountModal select,
-  #editAccountModal #editTesterTypeDisplay {
-    background:#202b4a !important;
-    border:1px solid #31426f !important;
-    color:#e6ecff !important;
-    border-radius:10px !important;
-    padding:12px 12px !important;
-  }
-  #editAccountModal input::placeholder { color:#9fb0d6; opacity:0.85; }
-  #editAccountModal input:focus,
-  #editAccountModal select:focus {
-    outline:none;
-    border-color:#4a9eff !important;
-    box-shadow:0 0 0 3px rgba(74,158,255,0.2);
-  }
-
-  /* Field labels */
-  #editAccountModal label { color:#cfe0ff !important; }
-  #editAccountModal .config-modal-row { margin-bottom:16px; }
-  #editAccountModal .edit-account-divider { border-top:1px solid #26345c !important; }
-
-  /* Tester type display pill */
-  #editAccountModal #editTesterTypeDisplay { display:flex; align-items:center; min-height:44px; }
-  #editAccountModal #editTesterTypeText { color:#d9e6ff; font-weight:500; }
-
-  /* Buttons */
-  #editAccountModal .config-modal-footer { border-top:1px solid #26345c; }
-  #editAccountModal .config-modal-cancel { 
-    background:#202b4a !important; border:1px solid #31426f !important; color:#e6ecff !important; 
-    border-radius:10px; transition:all .15s ease; 
-  }
-  #editAccountModal .config-modal-cancel:hover { filter:brightness(1.08); border-color:#3b4f84 !important; }
-  #editAccountModal .config-modal-submit { 
-    background:linear-gradient(135deg,#4a9eff 0%, #3f8de6 100%) !important; border:none !important; color:#fff !important; 
-    border-radius:10px; box-shadow:0 10px 20px rgba(74,158,255,0.25); transition:transform .05s ease, box-shadow .15s ease; 
-  }
-  #editAccountModal .config-modal-submit:hover { transform:translateY(-1px); box-shadow:0 12px 22px rgba(74,158,255,0.32); }
-  #editAccountModal .config-modal-submit:active { transform:translateY(0); box-shadow:0 8px 18px rgba(74,158,255,0.22); }
-
-  /* Password toggle button */
-  #editAccountModal .password-toggle { color:#9fb0d6 !important; }
-  #editAccountModal .password-toggle:hover { color:#cfe0ff !important; }
-
-  /* Close button */
-  #editAccountModal .config-modal-close { color:#bfc9da !important; }
-  #editAccountModal .config-modal-close:hover { color:#ffffff !important; }
-
-  /* Hide scrollbars visually but keep scrolling enabled in Edit Account modal */
-  #editAccountModal .config-modal-content,
-  #editAccountModal .edit-account-modal { 
-    overflow-y: auto !important; 
-    -ms-overflow-style: none; /* IE/Edge */
-    scrollbar-width: none;    /* Firefox */
-  }
-  #editAccountModal .config-modal-content::-webkit-scrollbar,
-  #editAccountModal .edit-account-modal::-webkit-scrollbar { 
-    width: 0; 
-    height: 0; 
-  }
-  #editAccountModal .config-modal-header { 
-    text-align:center; 
-    display:flex; 
-    flex-direction: column; 
-    align-items: center;
-  }
-  #editAccountModal .config-modal-title { display:block; margin-top:8px; }
-
-  /* Battery Status Styles */
-  .device-sensor-battery {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  .device-sensor-battery i {
-    font-size: 14px;
-  }
-
-  .battery-critical {
-    color: #dc3545;
-  }
-
-  .battery-low {
-    color: #ffc107;
-  }
-
-  .battery-medium {
-    color: #fd7e14;
-  }
-
-  .battery-good {
-    color: #28a745;
-  }
-
-  .device-sensor-status {
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .device-sensor-status.connected {
-    color: #28a745;
-    background: rgba(40, 167, 69, 0.1);
-  }
-
-  .device-sensor-status.disconnected {
-    color: #dc3545;
-    background: rgba(220, 53, 69, 0.1);
-  }
-
-  /* Device Information Section Styles */
-  .device-info-text {
-    margin-bottom: 20px;
-    padding: 16px;
-    background: rgba(74, 158, 255, 0.1);
-    border: 1px solid rgba(74, 158, 255, 0.2);
-    border-radius: 8px;
-  }
-
-  .device-info-text p {
-    margin: 0 0 8px 0;
-      color: #89CFF1;
-    line-height: 1.5;
-  }
-
-  .device-info-text p:last-child {
-    margin-bottom: 0;
-    color: #9fb8ff;
-    font-size: 0.9rem;
-  }
-
-  .device-info-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .refresh-device-btn,
-  .view-device-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .refresh-device-btn {
-    background: #4a9eff;
-    color: #ffffff;
-  }
-
-  .refresh-device-btn:hover {
-    background: #3a8eef;
-    transform: translateY(-1px);
-  }
-
-  .view-device-btn {
-    background: #2a3658;
-      color: #89CFF1;
-    border: 1px solid #3a4a6b;
-  }
-
-  .view-device-btn:hover {
-    background: #3a4a6b;
-    border-color: #4a5a7b;
-  }
-</style>
 
 <!-- Global Modal System -->
 <div class="modal-system" id="globalModal">
@@ -1422,117 +668,117 @@
 </div>
 
 <!-- Edit Account Modal -->
-<div class="config-modal" id="editAccountModal" style="display:none;">
+<div class="config-modal" id="editAccountModal">
   <div class="config-modal-backdrop"></div>
-  <div class="config-modal-content edit-account-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:500px;border-radius:12px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;text-align:center;padding:24px 20px 20px;position:relative;">
-      <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;position:absolute;top:20px;right:20px;background:none;border:none;font-size:20px;cursor:pointer;">&times;</button>
-      <div class="edit-account-avatar" style="width:80px;height:80px;border-radius:50%;background:#4a9eff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:#fff;font-weight:bold;" id="editAccountAvatar">
+  <div class="config-modal-content edit-account-modal">
+    <div class="config-modal-header">
+      <button class="config-modal-close" aria-label="Close">&times;</button>
+      <div class="edit-account-avatar" id="editAccountAvatar">
         ML
       </div>
-      <span class="config-modal-title" style="color:#fff;font-size:20px;font-weight:600;">Edit Account</span>
+      <span class="config-modal-title">Edit Account</span>
     </div>
     
-    <form class="config-modal-form" id="editAccountForm" style="padding:20px;">
+    <form class="config-modal-form" id="editAccountForm">
       <!-- Personal Information -->
       <div class="edit-account-section">
-        <div class="config-modal-row" style="display:flex;gap:16px;margin-bottom:16px;">
-          <div class="config-modal-group" style="flex:1;">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-person" style="color:#4a9eff;font-size:16px;"></i>
+        <div class="config-modal-row">
+          <div class="config-modal-group">
+            <label>
+              <i class="bi bi-person"></i>
               First Name
             </label>
-            <input type="text" id="editFirstName" required placeholder="Enter first name" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="text" id="editFirstName" required placeholder="Enter first name" />
           </div>
-          <div class="config-modal-group" style="flex:1;">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-person" style="color:#4a9eff;font-size:16px;"></i>
+          <div class="config-modal-group">
+            <label>
+              <i class="bi bi-person"></i>
               Last Name
             </label>
-            <input type="text" id="editLastName" required placeholder="Enter last name" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="text" id="editLastName" required placeholder="Enter last name" />
           </div>
         </div>
         
-        <div class="config-modal-row" style="margin-bottom:16px;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-at" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-at"></i>
               Username
             </label>
-            <input type="text" id="editUsername" required placeholder="Enter username" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="text" id="editUsername" required placeholder="Enter username" />
           </div>
         </div>
         
-        <div class="config-modal-row" style="margin-bottom:16px;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-envelope" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-envelope"></i>
               Email
             </label>
-            <input type="email" id="editEmail" required placeholder="Enter email address" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="email" id="editEmail" required placeholder="Enter email address" />
           </div>
         </div>
         
         <!-- Tester Type -->
-        <div class="config-modal-row" style="margin-bottom:16px;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-person-badge" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-person-badge"></i>
               Tester Type
             </label>
-            <div id="editTesterTypeDisplay" style="background:#1a2332;border:1px solid #2a3a4a;color:#cfd6e6;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;">
+            <div id="editTesterTypeDisplay">
               <span id="editTesterTypeText">Loading...</span>
             </div>
           </div>
         </div>
         
-        <div class="config-modal-row" style="margin-bottom:0;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-telephone" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-telephone"></i>
               Contact Number
             </label>
-            <input type="tel" id="editContactNumber" placeholder="Enter contact number" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="tel" id="editContactNumber" placeholder="Enter contact number" />
           </div>
         </div>
       </div>
       
       <!-- Password Section -->
-      <div class="edit-account-divider" style="border-top:1px solid #2b3a66;margin:24px 0;padding-top:24px;">
-        <h3 style="color:#e0e6f6;font-size:16px;font-weight:600;margin-bottom:16px;">Change Password</h3>
+      <div class="edit-account-divider">
+        <h3>Change Password</h3>
         
-        <div class="config-modal-row" style="margin-bottom:16px;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-lock" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-lock"></i>
               New Password
             </label>
-            <div style="position:relative;">
-              <input type="password" id="editNewPassword" placeholder="Enter new password" style="background:#fff;border:1px solid #ddd;color:#333;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;padding-right:40px;" />
-              <button type="button" class="password-toggle" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#666;cursor:pointer;" onclick="togglePasswordVisibility('editNewPassword')">
+            <div>
+              <input type="password" id="editNewPassword" placeholder="Enter new password" />
+              <button type="button" class="password-toggle" onclick="togglePasswordVisibility('editNewPassword')">
                 <i class="bi bi-eye"></i>
               </button>
             </div>
           </div>
         </div>
         
-        <div class="config-modal-row" style="margin-bottom:0;">
+        <div class="config-modal-row">
           <div class="config-modal-group">
-            <label style="color:#e0e6f6;display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;">
-              <i class="bi bi-lock-fill" style="color:#4a9eff;font-size:16px;"></i>
+            <label>
+              <i class="bi bi-lock-fill"></i>
               Re-enter Password
             </label>
-            <input type="password" id="editReenterPassword" placeholder="Re-enter new password" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;font-size:14px;" />
+            <input type="password" id="editReenterPassword" placeholder="Re-enter new password" />
           </div>
         </div>
       </div>
     </form>
     
-    <div class="config-modal-footer" style="border-top:1px solid #2b3a66;padding:16px 20px;display:flex;justify-content:flex-end;gap:12px;">
-      <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;">
+    <div class="config-modal-footer">
+      <button type="button" class="config-modal-cancel">
         Cancel
       </button>
-      <button type="submit" form="editAccountForm" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;">
+      <button type="submit" form="editAccountForm" class="config-modal-submit">
         <i class="bi bi-floppy"></i>
         Save
       </button>
@@ -1541,11 +787,11 @@
 </div>
 
 <!-- Food Selection Modal -->
-<div class="food-selection-modal" id="foodSelectionModal" style="display:none;">
+<div class="food-selection-modal" id="foodSelectionModal">
   <div class="food-selection-modal-backdrop"></div>
   <div class="food-selection-modal-content">
     <div class="food-selection-modal-header">
-      <button class="food-selection-modal-close" aria-label="Close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #bfc9da; font-size: 24px; cursor: pointer; z-index: 10;">&times;</button>
+      <button class="food-selection-modal-close" aria-label="Close">&times;</button>
       <div class="food-selection-modal-icon">
         <i class="bi bi-egg-fried"></i>
       </div>
@@ -1567,7 +813,7 @@
           </div>
           <div class="food-selection-form-group">
             <label>Category</label>
-            <select id="customFoodCategory">
+            <select id="customFoodCategory" aria-label="Food Category">
               <option value="">Select category</option>
               <option value="Fruits">Fruits</option>
               <option value="Vegetables">Vegetables</option>
@@ -1593,7 +839,7 @@
 </div>
 
 <!-- Food Selected Confirmation with Smart Training -->
-<div class="food-selected-confirmation" id="foodSelectedConfirmation" style="display:none;">
+<div class="food-selected-confirmation" id="foodSelectedConfirmation">
   <div class="food-selected-card" id="food-selected-card">
     <h2>🧠 Smart Training Ready</h2>
     <div class="food-selected-info">
@@ -1601,13 +847,13 @@
       <p>Scan with your IoT device, then teach our AI!</p>
       
       
-      <div id="sensorWaitIndicator" class="sensor-wait" style="display:none;">
+      <div id="sensorWaitIndicator" class="sensor-wait">
         <span class="sensor-wait-spinner" aria-hidden="true"></span>
         <span class="sensor-wait-text">Waiting for new sensor data...</span>
       </div>
       
       <!-- Auto Training Status -->
-      <div id="autoTrainingStatus" class="auto-training-status" style="display:none;">
+      <div id="autoTrainingStatus" class="auto-training-status">
         <div class="training-status-header">
           <h3>🧠 AI Training Complete!</h3>
           <p>Your sensor data has been automatically used to train our AI</p>
