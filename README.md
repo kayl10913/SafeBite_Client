@@ -12,31 +12,30 @@ A static frontend for the SafeBite system. It provides user and admin authentica
 ```
 SafeBite_Client/
   index.html
-  frontend/
-    pages/
-      Login.html
-      Admin-Login.html
-      User-Dashboard.html
-      ad-dashboard.html
-    assets/
-      css/
-        Login-assets/
-          login.css
-        Admin-assets/
-          ... (admin CSS files)
-        User-assets/
-          ... (user CSS files)
-      js/
-        Login/
-          login.js           # Auth flows, modals, password strength, progress, toasts
-          admin-login.js
-        config/
-          api-config.js      # API helper (Auth.*), base URLs
-          navigation.js      # SPA-like view helpers
-        User/
-          ... (user dashboards and analytics)
-      images/
-        ... (static assets)
+  pages/
+    Login.html
+    Admin-Login.html
+    User-Dashboard.html
+    ad-dashboard.html
+  assets/
+    css/
+      Login-assets/
+        login.css
+      Admin-assets/
+        ... (admin CSS files)
+      User-assets/
+        ... (user CSS files)
+    js/
+      Login/
+        login.js           # Auth flows, modals, password strength, progress, toasts
+        admin-login.js
+      config/
+        api-config.js      # API helper (Auth.*), base URLs
+        navigation.js      # SPA-like view helpers
+      User/
+        ... (user dashboards and analytics)
+    images/
+      ... (static assets)
 ```
 
 ### Key Features
@@ -56,13 +55,13 @@ SafeBite_Client/
   - Python: `python -m http.server 8080`
 
 2) Configure API endpoints:
-- Update `frontend/assets/js/config/api-config.js` to match your backend base URL(s) and tokens.
+- Update `assets/js/config/api-config.js` to match your backend base URL(s) and tokens.
 
 3) reCAPTCHA v3:
 - `Login.html` loads reCAPTCHA via a site key. Replace the key with your own in the script tag query string if needed.
 
 ### Development Notes
-- Most interactivity is implemented in `frontend/assets/js/Login/login.js`.
+- Most interactivity is implemented in `assets/js/Login/login.js`.
   - Modal functions are globally exposed (via `window.*`) so `Login.html` can invoke them.
   - Password UI logic is automatically initialized on DOMContentLoaded.
 - Styling guidelines:
@@ -72,13 +71,13 @@ SafeBite_Client/
 
 ### Common Tasks
 - Change API base URL:
-  - Edit `frontend/assets/js/config/api-config.js`
+  - Edit `assets/js/config/api-config.js`
 - Adjust password rules/labels:
-  - Edit functions in `frontend/assets/js/Login/login.js` (`validatePasswordRequirements`, `updatePasswordStrength`)
+  - Edit functions in `assets/js/Login/login.js` (`validatePasswordRequirements`, `updatePasswordStrength`)
 - Update Terms/Privacy text:
-  - Edit modal content in `frontend/pages/Login.html`
+  - Edit modal content in `pages/Login.html`
 - Tweak modal look-and-feel:
-  - Edit `frontend/assets/css/Login-assets/login.css` (modal, buttons, toasts, progress)
+  - Edit `assets/css/Login-assets/login.css` (modal, buttons, toasts, progress)
 
 ### Troubleshooting
 - reCAPTCHA status shows error:
