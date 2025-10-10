@@ -144,7 +144,7 @@ async function fetchUserActivityLogs(page = 1, limit = 25) {
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         console.error('Authentication required or access denied. Redirecting to admin login...');
-        setTimeout(() => { window.location.href = '/admin-login'; }, 300);
+        setTimeout(() => { window.location.href = '/pages/Admin-Login.html'; }, 300);
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }

@@ -35,10 +35,10 @@ class SensorAnalyticsAPI {
         if (!token) {
             console.error('No authentication token found');
             // Redirect to login if no token
-            if (window.location.pathname.includes('admin-dashboard')) {
-                window.location.href = '/admin-login';
+            if (window.location.pathname.includes('admin-dashboard') || window.location.pathname.endsWith('/pages/ad-dashboard.html')) {
+                window.location.href = '/pages/Admin-Login.html';
             } else {
-                window.location.href = '/login';
+                window.location.href = '/pages/Login.html';
             }
             return false;
         }
@@ -84,7 +84,7 @@ class SensorAnalyticsAPI {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Authentication failed - redirecting to login');
-                    window.location.href = '/admin-login';
+                    window.location.href = '/pages/Admin-Login.html';
                     return { summary: { totalSensors: 0, activeTesters: 0, spoilageAlerts: 0, inactiveUsers: 0 }, sensorTypes: [], testerTypes: [] };
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -120,7 +120,7 @@ class SensorAnalyticsAPI {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Authentication failed - redirecting to login');
-                    window.location.href = '/admin-login';
+                    window.location.href = '/pages/Admin-Login.html';
                     return [];
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -163,7 +163,7 @@ class SensorAnalyticsAPI {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Authentication failed - redirecting to login');
-                    window.location.href = '/admin-login';
+                    window.location.href = '/pages/Admin-Login.html';
                     return [];
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -241,7 +241,7 @@ class SensorAnalyticsAPI {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Authentication failed - redirecting to login');
-                    window.location.href = '/admin-login';
+                    window.location.href = '/pages/Admin-Login.html';
                     return { totalSensors: 0, activeSensors: 0, averageReadings: 0, lastUpdate: new Date().toISOString() };
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
