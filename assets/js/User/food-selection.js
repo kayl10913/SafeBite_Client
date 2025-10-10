@@ -1269,7 +1269,7 @@ class FoodSelection {
       }
 
       // Fallback: latest readings for the user
-      const r = await fetch('/api/sensor/latest-user', {
+      const r = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/sensor/latest-user') : '/api/sensor/latest-user'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

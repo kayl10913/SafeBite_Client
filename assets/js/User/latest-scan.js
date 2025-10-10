@@ -98,7 +98,7 @@ class LatestScanManager {
                 return;
             }
 
-            const response = await fetch('/api/users/latest-scan-result', {
+            const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/users/latest-scan-result') : '/api/users/latest-scan-result'), {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -457,7 +457,7 @@ class LatestScanManager {
                 return;
             }
 
-            const response = await fetch('/api/users/latest-scan-result', {
+            const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/users/latest-scan-result') : '/api/users/latest-scan-result'), {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

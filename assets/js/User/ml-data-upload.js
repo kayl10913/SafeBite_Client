@@ -211,7 +211,7 @@ class MLDataUpload {
                            localStorage.getItem('sessionToken') || 
                            localStorage.getItem('session_token');
 
-      const response = await fetch('/api/sensor/latest-user', {
+      const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/sensor/latest-user') : '/api/sensor/latest-user'), {
         headers: {
           'Authorization': `Bearer ${sessionToken}`,
           'Content-Type': 'application/json'

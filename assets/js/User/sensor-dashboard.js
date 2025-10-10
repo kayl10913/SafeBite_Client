@@ -528,7 +528,7 @@ class SensorDashboard {
         return;
       }
       
-      const response = await fetch('/api/sensor/latest-user', {
+      const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/sensor/latest-user') : '/api/sensor/latest-user'), {
         headers: {
           'Authorization': `Bearer ${sessionToken}`,
           'Content-Type': 'application/json'
@@ -1095,7 +1095,7 @@ class SensorDashboard {
         return null;
       }
 
-      const response = await fetch('/api/sensor/latest-user', {
+      const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/sensor/latest-user') : '/api/sensor/latest-user'), {
         headers: {
           'Authorization': `Bearer ${sessionToken}`,
           'Content-Type': 'application/json'
