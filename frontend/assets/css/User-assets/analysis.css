@@ -1,8 +1,19 @@
 /* Analysis Page Styles - User-Friendly & Wider Layout */
+
+/* Shimmer Border Animation */
+@keyframes shimmer-border {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
 .analysis-main {
   padding: 20px 24px 24px 24px;
   min-height: 100vh;
-  background: #181f36;
+  background: var(--background-dark, #003366);
+  color: var(--text-light, #8bb3d1);
 }
 .sidebar.collapsed ~ #main-content .analysis-main {
   margin-left: 84px;
@@ -36,30 +47,31 @@
 .analysis-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-white, #ffffff);
   margin-bottom: 0;
 }
 .analysis-subtitle {
-  color: #b0b0b0;
+  color: var(--text-muted, #6b9bc4);
   font-size: 1.1rem;
   margin-bottom: 0;
 }
 
 .analysis-nav-btn {
-  background: #212c4d;
-  border: none;
+  background: var(--background-card, #1a4d80);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 8px 8px 0 0;
   padding: 8px 24px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-white, #ffffff);
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px var(--shadow-color, rgba(0, 51, 102, 0.3));
 }
 .analysis-nav-btn.active, .analysis-nav-btn:focus {
-  background: #4a9eff;
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-blue, #2d5a8a) 0%, var(--light-blue, #4a7ba7) 100%);
+  color: var(--text-white, #ffffff);
+  border-color: var(--light-blue, #4a7ba7);
 }
 
 .analysis-content-row {
@@ -85,10 +97,10 @@
 }
 
 .analysis-card {
-  background: #212c4d;
+  background: var(--background-card, #1a4d80);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-  border: 1.5px solid rgba(255,255,255,0.04);
+  box-shadow: 0 4px 16px var(--shadow-color, rgba(0, 51, 102, 0.3));
   padding: 24px 28px 28px 28px;
   min-width: 360px;
   max-width: 520px;
@@ -97,15 +109,31 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  color: #fff;
+  color: var(--text-light, #8bb3d1);
   align-items: stretch;
   justify-content: flex-start;
   min-height: 320px;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
+
+.analysis-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-blue, #2d5a8a), var(--light-blue, #4a7ba7), var(--accent-blue, #2d5a8a));
+  background-size: 200% 100%;
+  animation: shimmer-border 3s ease-in-out infinite;
+}
+
 .analysis-card:hover {
-  box-shadow: 0 10px 36px rgba(74,158,255,0.13), 0 2px 8px rgba(0,0,0,0.10);
-  transform: translateY(-2px) scale(1.012);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-color, rgba(0, 51, 102, 0.3));
+  border-color: var(--light-blue, #4a7ba7);
 }
 
 .analysis-input-card, .analysis-results-card {
@@ -120,7 +148,7 @@
 .analysis-card-title {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-white, #ffffff);
   margin-bottom: 10px;
 }
 
@@ -239,9 +267,10 @@
 }
 
 .ai-chat-card {
-  background: #212c4d; /* Match dashboard card background */
+  background: var(--background-card, #1a4d80);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 16px var(--shadow-color, rgba(0, 51, 102, 0.3));
   padding: 32px 24px 18px 24px;
   min-width: 380px;
   width: 100%;
@@ -249,17 +278,39 @@
   flex-direction: column;
   align-items: stretch;
   min-height: 380px;
-  color: #fff; /* Match dashboard card text */
+  color: var(--text-light, #8bb3d1);
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-chat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-blue, #2d5a8a), var(--light-blue, #4a7ba7), var(--accent-blue, #2d5a8a));
+  background-size: 200% 100%;
+  animation: shimmer-border 3s ease-in-out infinite;
+}
+
+.ai-chat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-color, rgba(0, 51, 102, 0.3));
+  border-color: var(--light-blue, #4a7ba7);
 }
 .ai-chat-title {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 18px;
-  color: #fff; /* Match dashboard card title */
+  color: var(--text-white, #ffffff);
 }
 .ai-chat-area {
-  background: linear-gradient(180deg, #181f36 0%, #141a2b 100%);
+  background: linear-gradient(180deg, var(--background-dark, #003366) 0%, var(--background-card, #1a4d80) 100%);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 14px;
   min-height: 260px;
   max-height: 440px;
@@ -267,7 +318,6 @@
   overflow-y: auto;
   margin-bottom: 18px;
   padding: 16px 14px;
-  border: 1px solid rgba(255,255,255,0.04);
 }
 .ai-chat-empty {
   display: flex;
@@ -275,7 +325,7 @@
   align-items: center;
   text-align: center;
   width: 100%;
-  color: #b0b0b0;
+  color: var(--text-muted, #6b9bc4);
 }
 
 /* ChatGPT-style conversation layout */

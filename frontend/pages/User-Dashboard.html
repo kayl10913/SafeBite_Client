@@ -17,207 +17,9 @@
   <link rel="stylesheet" href="../assets/css/User-assets/user-log.css">
   <link rel="stylesheet" href="../assets/css/User-assets/config.css">
   <link rel="stylesheet" href="../assets/css/User-assets/feedback.css">
+  <link rel="stylesheet" href="../assets/css/User-assets/dashboard-inline-styles.css">
   <!-- <link rel="stylesheet" href="../assets/css/User-assets/alerts.css"> -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    /* Match site theme for dynamically injected buttons */
-    #cancelScanBtn{
-      background:#dc3545; /* danger */
-      color:#fff;
-      border:1px solid #c82333;
-      padding:8px 12px;
-      border-radius:6px;
-      font-weight:600;
-    }
-    #cancelScanBtn:hover{background:#c82333;border-color:#bd2130}
-
-    #showAllHistoryBtn{
-      background:#4a9eff; /* primary */
-      color:#fff;
-      border:0;
-      padding:8px 12px;
-      border-radius:6px;
-      font-weight:600;
-    }
-    #showAllHistoryBtn:hover{background:#3a8eef}
-
-    /* Ensure cancelled status is clearly styled in history */
-    .food-history-status.cancelled{background:#f8d7da;color:#721c24}
-
-    /* Loading states for spoilage analytics */
-    .loading-bars, .loading-summary {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #9fb8ff;
-      font-style: italic;
-    }
-
-    .loading-text {
-      font-size: 0.9rem;
-    }
-
-    /* Bar color classes */
-    .bar-green { background: linear-gradient(90deg, #4ade80, #22c55e); }
-    .bar-yellow { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-    .bar-red { background: linear-gradient(90deg, #f87171, #ef4444); }
-    
-
-    /* Recommendations Modal Styles */
-    .food-detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #2b3a66;
-    }
-
-    .food-detail-meta {
-      display: flex;
-      gap: 16px;
-      margin-top: 8px;
-    }
-
-    .detail-category {
-      background: #0ea5e9;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-created {
-      color: #9fb8ff;
-      font-size: 12px;
-    }
-
-    .food-detail-status {
-      text-align: right;
-    }
-
-    .detail-status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: #22c55e;
-      color: white;
-    }
-
-    .detail-risk-score {
-      margin-top: 4px;
-      font-size: 12px;
-      color: #9fb8ff;
-    }
-
-    .recommendations-section {
-      margin-bottom: 24px;
-    }
-
-    .recommendations-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .recommendation-item {
-      display: flex;
-      gap: 12px;
-      padding: 16px;
-      background: rgba(74, 158, 255, 0.05);
-      border: 1px solid rgba(74, 158, 255, 0.1);
-      border-radius: 8px;
-    }
-
-    .recommendation-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-
-    .recommendation-content {
-      flex: 1;
-    }
-
-    .recommendation-title {
-      color: #ffffff;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .recommendation-text {
-      color: #e0e6f6;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .sensor-details-section {
-      margin-top: 24px;
-    }
-
-    .sensor-details-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-    }
-
-    .sensor-detail-item {
-      padding: 12px;
-      background: rgba(42, 58, 74, 0.3);
-      border: 1px solid #2a3a4a;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .sensor-detail-label {
-      color: #9fb8ff;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
-    .sensor-detail-value {
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      font-family: 'Courier New', monospace;
-    }
-
-    .sensor-detail-status {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 6px;
-      border-radius: 4px;
-      display: inline-block;
-    }
-
-    .sensor-detail-status.good {
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
-    }
-
-    .sensor-detail-status.warning {
-      background: rgba(245, 158, 11, 0.2);
-      color: #f59e0b;
-    }
-
-    .sensor-detail-status.danger {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-    }
-    
-  </style>
 </head>
 <body>
 <!-- Hamburger Menu Button -->
@@ -235,10 +37,10 @@
   </div>
   <nav class="sidebar-nav">
     <!-- Main Navigation -->
-    <ul>
-      <li class="nav-item active">
+    <ul style="padding: 0; margin: 0;">
+      <li class="nav-item active" style="margin: 4px 20px;">
         <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#8962;</span>
+          <i class="bi bi-house-door nav-icon"></i>
           <span class="nav-text">Dashboard</span>
         </a>
       </li>
@@ -248,22 +50,22 @@
     <!-- Reports & Analysis Section -->
     <div class="nav-section">
       <div class="nav-section-title">Reports & Analysis</div>
-      <ul>
+      <ul style="padding: 0; margin: 0;">
       <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="spoilage-report" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128200;</span>
+          <i class="bi bi-graph-up nav-icon"></i>
           <span class="nav-text">Spoilage Reports</span>
         </a>
       </li>
       <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128229;</span>
+          <i class="bi bi-file-earmark-text nav-icon"></i>
           <span class="nav-text">Reports Generator</span>
         </a>
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link" data-page="analysis" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">🔬</span>
+          <i class="bi bi-search nav-icon"></i>
           <span class="nav-text">Analysis</span>
         </a>
       </li>
@@ -273,16 +75,16 @@
     <!-- Account & Support Section -->
     <div class="nav-section">
       <div class="nav-section-title">Account & Support</div>
-      <ul>
+      <ul style="padding: 0; margin: 0;">
       <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="user-logs" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128273;</span>
+          <i class="bi bi-key nav-icon"></i>
           <span class="nav-text">User Logs / History</span>
         </a>
       </li>
       <li class="nav-item is-truncated">
         <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-          <span class="nav-icon">&#128172;</span>
+          <i class="bi bi-chat-dots nav-icon"></i>
             <span class="nav-text">Feedbacks / Support</span>
         </a>
       </li>
@@ -290,7 +92,7 @@
     </div>
 </nav>
   <div class="sidebar-account" id="sidebarAccount" style="cursor:pointer;">
-    <span class="account-icon">&#128100;</span>
+    <i class="bi bi-person-circle account-icon"></i>
     <span class="account-text" id="accountText">Profile</span>
     <button class="logout-btn" id="logoutBtn" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;">Logout</button>
   </div>
@@ -306,8 +108,6 @@
     <div class="dashboard-container container-fluid">
         <!-- Dashboard Header -->
         <div class="dashboard-header">
-          <h1 class="dashboard-title">Sensor Dashboard</h1>
-          <p class="dashboard-subtitle">Monitor your food sensors and manage scanning operations</p>
         </div>
         
         <!-- Navigation Tabs -->
@@ -427,9 +227,9 @@
               </div>
             </div>
             <div class="activity-counters d-flex flex-wrap gap-2 mb-2" style="margin-top:6px;">
-              <div class="badge rounded-pill" id="count-today" style="background:#1e293b;color:#9fb8ff;padding:6px 10px;">Today: 0</div>
-              <div class="badge rounded-pill" id="count-7d" style="background:#1e293b;color:#9fb8ff;padding:6px 10px;">Last 7d: 0</div>
-              <div class="badge rounded-pill" id="count-30d" style="background:#1e293b;color:#9fb8ff;padding:6px 10px;">Last 30d: 0</div>
+              <div class="badge rounded-pill" id="count-today" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Today: 0</div>
+              <div class="badge rounded-pill" id="count-7d" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Last 7d: 0</div>
+              <div class="badge rounded-pill" id="count-30d" style="background:#003A6B;color:#6EB1D6;padding:6px 10px;">Last 30d: 0</div>
             </div>
               <div class="activity-chart-container">
                 <canvas id="activityChart"></canvas>
@@ -563,11 +363,11 @@
       </div>
     </div>
     <div class="spoilage-stats-row">
-      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Items</div><div class="stat-value">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Safe</div><div class="stat-value">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-yellow">&#9888;</div><div class="stat-label">At Risk</div><div class="stat-value">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoiled</div><div class="stat-value">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Expired</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-blue bi bi-graph-up-arrow"></div><div class="stat-label">Total Items</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-green bi bi-check-circle"></div><div class="stat-label">Safe</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-yellow bi bi-exclamation-triangle"></div><div class="stat-label">At Risk</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-red bi bi-x-circle"></div><div class="stat-label">Spoiled</div><div class="stat-value">0</div></div>
+      <div class="spoilage-stat-card"><div class="stat-icon stat-gray bi bi-info-circle"></div><div class="stat-label">Expired</div><div class="stat-value">0</div></div>
     </div>
     <div class="spoilage-main-cards">
       <div class="spoilage-card spoilage-bar-card">
@@ -596,8 +396,8 @@
 <!-- Dashboard Add Food Modal -->
 <div class="config-modal" id="dashboardAddFoodModal" style="display:none;">
   <div class="config-modal-backdrop"></div>
-  <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+  <div class="config-modal-content" style="background:#003A6B;color:#e0e6f6;border:1px solid #1B5886;">
+    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
       <span class="config-modal-title" style="color:#fff;">Add Food</span>
       <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
     </div>
@@ -605,16 +405,16 @@
       <div class="config-modal-row">
         <div class="config-modal-group">
           <label style="color:#e0e6f6;">Food Name *</label>
-          <input type="text" id="dashboardFoodName" required placeholder="e.g., Mango, Chicken" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;" />
+          <input type="text" id="dashboardFoodName" required placeholder="e.g., Mango, Chicken" style="background:#1B5886;border:1px solid #3776A1;color:#fff;" />
         </div>
         <div class="config-modal-group">
           <label style="color:#e0e6f6;">Category</label>
-          <select id="dashboardFoodCategory" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;"></select>
+          <select id="dashboardFoodCategory" style="background:#1B5886;border:1px solid #3776A1;color:#fff;"></select>
         </div>
       </div>
-      <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
-        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
-        <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Add</button>
+      <div class="config-modal-footer" style="border-top:1px solid #1B5886;">
+        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#e0e6f6;border:1px solid #3776A1;">Cancel</button>
+        <button type="submit" class="config-modal-submit" style="background:#3776A1;">Add</button>
       </div>
     </form>
   </div>
@@ -624,7 +424,7 @@
 <div class="config-modal" id="dashboardAddDeviceModal" style="display:none;">
   <div class="config-modal-backdrop"></div>
   <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:520px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
       <span class="config-modal-title" style="color:#fff;">Connect Device</span>
       <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
     </div>
@@ -632,20 +432,20 @@
       <div class="config-modal-row">
         <div class="config-modal-group">
           <label style="color:#e0e6f6;">Sensor ID *</label>
-          <input type="text" id="dashboardDeviceId" required placeholder="e.g., SENSOR_001, TEMP_01" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;" />
+          <input type="text" id="dashboardDeviceId" required placeholder="e.g., SENSOR_001, TEMP_01" style="background:#1B5886;border:1px solid #3776A1;color:#fff;" />
         </div>
         <div class="config-modal-group">
           <label style="color:#e0e6f6;">Sensor Type *</label>
-          <select id="dashboardDeviceType" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;">
+          <select id="dashboardDeviceType" style="background:#1B5886;border:1px solid #3776A1;color:#fff;">
             <option value="Temperature">Temperature</option>
             <option value="Humidity">Humidity</option>
             <option value="Gas">Gas</option>
           </select>
         </div>
       </div>
-      <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
-        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
-        <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Connect</button>
+      <div class="config-modal-footer" style="border-top:1px solid #1B5886;">
+        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#e0e6f6;border:1px solid #3776A1;">Cancel</button>
+        <button type="submit" class="config-modal-submit" style="background:#3776A1;">Connect</button>
       </div>
     </form>
   </div>
@@ -655,7 +455,7 @@
 <div class="config-modal" id="mlFoodScannerModal" style="display:none;">
   <div class="config-modal-backdrop"></div>
   <div class="config-modal-content ml-scanner-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
       <span class="config-modal-title" style="color:#fff;">
         <i class="bi bi-cpu"></i> SmartSense Scanner
       </span>
@@ -663,7 +463,7 @@
     </div>
     <div class="ml-scanner-body">
       <div class="ml-scanner-description">
-        <p style="color:#9fb8ff;margin:0 0 20px 0;font-size:0.9rem;">
+        <p style="color:#6EB1D6;margin:0 0 20px 0;font-size:0.9rem;">
           Select a food item and scan with sensors for AI-powered spoilage prediction
         </p>
       </div>
@@ -672,17 +472,17 @@
         <div class="ml-scanner-row">
           <div class="ml-scanner-group">
             <div class="ml-scanner-group-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <label for="mlFoodSelect" style="color:#e0e6f6;font-size:0.9rem;font-weight:500;margin:0;">
+              <label for="mlFoodSelect" style="color:#89CFF1;font-size:0.9rem;font-weight:500;margin:0;">
                 Choose from existing foods
               </label>
-              <button type="button" id="refreshFoodListBtn" class="btn btn-sm" style="background:#2a3658;color:#9fb8ff;border:1px solid #3a4a6b;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+              <button type="button" id="refreshFoodListBtn" class="btn btn-sm" style="background:#1B5886;color:#6EB1D6;border:1px solid #3776A1;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
               </button>
             </div>
-            <select id="mlFoodSelect" class="form-select" style="background:#2a3658;border:1px solid #3a4a6b;color:#fff;padding:8px 12px;border-radius:6px;width:100%;">
+            <select id="mlFoodSelect" class="form-select" style="background:#1B5886;border:1px solid #3776A1;color:#fff;padding:8px 12px;border-radius:6px;width:100%;">
               <option value="">Select from available foods</option>
             </select>
-            <div class="sensor-info" style="margin-top:8px;color:#9fb8ff;font-size:0.8rem;">
+            <div class="sensor-info" style="margin-top:8px;color:#6EB1D6;font-size:0.8rem;">
               <i class="bi bi-info-circle"></i> Will wait for new sensor data before running ML prediction
             </div>
           </div>
@@ -704,11 +504,11 @@
         </div>
       </div>
       
-      <div class="ml-scanner-footer" style="border-top:1px solid #2b3a66;padding-top:16px;margin-top:20px;">
-        <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;padding:8px 16px;border-radius:6px;margin-right:8px;">
+      <div class="ml-scanner-footer" style="border-top:1px solid #1B5886;padding-top:16px;margin-top:20px;">
+        <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#89CFF1;border:1px solid #3776A1;padding:8px 16px;border-radius:6px;margin-right:8px;">
           Cancel
         </button>
-        <button type="button" id="readyScanBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 16px;border-radius:6px;">
+        <button type="button" id="readyScanBtn" class="config-modal-submit" style="background:#3776A1;color:#fff;border:none;padding:8px 16px;border-radius:6px;">
           <i class="bi bi-scan"></i> Start Scanning
         </button>
       </div>
@@ -720,9 +520,9 @@
 <div class="config-modal" id="mlPredictionResultsModal" style="display:none;">
   <div class="config-modal-backdrop"></div>
   <div class="config-modal-content ml-results-modal" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:500px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
       <span class="config-modal-title" style="color:#fff;">
-        <i class="bi bi-check-circle-fill" style="color:#4a9eff;"></i> ML Prediction Complete!
+        <i class="bi bi-check-circle-fill" style="color:#3776A1;"></i> ML Prediction Complete!
       </span>
       <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
     </div>
@@ -746,8 +546,8 @@
         </div>
       </div>
     </div>
-    <div class="ml-results-footer" style="border-top:1px solid #2b3a66;padding:16px 20px;display:flex;justify-content:flex-end;">
-      <button type="button" id="mlResultsOkBtn" class="config-modal-submit" style="background:#4a9eff;color:#fff;border:none;padding:8px 20px;border-radius:6px;">
+      <div class="ml-results-footer" style="border-top:1px solid #1B5886;padding:16px 20px;display:flex;justify-content:flex-end;">
+      <button type="button" id="mlResultsOkBtn" class="config-modal-submit" style="background:#3776A1;color:#fff;border:none;padding:8px 20px;border-radius:6px;">
         OK
       </button>
     </div>
@@ -758,7 +558,7 @@
 <div class="config-modal" id="foodRecommendationsModal" style="display:none;">
   <div class="config-modal-backdrop"></div>
   <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
-    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+    <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
       <span class="config-modal-title" style="color:#fff;">
         <i class="bi bi-clipboard-data" style="color:#4a9eff;"></i> Food Analysis Details
       </span>
@@ -787,21 +587,21 @@
           </h4>
           <div class="recommendations-list" id="recommendationsList">
             <div class="recommendation-item">
-              <div class="recommendation-icon">🌡️</div>
+              <div class="recommendation-icon"><i class="bi bi-thermometer"></i></div>
               <div class="recommendation-content">
                 <div class="recommendation-title">Temperature Control</div>
                 <div class="recommendation-text">Maintain storage temperature between 0-4°C to prevent bacterial growth and maintain freshness.</div>
               </div>
             </div>
             <div class="recommendation-item">
-              <div class="recommendation-icon">⏰</div>
+              <div class="recommendation-icon"><i class="bi bi-clock"></i></div>
               <div class="recommendation-content">
                 <div class="recommendation-title">Consumption Timeline</div>
                 <div class="recommendation-text">Consume within 3 days for optimal quality and safety. Monitor for any changes in appearance or smell.</div>
               </div>
             </div>
             <div class="recommendation-item">
-              <div class="recommendation-icon">💧</div>
+              <div class="recommendation-icon"><i class="bi bi-droplet"></i></div>
               <div class="recommendation-content">
                 <div class="recommendation-title">Humidity Management</div>
                 <div class="recommendation-text">Current humidity levels are optimal. Avoid exposure to direct moisture to prevent spoilage.</div>
@@ -1334,7 +1134,7 @@
 
   .modal-body {
     padding: 20px 24px;
-    color: #e0e6f6;
+      color: #89CFF1;
     line-height: 1.5;
   }
 
@@ -1371,7 +1171,7 @@
 
   .modal-btn-secondary {
     background: #2a3658;
-    color: #e0e6f6;
+      color: #89CFF1;
     border: 1px solid #3a4a6b;
   }
 
@@ -1548,7 +1348,7 @@
 
   .device-info-text p {
     margin: 0 0 8px 0;
-    color: #e0e6f6;
+      color: #89CFF1;
     line-height: 1.5;
   }
 
@@ -1590,7 +1390,7 @@
 
   .view-device-btn {
     background: #2a3658;
-    color: #e0e6f6;
+      color: #89CFF1;
     border: 1px solid #3a4a6b;
   }
 
@@ -1606,7 +1406,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 class="modal-title">
-        <span class="modal-icon">ℹ️</span>
+        <span class="modal-icon"><i class="bi bi-info-circle"></i></span>
         <span class="modal-title-text">Information</span>
       </h3>
       <button class="modal-close" aria-label="Close">&times;</button>
@@ -1918,15 +1718,15 @@
           </div>
           <div class="report-actions">
             <button class="report-btn report-btn-primary" id="apply-filters">
-              <span>⚙️</span>
+              <span><i class="bi bi-gear"></i></span>
               Apply Filters
             </button>
             <button class="report-btn report-btn-secondary" id="export-csv">
-              <span>📥</span>
+              <span><i class="bi bi-download"></i></span>
               Download Excel
             </button>
             <button class="report-btn report-btn-secondary" id="export-pdf">
-              <span>📄</span>
+              <span><i class="bi bi-file-text"></i></span>
               Download PDF
             </button>
           </div>
@@ -2034,8 +1834,8 @@
       <!-- Add Food Item Modal -->
       <div class="config-modal" id="addFoodItemModal">
         <div class="config-modal-backdrop"></div>
-        <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;">
-          <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
+        <div class="config-modal-content" style="background:#003A6B;color:#e0e6f6;border:1px solid #1B5886;">
+          <div class="config-modal-header" style="border-bottom:1px solid #1B5886;">
             <span class="config-modal-title" style="color:#fff;">Add New Food Item</span>
             <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;">&times;</button>
           </div>
@@ -2084,8 +1884,8 @@
                 <option>Critical</option>
               </select>
             </div>
-            <div class="config-modal-footer" style="border-top:1px solid #2b3a66;">
-              <button type="button" class="config-modal-cancel" style="background:#2a3658;color:#e0e6f6;border:1px solid #3a4a6b;">Cancel</button>
+            <div class="config-modal-footer" style="border-top:1px solid #1B5886;">
+              <button type="button" class="config-modal-cancel" style="background:#1B5886;color:#e0e6f6;border:1px solid #3776A1;">Cancel</button>
               <button type="submit" class="config-modal-submit" style="background:#4a9eff;">Add Food Item</button>
             </div>
           </form>
@@ -2163,22 +1963,22 @@
           
           <div class="report-actions">
             <button id="userGenerateReport" class="report-btn report-btn-primary">
-              <span>📊</span>
+              <span><i class="bi bi-bar-chart"></i></span>
               Generate Report
             </button>
             <button id="downloadExcel" class="report-btn report-btn-secondary">
-              <span>📥</span>
+              <span><i class="bi bi-download"></i></span>
               Download Excel
             </button>
             <button id="downloadPDF" class="report-btn report-btn-secondary">
-              <span>📄</span>
+              <span><i class="bi bi-file-text"></i></span>
               Download PDF
             </button>
           </div>
         </div>
         
         <div class="report-preview">
-          <h2 id="reportTitle" class="report-preview-title">Report Generator</h2>
+          <h2 id="reportTitle" class="report-preview-title">Reports</h2>
           <div class="report-table-container">
             <table class="report-table">
               <thead>
@@ -2194,7 +1994,7 @@
                 <tr>
                   <td colspan="5" class="empty-state">
                     <div class="empty-state-content">
-                      <div class="empty-state-icon">📊</div>
+                      <div class="empty-state-icon"><i class="bi bi-bar-chart"></i></div>
                       <div class="empty-state-title">No Report Generated</div>
                       <div class="empty-state-desc">Select your report type and date range, then click "Generate Report" to view data.</div>
                     </div>
@@ -2248,19 +2048,19 @@
             </div>
             <div class="analysis-form-row">
               <div class="analysis-form-group">
-                <label><span class="label-icon">🌡️</span><span class="label-text">Temperature (°C)</span></label>
+                <label><span class="label-icon"><i class="bi bi-thermometer"></i></span><span class="label-text">Temperature (°C)</span></label>
                 <input type="number" id="analysisTemp" class="analysis-input" placeholder="e.g. 25.5" />
               </div>
               <div class="analysis-form-group">
-                <label><span class="label-icon">💧</span><span class="label-text">Humidity (%)</span></label>
+                <label><span class="label-icon"><i class="bi bi-droplet"></i></span><span class="label-text">Humidity (%)</span></label>
                 <input type="number" id="analysisHumidity" class="analysis-input" placeholder="e.g. 65.2" />
               </div>
               <div class="analysis-form-group">
-                <label><span class="label-icon">🧪</span><span class="label-text">Gas Level</span></label>
+                <label><span class="label-icon"><i class="bi bi-flask"></i></span><span class="label-text">Gas Level</span></label>
                 <input type="number" id="analysisGas" class="analysis-input" placeholder="e.g. 123.4" />
               </div>
             </div>
-            <button class="analysis-btn" id="analyzeBtn">🔎 Analyze Spoilage Risk</button>
+            <button class="analysis-btn" id="analyzeBtn"><i class="bi bi-search"></i> Analyze Spoilage Risk</button>
           </div>
           <div class="analysis-card analysis-results-card">
             <div class="analysis-card-title">Analysis Results</div>
@@ -2287,7 +2087,7 @@
               <input class="ai-chat-input" type="text" placeholder="Ask about spoilage analysis, food safety, or sensor data..." />
               <button class="ai-chat-send-btn" type="submit">Send</button>
             </form>
-            <div class="ai-chat-tip">⚡ The AI has context of your current sensor data when you chat</div>
+            <div class="ai-chat-tip"><i class="bi bi-lightning"></i> The AI has context of your current sensor data when you chat</div>
           </div>
         </div>
       </div>
@@ -2358,11 +2158,11 @@
               Apply Filters
             </button>
             <button id="userLogDownloadExcel" class="report-btn report-btn-secondary">
-              <span>📥</span>
+              <span><i class="bi bi-download"></i></span>
               Download Excel
             </button>
             <button id="userLogDownloadPDF" class="report-btn report-btn-secondary">
-              <span>📄</span>
+              <span><i class="bi bi-file-text"></i></span>
               Download PDF
             </button>
           </div>
@@ -2370,7 +2170,7 @@
       </div>
       <div class="user-log-table-card">
         <div class="user-log-table-title">
-          <span class="table-icon">📋</span>
+          <span class="table-icon"><i class="bi bi-clipboard"></i></span>
           User Activity Log
         </div>
         <table class="user-log-table">
@@ -2404,22 +2204,22 @@
     
     <div class="feedback-stats-row">
       <div class="feedback-stat-card">
-        <div class="stat-icon stat-blue">💬</div>
+        <div class="stat-icon stat-blue"><i class="bi bi-chat"></i></div>
         <div class="stat-label">Total Feedback</div>
         <div class="stat-value" id="totalFeedback">0</div>
       </div>
       <div class="feedback-stat-card">
-        <div class="stat-icon stat-orange">🕐</div>
+        <div class="stat-icon stat-orange"><i class="bi bi-clock"></i></div>
         <div class="stat-label">Active Issues</div>
         <div class="stat-value" id="activeIssues">0</div>
       </div>
       <div class="feedback-stat-card">
-        <div class="stat-icon stat-green">✅</div>
+        <div class="stat-icon stat-green"><i class="bi bi-check"></i></div>
         <div class="stat-label">Resolved</div>
         <div class="stat-value" id="resolvedIssues">0</div>
       </div>
       <div class="feedback-stat-card">
-        <div class="stat-icon stat-yellow">⭐</div>
+        <div class="stat-icon stat-yellow"><i class="bi bi-star"></i></div>
         <div class="stat-label">Average Rating</div>
         <div class="stat-value" id="averageRating">0.0</div>
       </div>
@@ -2433,7 +2233,7 @@
             Submit Feedback
           </button>
           <button class="feedback-tab" data-tab="history">
-            <span class="tab-icon">💬</span>
+            <span class="tab-icon"><i class="bi bi-chat"></i></span>
             Feedback History
           </button>
         </div>
@@ -2482,15 +2282,15 @@
               <label>Star Rating</label>
               <div class="rating-input">
                 <input type="radio" name="rating" value="1" id="rating1">
-                <label for="rating1">⭐</label>
+                <label for="rating1"><i class="bi bi-star"></i></label>
                 <input type="radio" name="rating" value="2" id="rating2">
-                <label for="rating2">⭐</label>
+                <label for="rating2"><i class="bi bi-star"></i></label>
                 <input type="radio" name="rating" value="3" id="rating3">
-                <label for="rating3">⭐</label>
+                <label for="rating3"><i class="bi bi-star"></i></label>
                 <input type="radio" name="rating" value="4" id="rating4">
-                <label for="rating4">⭐</label>
+                <label for="rating4"><i class="bi bi-star"></i></label>
                 <input type="radio" name="rating" value="5" id="rating5">
-                <label for="rating5">⭐</label>
+                <label for="rating5"><i class="bi bi-star"></i></label>
               </div>
             </div>
             
@@ -2510,7 +2310,7 @@
           <div class="feedback-controls">
           <div class="feedback-search">
             <input type="text" id="feedbackSearch" placeholder="Search feedback..." class="feedback-search-input">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon"><i class="bi bi-search"></i></span>
           </div>
           
           <div class="feedback-filters">
@@ -2591,14 +2391,14 @@
                 </td>
                 <td><span class="type-badge">General Feedback</span></td>
                 <td><span class="priority-badge priority-low">Low</span></td>
-                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td><span class="status-badge status-active"><i class="bi bi-clock"></i> Active</span></td>
                 <td>
                   <div class="rating-stars">
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
                   </div>
                 </td>
                 <td>9/5/2025</td>
@@ -2613,14 +2413,14 @@
                 </td>
                 <td><span class="type-badge">General Feedback</span></td>
                 <td><span class="priority-badge priority-low">Low</span></td>
-                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td><span class="status-badge status-active"><i class="bi bi-clock"></i> Active</span></td>
                 <td>
                   <div class="rating-stars">
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
                   </div>
                 </td>
                 <td>9/5/2025</td>
@@ -2635,14 +2435,14 @@
                 </td>
                 <td><span class="type-badge">Performance Issue</span></td>
                 <td><span class="priority-badge priority-medium">Medium</span></td>
-                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td><span class="status-badge status-active"><i class="bi bi-clock"></i> Active</span></td>
                 <td>
                   <div class="rating-stars">
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
                   </div>
                 </td>
                 <td>9/5/2025</td>
@@ -2657,14 +2457,14 @@
                 </td>
                 <td><span class="type-badge">System Bug</span></td>
                 <td><span class="priority-badge priority-high">High</span></td>
-                <td><span class="status-badge status-active">🕐 Active</span></td>
+                <td><span class="status-badge status-active"><i class="bi bi-clock"></i> Active</span></td>
                 <td>
                   <div class="rating-stars">
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
+                    <span class="star"><i class="bi bi-star"></i></span>
                   </div>
                 </td>
                 <td>9/5/2025</td>
@@ -2679,14 +2479,14 @@
                 </td>
                 <td><span class="type-badge">General Feedback</span></td>
                 <td><span class="priority-badge priority-low">Low</span></td>
-                <td><span class="status-badge status-resolved">✅ Resolved</span></td>
+                <td><span class="status-badge status-resolved"><i class="bi bi-check"></i> Resolved</span></td>
                 <td>
                   <div class="rating-stars">
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
-                    <span class="star filled">⭐</span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
+                    <span class="star filled"><i class="bi bi-star-fill"></i></span>
                   </div>
                 </td>
                 <td>9/5/2025</td>
@@ -3083,10 +2883,10 @@
       
       // Set icon based on type
       const icons = {
-        info: 'ℹ️',
-        success: '✅',
-        warning: '⚠️',
-        error: '❌'
+        info: '<i class="bi bi-info-circle"></i>',
+        success: '<i class="bi bi-check"></i>',
+        warning: '<i class="bi bi-exclamation-triangle"></i>',
+        error: '<i class="bi bi-x-circle"></i>'
       };
       this.iconElement.textContent = icons[type] || icons.info;
 
@@ -3288,17 +3088,17 @@
         riskScore: 'Risk: 15%',
         recommendations: [
           {
-            icon: '🌡️',
+            icon: '<i class="bi bi-thermometer"></i>',
             title: 'Temperature Control',
             text: 'Maintain storage temperature between 0-4°C to prevent bacterial growth and maintain freshness.'
           },
           {
-            icon: '⏰',
+            icon: '<i class="bi bi-clock"></i>',
             title: 'Consumption Timeline',
             text: 'Consume within 3 days for optimal quality and safety. Monitor for any changes in appearance or smell.'
           },
           {
-            icon: '💧',
+            icon: '<i class="bi bi-droplet"></i>',
             title: 'Humidity Management',
             text: 'Current humidity levels are optimal. Avoid exposure to direct moisture to prevent spoilage.'
           }
@@ -3317,17 +3117,17 @@
         riskScore: 'Risk: 45%',
         recommendations: [
           {
-            icon: '🌡️',
+            icon: '<i class="bi bi-thermometer"></i>',
             title: 'Temperature Alert',
             text: 'Temperature is too high at 4.8°C. Lower storage temperature immediately to prevent spoilage.'
           },
           {
-            icon: '⏰',
+            icon: '<i class="bi bi-clock"></i>',
             title: 'Immediate Consumption',
             text: 'Consume immediately or cook thoroughly. Do not store for more than 24 hours.'
           },
           {
-            icon: '⚠️',
+            icon: '<i class="bi bi-exclamation-triangle"></i>',
             title: 'Safety Warning',
             text: 'High risk of bacterial growth detected. Ensure proper cooking temperature if consuming.'
           }
@@ -3346,17 +3146,17 @@
         riskScore: 'Risk: 85%',
         recommendations: [
           {
-            icon: '🚫',
+            icon: '<i class="bi bi-x-circle"></i>',
             title: 'Discard Immediately',
             text: 'High spoilage detected. Do not consume under any circumstances. Dispose of safely.'
           },
           {
-            icon: '🧽',
+            icon: '<i class="bi bi-brush"></i>',
             title: 'Clean Storage Area',
             text: 'Thoroughly clean the storage area to prevent contamination of other food items.'
           },
           {
-            icon: '📋',
+            icon: '<i class="bi bi-clipboard"></i>',
             title: 'Review Storage Conditions',
             text: 'Check temperature and humidity settings to prevent future spoilage issues.'
           }
@@ -3920,7 +3720,7 @@
         <tr>
           <td colspan="7" class="empty-state">
             <div class="empty-state-content">
-              <div class="empty-state-icon">💬</div>
+              <div class="empty-state-icon"><i class="bi bi-chat"></i></div>
               <div class="empty-state-title">No Feedback Found</div>
               <div class="empty-state-desc">No feedback matches your current filters.</div>
             </div>
@@ -3958,11 +3758,11 @@
           </td>
           <td><span class="type-badge">${safeItem.type}</span></td>
           <td><span class="priority-badge priority-${safeItem.priority.toLowerCase()}">${safeItem.priority}</span></td>
-          <td><span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '🕐' : '✅'} ${safeItem.status}</span></td>
+          <td><span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '<i class="bi bi-clock"></i>' : '<i class="bi bi-check"></i>'} ${safeItem.status}</span></td>
           <td>
             <div class="rating-stars">
               ${Array.from({length: 5}, (_, i) => 
-                `<span class="star ${i < safeItem.rating ? 'filled' : ''}">⭐</span>`
+                `<span class="star ${i < safeItem.rating ? 'filled' : ''}"><i class="bi bi-star${i < safeItem.rating ? '-fill' : ''}"></i></span>`
               ).join('')}
             </div>
             <div style="font-size: 10px; color: #666;">(${safeItem.rating})</div>
@@ -3987,7 +3787,7 @@
       cardsGrid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #bfc9da;">
           <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
-            <div style="font-size: 48px; opacity: 0.5;">📝</div>
+            <div style="font-size: 48px; opacity: 0.5;"><i class="bi bi-pencil"></i></div>
             <div style="font-size: 18px; font-weight: 500;">No feedback entries found</div>
             <div style="font-size: 14px; opacity: 0.7;">Try adjusting your search or filter criteria</div>
           </div>
@@ -4019,7 +3819,7 @@
             <div class="feedback-card-rating">
               <div class="rating-stars">
                 ${Array.from({length: 5}, (_, i) => 
-                  `<span class="star ${i < safeItem.rating ? 'filled' : ''}">⭐</span>`
+                  `<span class="star ${i < safeItem.rating ? 'filled' : ''}"><i class="bi bi-star${i < safeItem.rating ? '-fill' : ''}"></i></span>`
                 ).join('')}
               </div>
             </div>
@@ -4031,7 +3831,7 @@
             <div class="feedback-card-badges">
               <span class="type-badge">${safeItem.type}</span>
               <span class="priority-badge priority-${safeItem.priority.toLowerCase()}">${safeItem.priority}</span>
-              <span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '🕐' : '✅'} ${safeItem.status}</span>
+              <span class="status-badge status-${safeItem.status.toLowerCase()}">${safeItem.status === 'Active' ? '<i class="bi bi-clock"></i>' : '<i class="bi bi-check"></i>'} ${safeItem.status}</span>
             </div>
             <div class="feedback-card-actions">
               <button class="action-btn" onclick="viewFeedback(${safeItem.id})">View</button>
@@ -4249,7 +4049,7 @@
         <div class="feedback-detail-row">
           <div class="feedback-detail-label">Status:</div>
           <div class="feedback-detail-value">
-            <span class="status-badge status-${feedbackItem.status.toLowerCase()}">${feedbackItem.status === 'Active' ? '🕐' : '✅'} ${feedbackItem.status}</span>
+            <span class="status-badge status-${feedbackItem.status.toLowerCase()}">${feedbackItem.status === 'Active' ? '<i class="bi bi-clock"></i>' : '<i class="bi bi-check"></i>'} ${feedbackItem.status}</span>
           </div>
         </div>
         <div class="feedback-detail-row">
@@ -4257,7 +4057,7 @@
           <div class="feedback-detail-value">
             <div class="rating-stars">
               ${Array.from({length: 5}, (_, i) => 
-                `<span class="star ${i < feedbackItem.rating ? 'filled' : ''}">⭐</span>`
+                `<span class="star ${i < feedbackItem.rating ? 'filled' : ''}"><i class="bi bi-star${i < feedbackItem.rating ? '-fill' : ''}"></i></span>`
               ).join('')}
               <span class="rating-text">(${feedbackItem.rating}/5)</span>
             </div>

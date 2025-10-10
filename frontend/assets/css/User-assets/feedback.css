@@ -1,8 +1,19 @@
 /* Feedback Center Styles */
+
+/* Shimmer Border Animation */
+@keyframes shimmer-border {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
 .feedback-main {
   padding: 32px 32px 32px 32px;
-  background: #181f36;
+  background: var(--background-dark, #003366);
   min-height: 100vh;
+  color: var(--text-light, #8bb3d1);
 }
 
 .sidebar.collapsed ~ #main-content .feedback-main {
@@ -16,13 +27,13 @@
 .feedback-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
   margin: 0 0 10px 0;
 }
 
 .feedback-subtitle {
   font-size: 1.1rem;
-  color: #bfc9da;
+  color: var(--text-muted, #6b9bc4);
   margin: 0;
 }
 
@@ -35,19 +46,35 @@
 }
 
 .feedback-stat-card {
-  background: #212c4d;
+  background: var(--background-card, #1a4d80);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px var(--shadow-color, rgba(0, 51, 102, 0.3));
   display: flex;
   align-items: center;
   gap: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feedback-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-blue, #2d5a8a), var(--light-blue, #4a7ba7), var(--accent-blue, #2d5a8a));
+  background-size: 200% 100%;
+  animation: shimmer-border 3s ease-in-out infinite;
 }
 
 .feedback-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px var(--shadow-color, rgba(0, 51, 102, 0.3));
+  border-color: var(--light-blue, #4a7ba7);
 }
 
 .stat-icon {
@@ -61,35 +88,35 @@
 }
 
 .stat-icon.stat-blue {
-  background: #1e3a8a;
-  color: #60a5fa;
+  background: var(--accent-blue, #2d5a8a);
+  color: var(--text-white, #ffffff);
 }
 
 .stat-icon.stat-orange {
-  background: #9a3412;
-  color: #fb923c;
+  background: var(--light-blue, #4a7ba7);
+  color: var(--text-white, #ffffff);
 }
 
 .stat-icon.stat-green {
-  background: #166534;
-  color: #4ade80;
+  background: var(--lighter-blue, #6b9bc4);
+  color: var(--text-white, #ffffff);
 }
 
 .stat-icon.stat-yellow {
-  background: #a16207;
-  color: #facc15;
+  background: var(--lightest-blue, #8bb3d1);
+  color: var(--text-white, #ffffff);
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #e0e6f6;
+  color: var(--text-muted, #6b9bc4);
   margin-bottom: 4px;
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
 }
 
 /* Content Row */
@@ -99,19 +126,33 @@
 }
 
 .feedback-main-panel {
-  background: #212c4d;
+  background: var(--background-card, #1a4d80);
+  border: 1px solid var(--border-color, #4a7ba7);
   border-radius: 12px;
   padding: 0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px var(--shadow-color, rgba(0, 51, 102, 0.3));
   width: 100%;
   max-width: 1200px;
   overflow: hidden;
+  position: relative;
+}
+
+.feedback-main-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-blue, #2d5a8a), var(--light-blue, #4a7ba7), var(--accent-blue, #2d5a8a));
+  background-size: 200% 100%;
+  animation: shimmer-border 3s ease-in-out infinite;
 }
 
 .feedback-tabs {
   display: flex;
-  border-bottom: 1px solid #3a4a6b;
-  background: #2a3658;
+  border-bottom: 1px solid var(--border-color, #4a7ba7);
+  background: var(--accent-blue, #2d5a8a);
 }
 
 .feedback-tab {
@@ -119,28 +160,28 @@
   border: none;
   padding: 16px 24px;
   font-size: 1rem;
-  color: #bfc9da;
+  color: var(--text-muted, #6b9bc4);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   flex: 1;
   justify-content: center;
   font-weight: 500;
 }
 
 .feedback-tab.active {
-  color: #ffffff;
-  border-bottom-color: #4a9eff;
-  background: #212c4d;
+  color: var(--text-white, #ffffff);
+  border-bottom-color: var(--light-blue, #4a7ba7);
+  background: var(--background-card, #1a4d80);
   font-weight: 600;
 }
 
 .feedback-tab:hover:not(.active) {
-  background: #3a4a6b;
-  color: #ffffff;
+  background: var(--light-blue, #4a7ba7);
+  color: var(--text-white, #ffffff);
 }
 
 .tab-icon {
