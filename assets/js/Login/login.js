@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.grecaptcha && grecaptcha.execute) {
                 try {
                     updateRecaptchaStatus('Generating security token...', 'loading');
-                    recaptchaToken = await grecaptcha.execute('6LehsL4rAAAAAJoPPIbOzI_M7vWu-bt1NoKq22Js', { action: 'register' });
+                    recaptchaToken = await grecaptcha.execute('6Lea4eUrAAAAAM6YBr39uGXeKaq0UEIpNNCm5Sfy', { action: 'register' });
                     updateRecaptchaStatus('Security token generated successfully', 'success');
                 } catch (error) {
                     console.warn('reCAPTCHA v3 failed:', error);
