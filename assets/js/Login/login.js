@@ -1086,8 +1086,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const userData = {
                 first_name: firstName,
                 last_name: lastName,
+                username: email || (firstName + lastName).toLowerCase(),
                 email: email,
                 password: password,
+                confirm_password: password, // mirror to satisfy backend requirement
                 contact_number: contactNumber || null,
                 tester_type_id: testerTypeId ? parseInt(testerTypeId, 10) : null,
                 recaptcha_token: recaptchaToken
