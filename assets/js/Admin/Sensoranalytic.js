@@ -1,7 +1,7 @@
 // Sensor Analytics API - Connected to Database
 class SensorAnalyticsAPI {
     constructor() {
-        this.baseURL = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : '') + '/api/sensor-analytics';
+        this.baseURL = '/api/sensor-analytics';
         this.currentFilters = {
             nameSearch: '',
             startDate: '',

@@ -1,7 +1,7 @@
 // API Configuration for SafeBite Node.js Backend
 const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
-const HOSTNAME = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
-const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/i.test(HOSTNAME) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(HOSTNAME);
+const HOSTNAME = 'https://safebite-server-zh2r.onrender.com';
+const IS_LOCALHOST = 'https://safebite-server-zh2r.onrender.com';
 
 const API_CONFIG = {
     // Always use Render backend in all environments (no localhost)

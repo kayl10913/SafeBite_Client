@@ -55,10 +55,8 @@ class FeedbacksManager {
             // Show loading state
             this.showLoadingState();
             
-            // Get the current origin for the API call
-            const baseUrl = window.location.origin;
-            // Use endpoint that returns all user-submitted feedbacks (exclude Admin role) with exact aliases
-            const apiUrl = `${baseUrl}/api/feedbacks/users/all-plain`;
+            // Use relative endpoint so api-config.js rewrites to Render BASE_URL
+            const apiUrl = `/api/feedbacks/users/all-plain`;
             console.log('🌐 Using API URL:', apiUrl);
             
             let response = await fetch(apiUrl);
@@ -95,7 +93,7 @@ class FeedbacksManager {
                 }
       } else {
                 console.warn('⚠️ users/all failed; retrying generic endpoint /api/feedbacks');
-                const fallbackUrl = `${baseUrl}/api/feedbacks`;
+                const fallbackUrl = `/api/feedbacks`;
                 response = await fetch(fallbackUrl);
                 result = await response.json();
                 if (result && result.success && Array.isArray(result.data)) {
@@ -119,8 +117,6 @@ class FeedbacksManager {
             // Show loading state
             this.showLoadingState();
             
-            const baseUrl = window.location.origin;
-
             // Decide best endpoint strategy
             const noOtherFilters = (
                 (filters.customer_name == null || filters.customer_name === '') &&
@@ -137,7 +133,7 @@ class FeedbacksManager {
                 const qs = new URLSearchParams();
                 if (filters.date_from) qs.append('date_from', filters.date_from);
                 if (filters.date_to) qs.append('date_to', filters.date_to);
-                const url = `${baseUrl}/api/feedbacks/users/all-plain${qs.toString() ? `?${qs.toString()}` : ''}`;
+                const url = `/api/feedbacks/users/all-plain${qs.toString() ? `?${qs.toString()}` : ''}`;
                 const r = await fetch(url);
                 const j = await r.json();
                 const rows = Array.isArray(j.data) ? j.data : [];
@@ -147,7 +143,7 @@ class FeedbacksManager {
                 return;
             }
 
-            const apiUrl = `${baseUrl}/api/feedbacks/users/filter`;
+            const apiUrl = `/api/feedbacks/users/filter`;
             console.log('🔍 Filtering feedbacks with URL:', apiUrl);
             console.log('🔍 Filter params:', filters);
             

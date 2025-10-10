@@ -293,7 +293,7 @@ function initFormHandling() {
             
             try {
                 // Send form data to backend
-                const response = await fetch('/api/contact', {
+                const response = await fetch(buildApiUrl('/api/contact'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -451,7 +451,7 @@ function initNewsletterForm() {
             button.disabled = true;
             
             // Send to API
-            fetch('/api/newsletter', {
+            fetch(buildApiUrl('/api/newsletter'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -828,7 +828,7 @@ if ('serviceWorker' in navigator) {
 // Initialize user statistics from database
 function initUserStatistics() {
     // Fetch user count from the API
-    fetch('/api/statistics/user-count')
+    fetch(buildApiUrl('/api/statistics/user-count'))
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data) {
@@ -861,7 +861,7 @@ function initUserStatistics() {
 // Initialize feedbacks from database
 function initFeedbacks() {
     // Fetch feedbacks from the API
-    fetch('/api/statistics/feedbacks')
+    fetch(buildApiUrl('/api/statistics/feedbacks'))
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data) {

@@ -16,7 +16,7 @@ async function loadUserInfo() {
 
     console.log('Session token found, fetching user profile...');
 
-    const response = await fetch('/api/users/profile', {
+    const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/users/profile') : '/api/users/profile'), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -75,7 +75,7 @@ async function loadSpoilageStats() {
       return;
     }
 
-    const response = await fetch('/api/spoilage-analytics/stats', {
+    const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/spoilage-analytics/stats') : '/api/spoilage-analytics/stats'), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -139,7 +139,7 @@ async function loadSpoilageChartData() {
       return;
     }
 
-    const response = await fetch('/api/spoilage-analytics/summary', {
+    const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/spoilage-analytics/summary') : '/api/spoilage-analytics/summary'), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -418,7 +418,7 @@ async function loadFoodCategories() {
       return;
     }
 
-    const response = await fetch('/api/users/food-types', {
+    const response = await fetch((typeof buildApiUrl === 'function' ? buildApiUrl('/api/users/food-types') : '/api/users/food-types'), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${sessionToken}`,
@@ -1652,10 +1652,10 @@ class SpoilageAnalytics {
             // Fetch both summary and stats data with cache busting
             const timestamp = Date.now();
             const [summaryResponse, statsResponse] = await Promise.all([
-                fetch(`/api/spoilage-analytics/summary?t=${timestamp}`, {
+                fetch((typeof buildApiUrl === 'function' ? buildApiUrl(`/api/spoilage-analytics/summary?t=${timestamp}`) : `/api/spoilage-analytics/summary?t=${timestamp}`), {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch(`/api/spoilage-analytics/stats?t=${timestamp}`, {
+                fetch((typeof buildApiUrl === 'function' ? buildApiUrl(`/api/spoilage-analytics/stats?t=${timestamp}`) : `/api/spoilage-analytics/stats?t=${timestamp}`), {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
