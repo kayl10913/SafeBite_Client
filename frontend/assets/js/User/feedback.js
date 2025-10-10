@@ -3,6 +3,7 @@ class FeedbackCenter {
   constructor() {
     this.currentPage = 1;
     this.recordsPerPage = this.getRecordsPerPageFromUI();
+    this.currentView = 'table'; // Track current view: 'table' or 'cards'
     this.currentFilters = {
       search: '',
       type: '',
@@ -252,6 +253,7 @@ class FeedbackCenter {
   }
 
   switchView(viewType) {
+    this.currentView = viewType; // Track the current view
     const cardsContainer = document.getElementById('feedbackCardsContainer');
     const tableContainer = document.getElementById('feedbackTableContainer');
     
@@ -262,6 +264,15 @@ class FeedbackCenter {
     } else {
       cardsContainer.style.display = 'none';
       tableContainer.style.display = 'block';
+      this.renderTable();
+    }
+  }
+
+  // Method to render the appropriate view based on current view
+  renderCurrentView() {
+    if (this.currentView === 'cards') {
+      this.renderCards();
+    } else {
       this.renderTable();
     }
   }
@@ -746,7 +757,7 @@ class FeedbackCenter {
     prevBtn.addEventListener('click', () => {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.renderTable();
+        this.renderCurrentView();
       }
     });
     controlsContainer.appendChild(prevBtn);
@@ -761,7 +772,7 @@ class FeedbackCenter {
       pageBtn.className = `pagination-btn ${i === this.currentPage ? 'active' : ''}`;
       pageBtn.addEventListener('click', () => {
         this.currentPage = i;
-        this.renderTable();
+        this.renderCurrentView();
       });
       controlsContainer.appendChild(pageBtn);
     }
@@ -774,7 +785,7 @@ class FeedbackCenter {
     nextBtn.addEventListener('click', () => {
       if (this.currentPage < totalPages) {
         this.currentPage++;
-        this.renderTable();
+        this.renderCurrentView();
       }
     });
     controlsContainer.appendChild(nextBtn);

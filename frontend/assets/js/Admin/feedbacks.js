@@ -343,7 +343,7 @@ class FeedbacksManager {
         // Action
         const action = document.createElement('td');
         if (feedbackIdValue) {
-            action.innerHTML = `<button class="action-btn" onclick="window.feedbacksManager.openResponseModal(${feedbackIdValue})">📝 Respond</button>`;
+            action.innerHTML = `<button class="action-btn" onclick="openResponseModal(${feedbackIdValue})">📝 Respond</button>`;
         } else {
             action.innerHTML = `<button class="action-btn" disabled title="No ID">📝 Respond</button>`;
         }
@@ -633,11 +633,11 @@ class FeedbacksManager {
         }
 
         // Star rating filter
-        const starRatingSelect = document.querySelector('.feedbacks-filter-select');
+        const starRatingSelect = document.getElementById('feedbackStarRatingFilter');
         if (starRatingSelect) {
             starRatingSelect.addEventListener('change', () => {
                 const value = starRatingSelect.value;
-                this.currentFilters.star_rating = value === 'All Ratings' ? null : parseInt(value);
+                this.currentFilters.star_rating = value === '' ? null : parseInt(value);
                 if (!dateRangeSelect || dateRangeSelect.value === 'all') {
                     this.applyFilters();
                 }
@@ -645,11 +645,35 @@ class FeedbacksManager {
         }
 
         // Sentiment filter
-        const sentimentSelect = document.querySelectorAll('.feedbacks-filter-select')[1];
+        const sentimentSelect = document.getElementById('feedbackSentimentFilter');
         if (sentimentSelect) {
             sentimentSelect.addEventListener('change', () => {
                 const value = sentimentSelect.value;
-                this.currentFilters.sentiment = value === 'All' ? null : value;
+                this.currentFilters.sentiment = value === '' ? null : value;
+                if (!dateRangeSelect || dateRangeSelect.value === 'all') {
+                    this.applyFilters();
+                }
+            });
+        }
+
+        // Priority filter
+        const prioritySelect = document.getElementById('feedbackPriorityFilter');
+        if (prioritySelect) {
+            prioritySelect.addEventListener('change', () => {
+                const value = prioritySelect.value;
+                this.currentFilters.priority = value === '' ? null : value;
+                if (!dateRangeSelect || dateRangeSelect.value === 'all') {
+                    this.applyFilters();
+                }
+            });
+        }
+
+        // Status filter
+        const statusSelect = document.getElementById('feedbackStatusFilter');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', () => {
+                const value = statusSelect.value;
+                this.currentFilters.status = value === '' ? null : value;
                 if (!dateRangeSelect || dateRangeSelect.value === 'all') {
                     this.applyFilters();
                 }
@@ -711,16 +735,159 @@ class FeedbacksManager {
         };
     }
 
-    exportToExcel() {
-        // Implementation for Excel export
-        console.log('Exporting to Excel...');
-        // You can implement actual Excel export logic here
+    async exportToExcel() {
+        try {
+            console.log('📊 Exporting to Excel...');
+            this.showToast('Preparing Excel export...', 'info');
+            
+            // Get current filtered data
+            const filteredData = this.feedbacks || [];
+            
+            if (filteredData.length === 0) {
+                this.showToast('No data to export', 'warning');
+                return;
+            }
+
+            // Prepare data for Excel export
+            const excelData = filteredData.map(feedback => ({
+                'Feedback ID': feedback['FEEDBACK ID'] || feedback.feedback_id || '',
+                'Customer Name': feedback['CUSTOMER NAME'] || feedback.customer_name || '',
+                'Customer Email': feedback['CUSTOMER EMAIL'] || feedback.customer_email || '',
+                'Feedback Text': feedback['FEEDBACK TEXT'] || feedback.feedback_text || '',
+                'Feedback Type': feedback['FEEDBACK TYPE'] || feedback.feedback_type || '',
+                'Priority': feedback['PRIORITY'] || feedback.priority || '',
+                'Star Rating': feedback['STAR RATE'] || feedback.star_rating || '',
+                'Sentiment': feedback['SENTIMENT'] || feedback.sentiment || '',
+                'Status': feedback['STATUS'] || feedback.status || '',
+                'Response Text': feedback['RESPONSE TEXT'] || feedback.response_text || ''
+            }));
+
+            // Create CSV content
+            const headers = Object.keys(excelData[0]);
+            const csvContent = [
+                headers.join(','),
+                ...excelData.map(row => 
+                    headers.map(header => {
+                        const value = row[header] || '';
+                        // Escape commas and quotes in CSV
+                        return `"${value.toString().replace(/"/g, '""')}"`;
+                    }).join(',')
+                )
+            ].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `feedbacks_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.showToast('Excel export completed successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            this.showToast('Error exporting to Excel', 'error');
+        }
     }
 
-    exportToPdf() {
-        // Implementation for PDF export
-        console.log('Exporting to PDF...');
-        // You can implement actual PDF export logic here
+    async exportToPdf() {
+        try {
+            console.log('📄 Exporting to PDF...');
+            this.showToast('Preparing PDF export...', 'info');
+            
+            // Get current filtered data
+            const filteredData = this.feedbacks || [];
+            
+            if (filteredData.length === 0) {
+                this.showToast('No data to export', 'warning');
+                return;
+            }
+
+            // Create HTML content for PDF
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Feedbacks Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; text-align: center; }
+                        .report-info { margin: 20px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        tr:nth-child(even) { background-color: #f9f9f9; }
+                        .status-open { color: #007bff; }
+                        .status-resolved { color: #28a745; }
+                        .status-closed { color: #6c757d; }
+                        .priority-critical { color: #dc3545; font-weight: bold; }
+                        .priority-high { color: #fd7e14; }
+                        .priority-medium { color: #ffc107; }
+                        .priority-low { color: #28a745; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Feedbacks Report</h1>
+                    <div class="report-info">
+                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                        <p><strong>Total Records:</strong> ${filteredData.length}</p>
+                        <p><strong>Export Type:</strong> PDF Report</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Email</th>
+                                <th>Feedback</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Rating</th>
+                                <th>Sentiment</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredData.map(feedback => `
+                                <tr>
+                                    <td>${feedback['FEEDBACK ID'] || feedback.feedback_id || ''}</td>
+                                    <td>${feedback['CUSTOMER NAME'] || feedback.customer_name || ''}</td>
+                                    <td>${feedback['CUSTOMER EMAIL'] || feedback.customer_email || ''}</td>
+                                    <td>${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').substring(0, 100)}${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').length > 100 ? '...' : ''}</td>
+                                    <td>${feedback['FEEDBACK TYPE'] || feedback.feedback_type || ''}</td>
+                                    <td class="priority-${(feedback['PRIORITY'] || feedback.priority || '').toLowerCase()}">${feedback['PRIORITY'] || feedback.priority || ''}</td>
+                                    <td>${feedback['STAR RATE'] || feedback.star_rating || ''} ⭐</td>
+                                    <td>${feedback['SENTIMENT'] || feedback.sentiment || ''}</td>
+                                    <td class="status-${(feedback['STATUS'] || feedback.status || '').toLowerCase().replace(' ', '-')}">${feedback['STATUS'] || feedback.status || ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            // Create a new window for PDF generation
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            
+            // Wait for content to load then print
+            printWindow.onload = function() {
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+            };
+            
+            this.showToast('PDF export completed successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            this.showToast('Error exporting to PDF', 'error');
+        }
     }
 
     async updateFeedbackStatus(feedbackId, status, responseText) {
@@ -853,34 +1020,54 @@ window.FeedbacksManager = FeedbacksManager;
 console.log('🌐 FeedbacksManager class made globally available');
 
 // Initialize when DOM is loaded
+// Initialize FeedbacksManager immediately
+console.log('🚀 Initializing FeedbacksManager...');
+window.feedbacksManager = new FeedbacksManager();
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🌐 DOM Content Loaded');
     const feedbacksContainer = document.querySelector('.feedbacks-container');
     console.log('🔍 Looking for .feedbacks-container:', feedbacksContainer);
     
     if (feedbacksContainer) {
-        console.log('✅ Found feedbacks container, creating FeedbacksManager');
-        window.feedbacksManager = new FeedbacksManager();
+        console.log('✅ Found feedbacks container, FeedbacksManager already initialized');
     } else {
-        console.log('❌ Feedbacks container not found');
+        console.log('⚠️ Feedbacks container not found, but FeedbacksManager is available');
     }
 });
 
 // Global functions for modal
 function openResponseModal(feedbackId) {
+    console.log('🔍 openResponseModal called with ID:', feedbackId);
     if (window.feedbacksManager) {
+        console.log('✅ FeedbacksManager found, opening modal');
+        window.feedbacksManager.openResponseModal(feedbackId);
+    } else {
+        console.error('❌ FeedbacksManager not found on window object, creating new instance...');
+        // Fallback: create a new instance if one doesn't exist
+        window.feedbacksManager = new FeedbacksManager();
         window.feedbacksManager.openResponseModal(feedbackId);
     }
 }
 
 function closeResponseModal() {
+    console.log('🔍 closeResponseModal called');
     if (window.feedbacksManager) {
+        window.feedbacksManager.closeResponseModal();
+    } else {
+        console.error('❌ FeedbacksManager not found on window object, creating new instance...');
+        window.feedbacksManager = new FeedbacksManager();
         window.feedbacksManager.closeResponseModal();
     }
 }
 
 function saveResponse() {
+    console.log('🔍 saveResponse called');
     if (window.feedbacksManager) {
+        window.feedbacksManager.saveResponse();
+    } else {
+        console.error('❌ FeedbacksManager not found on window object, creating new instance...');
+        window.feedbacksManager = new FeedbacksManager();
         window.feedbacksManager.saveResponse();
     }
 }

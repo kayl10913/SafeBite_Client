@@ -137,8 +137,18 @@ function showMlPredictionsDetail() {
 function showUsers() {
   const mainContent = document.getElementById('main-content');
   const template = document.getElementById('users-template');
+  
   if (mainContent && template) {
+    // Check if users page is already loaded to prevent unnecessary reload
+    const existingUserTable = mainContent.querySelector('#userTableBody');
+    if (existingUserTable && window.userManagerInitialized) {
+      console.log('🔧 Users page already loaded, skipping reload...');
+      return;
+    }
+    
+    console.log('🔧 Loading users page...');
     mainContent.innerHTML = template.innerHTML;
+    
     if (window.initUserManager) {
       window.initUserManager();
     }
@@ -183,24 +193,24 @@ function showFeedbacks() {
       window.feedbackCenter.init();
     } else {
       console.log('🚀 Creating new feedback center');
-      // Wait for DOM to be ready and check if FeedbackCenter class exists
+      // Wait for DOM to be ready and check if FeedbacksManager class exists
       setTimeout(() => {
         const container = document.querySelector('.feedbacks-container');
         console.log('🔍 Feedbacks container after timeout:', container);
         
         if (container) {
-          if (typeof FeedbackCenter !== 'undefined') {
-            console.log('✅ FeedbackCenter class found, creating instance');
-            window.feedbackCenter = new FeedbackCenter();
+          if (typeof FeedbacksManager !== 'undefined') {
+            console.log('✅ FeedbacksManager class found, creating instance');
+            window.feedbackCenter = new FeedbacksManager();
           } else {
-            console.error('❌ FeedbackCenter class not defined yet, waiting...');
+            console.error('❌ FeedbacksManager class not defined yet, waiting...');
             // Try again after a longer delay
             setTimeout(() => {
-              if (typeof FeedbackCenter !== 'undefined') {
-                console.log('✅ FeedbackCenter class found on retry, creating instance');
-                window.feedbackCenter = new FeedbackCenter();
+              if (typeof FeedbacksManager !== 'undefined') {
+                console.log('✅ FeedbacksManager class found on retry, creating instance');
+                window.feedbackCenter = new FeedbacksManager();
               } else {
-                console.error('❌ FeedbackCenter class still not defined after retry');
+                console.error('❌ FeedbacksManager class still not defined after retry');
               }
             }, 500);
           }

@@ -1140,33 +1140,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 
-                // Training Data Update button
-                const mlUpdateTrainingBtn = document.getElementById('mlUpdateTraining');
-                if (mlUpdateTrainingBtn) {
-                    mlUpdateTrainingBtn.addEventListener('click', async () => {
-                        try {
-                            console.log('🔄 Updating Training Data...');
-                            mlUpdateTrainingBtn.disabled = true;
-                            mlUpdateTrainingBtn.innerHTML = '🔄 Updating...';
-                            
-                            // Refresh training data
-                            if (this._loadSamples) {
-                                await this._loadSamples();
-                            }
-                            
-                            // Show success message
-                            this.showToast('Training Data updated successfully!', 'success');
-                            
-                        } catch (error) {
-                            console.error('Error updating training data:', error);
-                            this.showToast('Error updating training data', 'error');
-                        } finally {
-                            mlUpdateTrainingBtn.disabled = false;
-                            mlUpdateTrainingBtn.innerHTML = '🔄 Update';
-                        }
-                    });
-                }
-                
                 // Individual Training Data Update buttons (delegated event listener)
                 document.addEventListener('click', (e) => {
                     console.log('🔍 Click detected on:', e.target);

@@ -195,7 +195,10 @@
             <canvas id="activityChart"></canvas>
           </div>
           <div class="dashboard-card tall recent-reviews-card" style="flex:1;display:flex;flex-direction:column;">
-            <h4 style="margin:0 0 20px 0;color:#fff;font-size:1.4em;font-weight:600;">Recent Reviews</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 20px 0;">
+              <h4 style="margin:0;color:#fff;font-size:1.4em;font-weight:600;">Recent Reviews</h4>
+              <span id="reviews-date" style="color:#8a9bb5;font-size:0.9em;font-weight:500;">Today</span>
+            </div>
             <div id="recent-reviews-container" class="recent-reviews-container">
               <div class="loading-reviews">Loading reviews...</div>
             </div>
@@ -228,7 +231,6 @@
       <div class="ml-card-header">
         <div class="ml-card-title">Training Data (<span id="mlSamplesCount">0</span>)</div>
         <div class="ml-actions">
-          <button class="ml-btn secondary" id="mlUpdateTraining">🔄 Update</button>
           <button class="ml-btn primary" id="mlAddTraining">+ Add Training Data</button>
         </div>
       </div>
@@ -353,7 +355,7 @@
             </div>
           </form>
         </div>
-        <div class="modal-footer update-modal-footer">
+        <div class="update-modal-footer">
           <button type="button" class="update-modal-btn update-modal-btn-secondary" id="cancelUpdateTrainingBtn">Cancel</button>
           <button type="button" class="update-modal-btn update-modal-btn-primary" id="updateTrainingDataBtn">Update Training Data</button>
         </div>
@@ -754,10 +756,14 @@
     </div>
     <div class="report-generator-card">
       <div class="report-filters user-filters">
+        <form autocomplete="off" data-lpignore="true" style="margin: 0; padding: 0;">
         <div class="filter-controls">
           <div class="filter-group">
             <label for="userSearch">Search</label>
-            <input type="text" id="userSearch" class="user-search-input" placeholder="Search by name or email..." />
+            <!-- Hidden fake inputs to prevent browser autofill -->
+            <input type="text" style="display:none;" autocomplete="username" />
+            <input type="password" style="display:none;" autocomplete="current-password" />
+            <input type="text" id="userSearch" class="user-search-input" placeholder="Search by name or email..." autocomplete="off" data-lpignore="true" data-form-type="other" />
           </div>
           
           <div class="filter-group">
@@ -811,6 +817,7 @@
             </select>
           </div>
         </div>
+        </form>
         <div class="filter-actions">
           <button class="filter-btn" id="userFilterBtn">Filter</button>
           <button class="filter-btn" id="addUserBtn">+ Add User</button>
@@ -838,73 +845,74 @@
         </div>
       </div>
     </div>
-      <!-- User Modal -->
-      <div class="user-modal" id="userModal" style="display:none;">
-        <div class="user-modal-content" style="max-width: 500px; width: 90%;">
-          <h2 id="userModalTitle">Add User</h2>
-          <form id="userForm">
-            <input type="hidden" id="userId" />
-            
-            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
-              <div class="form-group" style="flex: 1;">
-                <label for="userFirstName">First Name *</label>
-                <input type="text" id="userFirstName" required placeholder="Enter first name" />
-              </div>
-              <div class="form-group" style="flex: 1;">
-                <label for="userLastName">Last Name *</label>
-                <input type="text" id="userLastName" required placeholder="Enter last name" />
-              </div>
+    
+    <!-- User Modal -->
+    <div class="user-modal" id="userModal" style="display:none;">
+      <div class="user-modal-content" style="max-width: 500px; width: 90%;">
+        <h2 id="userModalTitle">Add User</h2>
+        <form id="userForm">
+          <input type="hidden" id="userId" />
+          
+          <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="flex: 1;">
+              <label for="userFirstName">First Name *</label>
+              <input type="text" id="userFirstName" required placeholder="Enter first name" autocomplete="off" />
             </div>
-            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
-              <div class="form-group" style="flex: 1;">
-                <label for="userEmail">Email *</label>
-                <input type="email" id="userEmail" required placeholder="Enter email" />
-              </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="userLastName">Last Name *</label>
+              <input type="text" id="userLastName" required placeholder="Enter last name" autocomplete="off" />
             </div>
+          </div>
+          <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="flex: 1;">
+              <label for="userEmail">Email *</label>
+              <input type="email" id="userEmail" required placeholder="Enter email" autocomplete="off" />
+            </div>
+          </div>
 
-            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
-              <div class="form-group" style="flex: 1;">
-                <label for="userCategory">Category *</label>
-                <select id="userCategory" required>
-                  <option value="">Select Category</option>
-                  <option value="1">Personal Tester</option>
-                  <option value="2">Canteen Tester</option>
-                  <option value="3">Restaurant Tester</option>
-                  <option value="4">Cafeteria Tester</option>
-                  <option value="5">Catering Tester</option>
-                </select>
-              </div>
-              <div class="form-group" style="flex: 1;">
-                <label for="userStatus">Status *</label>
-                <select id="userStatus" required>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
+          <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="flex: 1;">
+              <label for="userCategory">Category *</label>
+              <select id="userCategory" required>
+                <option value="">Select Category</option>
+                <option value="1">Personal Tester</option>
+                <option value="2">Canteen Tester</option>
+                <option value="3">Restaurant Tester</option>
+                <option value="4">Cafeteria Tester</option>
+                <option value="5">Catering Tester</option>
+              </select>
             </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="userStatus">Status *</label>
+              <select id="userStatus" required>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
 
-            <div class="form-group" style="margin-bottom: 15px;">
-              <label>Date Created</label>
-              <input type="text" id="userDateCreated" readonly style="background:#181f36;color:#bfc9da;width:100%;" />
-            </div>
+          <div class="form-group" style="margin-bottom: 15px;">
+            <label>Date Created</label>
+            <input type="text" id="userDateCreated" readonly style="background:#181f36;color:#bfc9da;width:100%;" />
+          </div>
 
-            <div class="form-group password-group" style="display:none; margin-bottom: 15px;">
-              <label for="userPassword">New Password</label>
-              <div style="position:relative;display:flex;align-items:center;">
-                <input type="password" id="userPassword" autocomplete="new-password" minlength="6" placeholder="Enter new password... (leave blank to keep current)" style="flex:1;width:100%;" />
-                <button type="button" id="toggleUserPassword" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;padding:0 6px;color:#bfc9da;" tabindex="-1" aria-label="Show password">
-                    <span id="toggleUserPasswordIcon">&#128065;</span>
-                </button>
-              </div>
+          <div class="form-group password-group" style="display:none; margin-bottom: 15px;">
+            <label for="userPassword">New Password</label>
+            <div style="position:relative;display:flex;align-items:center;">
+              <input type="password" id="userPassword" autocomplete="new-password" minlength="6" placeholder="Enter new password... (leave blank to keep current)" style="flex:1;width:100%;" />
+              <button type="button" id="toggleUserPassword" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;padding:0 6px;color:#bfc9da;" tabindex="-1" aria-label="Show password">
+                  <span id="toggleUserPasswordIcon">&#128065;</span>
+              </button>
             </div>
+          </div>
 
-            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-              <button type="submit" class="filter-btn" style="background: #4a5b8d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save</button>
-              <button type="button" class="filter-btn export" id="cancelUserBtn" style="background: #2a3b6d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
-            </div>
-          </form>
-        </div>
+          <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button type="submit" class="filter-btn" style="background: #4a5b8d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            <button type="button" class="filter-btn export" id="cancelUserBtn" style="background: #2a3b6d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+          </div>
+        </form>
       </div>
+    </div>
   </div>
 </template>
 
@@ -1156,14 +1164,68 @@
       </div>
     </div>
     <div class="report-generator-card" style="padding:20px 24px;">
-      <div class="report-filters feedbacks-filters" style="margin-bottom:0; display:flex; align-items:flex-end; gap:16px;">
-        <div class="filter-controls" style="gap:12px; display:flex; flex-wrap:wrap; flex:1; align-items:flex-end;">
-          <div class="filter-group">
-            <label for="feedback-search">Name Search</label>
-            <input type="text" id="feedback-search" class="feedbacks-search-input" placeholder="Search feedback name..." />
+      <style>
+        /* Feedback date picker styling to match admin log */
+        .feedbacks-filters input[type="week"].report-select,
+        .feedbacks-filters input[type="month"].report-select,
+        .feedbacks-filters input[type="date"].report-select,
+        .feedbacks-filters input[type="number"].report-select {
+          background: #181f36;
+          color: #fff;
+          border: 1px solid #2a3b6d;
+          border-radius: 6px;
+          padding: 7px 12px;
+          font-size: 1em;
+          outline: none;
+          width: 100%;
+        }
+        
+        .feedbacks-filters input[type="week"].report-select:focus,
+        .feedbacks-filters input[type="month"].report-select:focus,
+        .feedbacks-filters input[type="date"].report-select:focus,
+        .feedbacks-filters input[type="number"].report-select:focus {
+          outline: none;
+          border-color: #4a9eff;
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+        }
+        
+        /* Calendar picker indicators for feedback date inputs */
+        .feedbacks-filters input[type="week"].report-select::-webkit-calendar-picker-indicator,
+        .feedbacks-filters input[type="month"].report-select::-webkit-calendar-picker-indicator,
+        .feedbacks-filters input[type="date"].report-select::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+        
+        .feedbacks-filters input[type="week"].report-select::-webkit-calendar-picker-indicator:hover,
+        .feedbacks-filters input[type="month"].report-select::-webkit-calendar-picker-indicator:hover,
+        .feedbacks-filters input[type="date"].report-select::-webkit-calendar-picker-indicator:hover {
+          opacity: 1;
+        }
+        
+        /* Remove number input spinners for year picker */
+        .feedbacks-filters input[type="number"].report-select::-webkit-outer-spin-button,
+        .feedbacks-filters input[type="number"].report-select::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        
+        .feedbacks-filters input[type="number"].report-select {
+          appearance: textfield; /* Standard */
+          -moz-appearance: textfield; /* Firefox */
+        }
+      </style>
+      <div class="report-filters feedbacks-filters" style="margin-bottom:0;">
+        <!-- Single Row: All Filters -->
+        <div class="filter-row" style="display:flex; gap:20px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
+          <div class="filter-group" style="min-width:160px;">
+            <label for="feedback-search" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">🔍 Name Search</label>
+            <input type="text" id="feedback-search" class="feedbacks-search-input" placeholder="Search feedback name..." style="width:100%; padding:10px 12px; background:#1a2332; border:1px solid #2a3a4a; border-radius:6px; color:#e0e6f6; font-size:14px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'" onblur="this.style.borderColor='#2a3a4a'" />
           </div>
-          <div class="filter-group" style="min-width:180px;">
-            <label for="feedbackDateRange">Date Range</label>
+          <div class="filter-group" style="min-width:140px;">
+            <label for="feedbackDateRange" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Date Range</label>
             <select id="feedbackDateRange" class="report-select">
               <option value="all">All Time</option>
               <option value="daily">Daily</option>
@@ -1173,48 +1235,68 @@
               <option value="custom">Custom</option>
             </select>
           </div>
-          <div class="filter-group" id="feedbackWeekGroup" style="display:none;min-width:200px;">
-            <label for="feedbackWeekPicker">Select Week</label>
-            <input type="week" id="feedbackWeekPicker" />
+          <div class="filter-group" id="feedbackWeekGroup" style="display:none;min-width:200px; margin-right:8px;">
+            <label for="feedbackWeekPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Week</label>
+            <input type="week" id="feedbackWeekPicker" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
-          <div class="filter-group" id="feedbackMonthGroup" style="display:none;min-width:200px;">
-            <label for="feedbackMonthPicker">Select Month</label>
-            <input type="month" id="feedbackMonthPicker" />
+          <div class="filter-group" id="feedbackMonthGroup" style="display:none;min-width:200px; margin-right:8px;">
+            <label for="feedbackMonthPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Month</label>
+            <input type="month" id="feedbackMonthPicker" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
-          <div class="filter-group" id="feedbackYearGroup" style="display:none;min-width:160px;">
-            <label for="feedbackYearPicker">Select Year</label>
-            <input type="number" id="feedbackYearPicker" min="1970" max="2100" step="1" placeholder="2025" />
+          <div class="filter-group" id="feedbackYearGroup" style="display:none;min-width:180px; margin-right:8px;">
+            <label for="feedbackYearPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Year</label>
+            <input type="number" id="feedbackYearPicker" class="report-select" min="1970" max="2100" step="1" placeholder="2025" style="width:100%; padding:8px 12px;" />
           </div>
-          <div class="filter-group custom-date-inputs" id="feedbackCustomDateGroup" style="display:none;min-width:180px;">
-            <label for="feedback-date-from">Start Date</label>
-            <input type="date" id="feedback-date-from" class="feedbacks-date-input" />
+          <div class="filter-group custom-date-inputs" id="feedbackCustomDateGroup" style="display:none;min-width:180px; margin-right:8px;">
+            <label for="feedback-date-from" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Start Date</label>
+            <input type="date" id="feedback-date-from" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
-          <div class="filter-group custom-date-inputs" style="display:none;min-width:180px;">
-            <label for="feedback-date-to">End Date</label>
-            <input type="date" id="feedback-date-to" class="feedbacks-date-input" />
+          <div class="filter-group custom-date-inputs" style="display:none;min-width:180px; margin-right:8px;">
+            <label for="feedback-date-to" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 End Date</label>
+            <input type="date" id="feedback-date-to" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
-          <div class="filter-group" style="min-width:160px;">
-            <label>Star Rating</label>
-            <select class="feedbacks-filter-select">
-              <option>All Ratings</option>
-              <option>5</option>
-              <option>4</option>
-              <option>3</option>
-              <option>2</option>
-              <option>1</option>
+          <div class="filter-group" style="min-width:120px;">
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">⭐ Star Rating</label>
+            <select class="report-select" id="feedbackStarRatingFilter">
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
             </select>
           </div>
-          <div class="filter-group" style="min-width:160px;">
-            <label>Sentiment</label>
-            <select class="feedbacks-filter-select">
-              <option>All</option>
-              <option>Positive</option>
-              <option>Negative</option>
-              <option>Neutral</option>
+          <div class="filter-group" style="min-width:120px;">
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">😊 Sentiment</label>
+            <select class="report-select" id="feedbackSentimentFilter">
+              <option value="">All Sentiment</option>
+              <option value="Positive">Positive</option>
+              <option value="Negative">Negative</option>
+              <option value="Neutral">Neutral</option>
             </select>
           </div>
-          <div class="filter-group" style="min-width:160px;">
-            <label for="feedbackRecordsPerPage">Records per Page</label>
+          <div class="filter-group" style="min-width:120px;">
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">🚨 Priority</label>
+            <select class="report-select" id="feedbackPriorityFilter">
+              <option value="">All Priorities</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div class="filter-group" style="min-width:120px;">
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📋 Status</label>
+            <select class="report-select" id="feedbackStatusFilter">
+              <option value="">All Status</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <div class="filter-group" style="min-width:120px;">
+            <label for="feedbackRecordsPerPage" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📄 Records per Page</label>
             <select id="feedbackRecordsPerPage" class="report-select">
               <option value="10">10</option>
               <option value="25" selected>25</option>
@@ -1223,10 +1305,18 @@
             </select>
           </div>
         </div>
-        <div class="filter-actions" style="gap:10px; display:flex; align-items:flex-end; justify-content:flex-end; margin-left:auto;">
-          <button class="filter-btn" id="applyFeedbackFilters" type="button">🔎 Filter</button>
-          <button class="filter-btn export" id="export-feedbacks-excel" type="button">Download Excel</button>
-          <button class="filter-btn export" id="export-feedbacks-pdf" type="button">Download PDF</button>
+
+        <!-- Action Buttons Row -->
+        <div class="filter-actions" style="display:flex; gap:16px; align-items:flex-end; justify-content:flex-end; padding-top:8px; border-top:1px solid #2a3a4a;">
+          <button class="filter-btn" id="applyFeedbackFilters" type="button" style="background:linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:120px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #2d5fd8 0%, #1e40af 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%)'">
+            <span>🔎</span> Filter
+          </button>
+          <button class="filter-btn export" id="export-feedbacks-excel" type="button" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:140px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'">
+            <span>📊</span> Download Excel
+          </button>
+          <button class="filter-btn export" id="export-feedbacks-pdf" type="button" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:140px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'">
+            <span>📄</span> Download PDF
+          </button>
         </div>
       </div>
     </div>
@@ -1736,22 +1826,22 @@
       <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
         <div class="form-group" style="flex: 1;">
           <label for="adminEmail">Account (Email) *</label>
-          <input type="email" id="adminEmail" required placeholder="admin@example.com" />
+          <input type="email" id="adminEmail" required placeholder="admin@example.com" autocomplete="off" />
         </div>
         <div class="form-group" style="flex: 1;">
           <label for="adminUsername">Username</label>
-          <input type="text" id="adminUsername" placeholder="Enter username" />
+          <input type="text" id="adminUsername" placeholder="Enter username" autocomplete="off" />
         </div>
       </div>
 
       <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
         <div class="form-group" style="flex: 1;">
           <label for="adminFirstName">First Name *</label>
-          <input type="text" id="adminFirstName" required placeholder="First name" />
+          <input type="text" id="adminFirstName" required placeholder="First name" autocomplete="off" />
         </div>
         <div class="form-group" style="flex: 1;">
           <label for="adminLastName">Last Name *</label>
-          <input type="text" id="adminLastName" required placeholder="Last name" />
+          <input type="text" id="adminLastName" required placeholder="Last name" autocomplete="off" />
         </div>
       </div>
 
@@ -1817,14 +1907,20 @@ function handleAdminPassFormSubmit(e) {
     setTimeout(() => {
       if (pendingUserAction) {
         if (pendingUserAction.type === 'add') {
-          openUserModal();
-          const nameInput = document.getElementById('userName');
-          if (nameInput) nameInput.focus();
+          // Use the new admin password modal system
+          showAdminPasswordModal('add', () => {
+            openUserModal();
+            const nameInput = document.getElementById('userFirstName');
+            if (nameInput) nameInput.focus();
+          });
         }
         if (pendingUserAction.type === 'edit') {
-          openUserModal(pendingUserAction.user);
-          const nameInput = document.getElementById('userName');
-          if (nameInput) nameInput.focus();
+          // Use the new admin password modal system
+          showAdminPasswordModal('update', () => {
+            openUserModal(pendingUserAction.user);
+            const nameInput = document.getElementById('userFirstName');
+            if (nameInput) nameInput.focus();
+          });
         }
       }
     }, 100);
@@ -2074,6 +2170,596 @@ function handleAdminPassFormSubmit(e) {
 })();
 </script>
 
+<!-- Admin Password Modal for User Management -->
+<div id="adminPasswordModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+  <div class="modal-content" style="background-color: #212c4d; margin: auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #2a3b6d; display: flex; align-items: center; justify-content: space-between;">
+      <h3 style="color: #e0e6f6; margin: 0; font-size: 18px; font-weight: 600;">🔐 Admin Authentication</h3>
+      <button onclick="closeAdminPasswordModal()" style="background: none; border: none; color: #bfc9da; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 24px;">
+      <div style="margin-bottom: 20px;">
+        <div style="color: #bfc9da; font-size: 14px; margin-bottom: 8px;">Action Required</div>
+        <div style="color: #e0e6f6; font-size: 16px; font-weight: 500;" id="adminPasswordAction">-</div>
+      </div>
+      
+        <div style="margin-bottom: 20px;">
+          <label style="color: #bfc9da; font-size: 14px; margin-bottom: 8px; display: block; font-weight: 500;">Enter your password</label>
+          <div style="position: relative;">
+            <input type="password" id="adminPasswordInput" autocomplete="current-password" style="width: 100%; padding: 12px 16px; background: #181f36; border: 1px solid #2a3b6d; border-radius: 6px; color: #e0e6f6; font-size: 14px; outline: none; transition: all 0.2s ease; box-sizing: border-box;" placeholder="Enter admin password..." onkeypress="handleAdminPasswordKeypress(event)" onfocus="this.style.borderColor='#4a9eff'; this.style.boxShadow='0 0 0 2px rgba(74, 158, 255, 0.2)'" onblur="this.style.borderColor='#2a3b6d'; this.style.boxShadow='none'">
+            <button type="button" id="toggleAdminPassword" onclick="toggleAdminPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #bfc9da; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2a3b6d'" onmouseout="this.style.backgroundColor='transparent'">
+              <span id="toggleAdminPasswordIcon">👁️</span>
+            </button>
+            <!-- Password verification status indicator -->
+            <div id="passwordStatusIndicator" style="position: absolute; right: 50px; top: 50%; transform: translateY(-50%); display: none; color: #4a9eff; font-size: 16px;">
+              <span id="passwordStatusIcon">⏳</span>
+            </div>
+          </div>
+          <!-- Password verification status message -->
+          <div id="passwordStatusMessage" style="margin-top: 8px; font-size: 12px; color: #bfc9da; display: none;">
+            <span id="passwordStatusText"></span>
+          </div>
+        </div>
+      
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button onclick="closeAdminPasswordModal()" style="background: #2a3b6d; color: #e0e6f6; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>
+        <button onclick="submitAdminPassword()" style="background: #4a9eff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Verify</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<!-- User Confirmation Modal -->
+<div id="userConfirmModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+  <div class="modal-content" style="background-color: #212c4d; margin: auto; padding: 0; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #2a3b6d; display: flex; align-items: center; justify-content: space-between;">
+      <h3 style="color: #e0e6f6; margin: 0; font-size: 18px; font-weight: 600;">⚠️ Confirm Action</h3>
+      <button onclick="closeUserConfirmModal()" style="background: none; border: none; color: #bfc9da; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 24px;">
+      <div style="margin-bottom: 20px;">
+        <div style="color: #e0e6f6; font-size: 16px; font-weight: 500;" id="userConfirmMessage">Are you sure you want to perform this action?</div>
+      </div>
+      
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button onclick="closeUserConfirmModal()" style="background: #2a3b6d; color: #e0e6f6; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>
+        <button onclick="confirmUserAction()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// Admin Password Modal Functions
+let currentAdminAction = null;
+let currentAdminCallback = null;
+
+// User Confirmation Modal Functions
+let currentUserConfirmCallback = null;
+
+function showUserConfirmModal(message, callback) {
+  console.log('🔔 showUserConfirmModal called with message:', message);
+  currentUserConfirmCallback = callback;
+  
+  const modal = document.getElementById('userConfirmModal');
+  const messageElement = document.getElementById('userConfirmMessage');
+  
+  if (modal && messageElement) {
+    messageElement.textContent = message;
+    modal.style.display = 'flex';
+  }
+}
+
+function closeUserConfirmModal() {
+  const modal = document.getElementById('userConfirmModal');
+  if (modal) {
+    modal.style.display = 'none';
+    currentUserConfirmCallback = null;
+  }
+}
+
+function confirmUserAction() {
+  console.log('🔔 confirmUserAction called');
+  if (currentUserConfirmCallback && typeof currentUserConfirmCallback === 'function') {
+    console.log('🔔 Executing confirmation callback...');
+    try {
+      currentUserConfirmCallback();
+      console.log('🔔 Confirmation callback executed successfully');
+    } catch (error) {
+      console.error('🔔 Error executing confirmation callback:', error);
+    }
+  } else {
+    console.error('🔔 No valid confirmation callback found');
+  }
+  closeUserConfirmModal();
+}
+
+// Add click-outside-to-close functionality for confirmation modal
+document.getElementById('userConfirmModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeUserConfirmModal();
+  }
+});
+
+function showAdminPasswordModal(action, callback) {
+  console.log('🔐 showAdminPasswordModal called with action:', action);
+  console.log('🔐 Callback function:', callback);
+  console.log('🔐 Callback type:', typeof callback);
+  console.log('🔐 Callback is function:', typeof callback === 'function');
+  
+  currentAdminAction = action;
+  currentAdminCallback = callback;
+  
+  console.log('🔐 Stored currentAdminCallback:', currentAdminCallback);
+  console.log('🔐 Stored currentAdminAction:', currentAdminAction);
+  
+  // Clear search input to prevent auto-fill conflict
+  const searchInput = document.getElementById('userSearch');
+  if (searchInput) {
+    console.log('🔐 Clearing search input to prevent auto-fill conflict...');
+    searchInput.value = '';
+    searchInput.removeAttribute('data-user-typed');
+  }
+  
+  const actionText = document.getElementById('adminPasswordAction');
+  const modal = document.getElementById('adminPasswordModal');
+  const passwordInput = document.getElementById('adminPasswordInput');
+  
+  console.log('🔐 Modal elements found:', { actionText, modal, passwordInput });
+  
+  // Set action text
+  if (action === 'add') {
+    actionText.textContent = 'Enter password to add a new user:';
+  } else if (action === 'update') {
+    actionText.textContent = 'Enter password to update this user:';
+  } else if (action === 'deactivate') {
+    actionText.textContent = 'Enter password to deactivate this user:';
+  } else if (action === 'activate') {
+    actionText.textContent = 'Enter password to activate this user:';
+  } else if (action === 'reactivate') {
+    actionText.textContent = 'Enter password to reactivate this user:';
+  } else if (action === 'delete') {
+    actionText.textContent = 'Enter password to delete this user:';
+  }
+  
+  // Show modal
+  console.log('🔐 Showing password modal...');
+  modal.style.display = 'flex';
+  passwordInput.value = '';
+  passwordInput.focus();
+}
+
+function closeAdminPasswordModal() {
+  const modal = document.getElementById('adminPasswordModal');
+  modal.style.display = 'none';
+  currentAdminAction = null;
+  currentAdminCallback = null;
+  
+  // Hide password verification status indicators
+  hidePasswordVerificationStatus();
+  
+  // Clear password input
+  const passwordInput = document.getElementById('adminPasswordInput');
+  if (passwordInput) passwordInput.value = '';
+}
+
+function handleAdminPasswordKeypress(event) {
+  if (event.key === 'Enter') {
+    submitAdminPassword();
+  }
+}
+
+function toggleAdminPasswordVisibility() {
+  const passwordInput = document.getElementById('adminPasswordInput');
+  const toggleIcon = document.getElementById('toggleAdminPasswordIcon');
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    toggleIcon.textContent = '🙈';
+  } else {
+    passwordInput.type = 'password';
+    toggleIcon.textContent = '👁️';
+  }
+}
+
+async function submitAdminPassword() {
+  const password = document.getElementById('adminPasswordInput').value.trim();
+  
+  if (!password) {
+    showToast('Please enter your password', 'error');
+    return;
+  }
+
+  try {
+    // Show loading state
+    const verifyBtn = document.querySelector('#adminPasswordModal button[onclick="submitAdminPassword()"]');
+    const originalText = verifyBtn.textContent;
+    verifyBtn.textContent = 'Verifying...';
+    verifyBtn.disabled = true;
+
+    // Show verification status indicators
+    showPasswordVerificationStatus('verifying', 'Verifying password...');
+
+    console.log('🔐 Starting password verification...');
+    console.log('🔐 Password length:', password.length);
+    console.log('🔐 JWT Token exists:', !!(localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token')));
+    console.log('🔐 API Config available:', !!(window.API_CONFIG && window.makeApiRequest));
+    
+    // Use the existing verifyAdminPassword function that's already connected to your API
+    const isValid = await verifyAdminPassword(password);
+    
+    console.log('🔐 Password verification result:', isValid);
+
+    if (isValid) {
+      // Show success status
+      showPasswordVerificationStatus('success', 'Password verified successfully!');
+      
+      // Wait a moment to show success status
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      showToast('Password verified successfully', 'success');
+      
+      // Execute the callback function BEFORE closing the modal
+      console.log('🔐 About to execute callback...');
+      console.log('🔐 currentAdminCallback exists:', !!currentAdminCallback);
+      console.log('🔐 currentAdminCallback type:', typeof currentAdminCallback);
+      console.log('🔐 currentAdminCallback value:', currentAdminCallback);
+      
+      if (currentAdminCallback && typeof currentAdminCallback === 'function') {
+        console.log('🔐 Executing admin callback...');
+        console.log('🔐 Callback function:', currentAdminCallback);
+        try {
+          currentAdminCallback();
+          console.log('🔐 Callback executed successfully');
+        } catch (error) {
+          console.error('🔐 Error executing callback:', error);
+          console.error('🔐 Error stack:', error.stack);
+        }
+      } else {
+        console.error('🔐 No valid callback function found');
+        console.log('🔐 currentAdminCallback:', currentAdminCallback);
+        console.log('🔐 typeof currentAdminCallback:', typeof currentAdminCallback);
+        console.log('🔐 currentAdminAction:', currentAdminAction);
+      }
+      
+      // Close modal AFTER executing callback
+      closeAdminPasswordModal();
+    } else {
+      // Show error status
+      showPasswordVerificationStatus('error', 'Invalid password. Please try again.');
+      
+      showToast('Invalid password. Please try again.', 'error');
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('adminPasswordInput').focus();
+    }
+  } catch (error) {
+    console.error('Password verification error:', error);
+    
+    // Show error status
+    showPasswordVerificationStatus('error', 'Network error. Please try again.');
+    
+    showToast('Error verifying password. Please try again.', 'error');
+    document.getElementById('adminPasswordInput').value = '';
+    document.getElementById('adminPasswordInput').focus();
+  } finally {
+    // Restore button state
+    const verifyBtn = document.querySelector('#adminPasswordModal button[onclick="submitAdminPassword()"]');
+    verifyBtn.textContent = 'Verify';
+    verifyBtn.disabled = false;
+    
+    // Hide status indicators after a delay
+    setTimeout(() => {
+      hidePasswordVerificationStatus();
+    }, 3000);
+  }
+}
+
+// Password verification status functions
+function showPasswordVerificationStatus(status, message) {
+  const indicator = document.getElementById('passwordStatusIndicator');
+  const messageDiv = document.getElementById('passwordStatusMessage');
+  const icon = document.getElementById('passwordStatusIcon');
+  const text = document.getElementById('passwordStatusText');
+  const passwordInput = document.getElementById('adminPasswordInput');
+  
+  if (!indicator || !messageDiv || !icon || !text) return;
+  
+  // Show the indicators
+  indicator.style.display = 'block';
+  messageDiv.style.display = 'block';
+  
+  // Update input field styling based on status
+  if (passwordInput) {
+    switch (status) {
+      case 'verifying':
+        passwordInput.style.borderColor = '#4a9eff';
+        passwordInput.style.boxShadow = '0 0 0 2px rgba(74, 158, 255, 0.2)';
+        break;
+      case 'success':
+        passwordInput.style.borderColor = '#10b981';
+        passwordInput.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.2)';
+        break;
+      case 'error':
+        passwordInput.style.borderColor = '#ef4444';
+        passwordInput.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
+        break;
+    }
+  }
+  
+  // Set status-specific styling and content
+  switch (status) {
+    case 'verifying':
+      icon.textContent = '⏳';
+      icon.style.color = '#4a9eff';
+      text.textContent = message;
+      text.style.color = '#4a9eff';
+      break;
+    case 'success':
+      icon.textContent = '✅';
+      icon.style.color = '#10b981';
+      text.textContent = message;
+      text.style.color = '#10b981';
+      break;
+    case 'error':
+      icon.textContent = '❌';
+      icon.style.color = '#ef4444';
+      text.textContent = message;
+      text.style.color = '#ef4444';
+      break;
+  }
+}
+
+function hidePasswordVerificationStatus() {
+  const indicator = document.getElementById('passwordStatusIndicator');
+  const messageDiv = document.getElementById('passwordStatusMessage');
+  const passwordInput = document.getElementById('adminPasswordInput');
+  
+  if (indicator) indicator.style.display = 'none';
+  if (messageDiv) messageDiv.style.display = 'none';
+  
+  // Reset input field styling
+  if (passwordInput) {
+    passwordInput.style.borderColor = '#2a3b6d';
+    passwordInput.style.boxShadow = 'none';
+  }
+}
+
+// Toast Notification Functions
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  
+  const colors = {
+    success: '#10b981',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    info: '#3b82f6'
+  };
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+  
+  toast.style.cssText = `
+    background: ${colors[type] || colors.info};
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 350px;
+    animation: slideInRight 0.3s ease-out;
+    position: relative;
+    overflow: hidden;
+  `;
+  
+  toast.innerHTML = `
+    <span style="font-size: 16px;">${icons[type] || icons.info}</span>
+    <span style="flex: 1;">${message}</span>
+    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; font-size: 18px; line-height: 1;">&times;</button>
+  `;
+  
+  // Add CSS animation if not already added
+  if (!document.getElementById('toastAnimations')) {
+    const style = document.createElement('style');
+    style.id = 'toastAnimations';
+    style.textContent = `
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  container.appendChild(toast);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, 300);
+    }
+  }, 5000);
+}
+
+// Close modal when clicking outside
+document.getElementById('adminPasswordModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeAdminPasswordModal();
+  }
+});
+
+// Test function to debug API connection
+async function testApiConnection() {
+  console.log('🧪 Testing API connection...');
+  
+  // Check if API config is loaded
+  console.log('🧪 API Config loaded:', !!window.API_CONFIG);
+  console.log('🧪 makeApiRequest available:', !!window.makeApiRequest);
+  console.log('🧪 JWT Token available:', !!(localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token')));
+  
+  if (window.API_CONFIG) {
+    console.log('🧪 API Base URL:', window.API_CONFIG.BASE_URL);
+    console.log('🧪 Verify Password Endpoint:', window.API_CONFIG.ENDPOINTS.ADMIN.VERIFY_PASSWORD);
+  }
+  
+  // Test a simple API call
+  try {
+    const jwtToken = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+    if (jwtToken) {
+      console.log('🧪 Testing with JWT token...');
+      const response = await fetch('/api/admin/test', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('🧪 Test API response status:', response.status);
+      const result = await response.json();
+      console.log('🧪 Test API response:', result);
+    } else {
+      console.log('🧪 No JWT token found for testing');
+    }
+  } catch (error) {
+    console.error('🧪 API test failed:', error);
+  }
+}
+
+// Run API test when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(testApiConnection, 1000);
+});
+</script>
+
+<style>
+/* Prevent autofill styling on search input - keep dark background */
+.user-search-input:-webkit-autofill,
+.user-search-input:-webkit-autofill:hover,
+.user-search-input:-webkit-autofill:focus,
+.user-search-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #181f36 inset !important;
+  -webkit-text-fill-color: #e0e6f6 !important;
+  background-color: #181f36 !important;
+  color: #e0e6f6 !important;
+  background: #181f36 !important;
+  border: 1px solid #2a3b6d !important;
+}
+
+/* Additional protection for all autofill states */
+.user-search-input[data-autofilled] {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border: 1px solid #2a3b6d !important;
+}
+
+/* Force dark styling on any autofill */
+input.user-search-input {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border: 1px solid #2a3b6d !important;
+}
+
+/* Prevent all input fields from turning white when filled or focused */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="week"],
+input[type="month"],
+input[type="number"],
+input.user-search-input,
+input.user-filter-date,
+input.report-select {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border: 1px solid #2a3b6d !important;
+}
+
+/* Prevent autofill styling on all inputs */
+input[type="text"]:-webkit-autofill,
+input[type="text"]:-webkit-autofill:hover,
+input[type="text"]:-webkit-autofill:focus,
+input[type="text"]:-webkit-autofill:active,
+input[type="email"]:-webkit-autofill,
+input[type="email"]:-webkit-autofill:hover,
+input[type="email"]:-webkit-autofill:focus,
+input[type="email"]:-webkit-autofill:active,
+input[type="password"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill:hover,
+input[type="password"]:-webkit-autofill:focus,
+input[type="password"]:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #181f36 inset !important;
+  -webkit-text-fill-color: #e0e6f6 !important;
+  background-color: #181f36 !important;
+  color: #e0e6f6 !important;
+  background: #181f36 !important;
+  border: 1px solid #2a3b6d !important;
+}
+
+/* Force dark styling on focus */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="week"]:focus,
+input[type="month"]:focus,
+input[type="number"]:focus {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border: 1px solid #4a9eff !important;
+  outline: none !important;
+}
+
+/* Action button styling for different user statuses */
+.action-btn.reactivate {
+  background: #10b981 !important;
+  color: white !important;
+  border: 1px solid #10b981 !important;
+}
+
+.action-btn.reactivate:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
+}
+
+.action-btn.deactivate {
+  background: #f59e0b !important;
+  color: white !important;
+  border: 1px solid #f59e0b !important;
+}
+
+.action-btn.deactivate:hover {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+}
+</style>
 
 </body>
 </html>

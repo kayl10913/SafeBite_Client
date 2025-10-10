@@ -13,6 +13,26 @@ class LatestScanManager {
     }
 
     /**
+     * Format date to Philippine time
+     */
+    formatPhilippineDate(date) {
+        if (!date) return new Date().toLocaleDateString('en-PH');
+        
+        // Convert to Philippine time (UTC+8)
+        const phDate = new Date(date);
+        const phTime = new Date(phDate.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for PH time
+        
+        return phTime.toLocaleDateString('en-PH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Manila'
+        });
+    }
+
+    /**
      * Get authentication token from localStorage
      */
     getAuthToken() {
@@ -175,7 +195,7 @@ class LatestScanManager {
                         expiryStatus: 'Unknown',
                         daysLeft: 0,
                         recommendations: parsedRecommendations,
-                        createdAt: latestPrediction.created_at || new Date().toISOString()
+                        createdAt: latestPrediction.created_at || this.formatPhilippineDate(new Date())
                     };
                     
                     console.log('🔍 Converted SmartSense Scanner data:', this.latestScanData);
@@ -593,14 +613,8 @@ class LatestScanManager {
 
         const data = this.latestScanData;
         
-        // Format the scan date
-        const scanDate = new Date(data.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        // Format the scan date in Philippine time
+        const scanDate = this.formatPhilippineDate(data.createdAt);
 
         // Get status badge class
         const statusBadgeClass = this.getStatusBadgeClass(data.statusClass);
@@ -759,10 +773,33 @@ class LatestScanManager {
         
         console.log('✅ Opening recommendations modal');
 
+        // Use the existing modal instead of creating a new one
+        const modal = document.getElementById('foodRecommendationsModal');
+        if (!modal) {
+            console.error('❌ Recommendations modal not found');
+            alert('Modal not found. Please refresh the page.');
+            return;
+        }
+
+        // Update modal content with current scan data
+        this.updateModalContent();
+        
+        // Show the existing modal
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+        
+        // Prevent body scroll when modal is open
+        document.body.classList.add('modal-open');
+    }
+
+    /**
+     * Update modal content with current scan data
+     */
+    updateModalContent() {
         const recommendations = this.latestScanData.recommendations;
         const foodName = this.latestScanData.name || 'Unknown Food';
         
-        console.log('🔍 Recommendations in showRecommendations:', recommendations);
+        console.log('🔍 Recommendations in updateModalContent:', recommendations);
         console.log('🔍 Recommendations type:', typeof recommendations);
         
         // Handle structured format (Smart Scanner) vs array format
@@ -785,118 +822,109 @@ class LatestScanManager {
             detailRecommendations = [];
         }
         
-        // Create modal HTML using previous design
-        const modalHTML = `
-            <div class="config-modal" id="foodRecommendationsModal" style="display: flex;">
-                <div class="config-modal-backdrop"></div>
-                <div class="config-modal-content" style="background:#212c4d;color:#e0e6f6;border:1px solid #2b3a66;max-width:600px;">
-                    <div class="config-modal-header" style="border-bottom:1px solid #2b3a66;">
-                        <span class="config-modal-title" style="color:#fff;">
-                            <i class="bi bi-clipboard-data" style="color:#4a9eff;"></i> Food Analysis Details
-                        </span>
-                        <button class="config-modal-close" aria-label="Close" style="color:#bfc9da;" onclick="latestScanManager.closeRecommendations()">&times;</button>
-                    </div>
-                    <div class="recommendations-body" style="padding:20px;">
-                        <div class="food-detail-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #2b3a66;">
-                            <div class="food-detail-info" style="flex:1;">
-                                <h3 style="color:#fff;margin:0 0 8px 0;font-size:1.5rem;font-weight:600;">${foodName}</h3>
-                                <div class="food-detail-meta" style="display:flex;align-items:center;gap:12px;">
-                                    <span class="detail-category" style="background:#4a9eff;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;text-transform:uppercase;">${this.latestScanData.category || 'Unknown'}</span>
-                                    <span class="detail-created" style="color:#b8c5e8;font-size:12px;">Created: ${new Date(this.latestScanData.createdAt).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                            <div class="food-detail-status" style="text-align:right;">
-                                <span class="detail-status-badge ${this.getStatusBadgeClass(this.latestScanData.statusClass)}" style="display:inline-block;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:4px;">${this.latestScanData.status}</span>
-                                <div class="detail-risk-score" style="color:#b8c5e8;font-size:12px;">Risk: ${this.latestScanData.riskScore}%</div>
-                            </div>
-                        </div>
-                        
-                        <div class="recommendations-content">
-                            <h4 style="color:#fff;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;">
-                                <i class="bi bi-lightbulb" style="color:#4a9eff;font-size:1.2rem;"></i>
-                                Recommendations
-                            </h4>
-                            <div class="recommendations-list" style="margin-bottom:24px;">
-                                ${mainRecommendation ? `
-                                    <div class="main-recommendation" style="background:linear-gradient(135deg,#f59e0b 0%,#f97316 100%);border:1px solid #f59e0b;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 4px 12px rgba(245,158,11,0.2);">
-                                        <div style="display:flex;align-items:center;gap:12px;">
-                                            <div style="background:rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;">⚠️</div>
-                                            <div style="color:#fff;font-size:16px;font-weight:600;line-height:1.4;flex:1;">${mainRecommendation}</div>
+        // Update the existing modal content
+        this.updateExistingModalContent(foodName, mainRecommendation, detailRecommendations);
+    }
+
+    /**
+     * Update existing modal content
+     */
+    updateExistingModalContent(foodName, mainRecommendation, detailRecommendations) {
+        // Update food name
+        const foodNameElement = document.getElementById('detailFoodName');
+        if (foodNameElement) {
+            foodNameElement.textContent = foodName;
+        }
+
+        // Update category
+        const categoryElement = document.getElementById('detailCategory');
+        if (categoryElement) {
+            categoryElement.textContent = this.latestScanData.category || 'Unknown';
+        }
+
+        // Update created date
+        const createdElement = document.getElementById('detailCreated');
+        if (createdElement) {
+            createdElement.textContent = `Created: ${this.formatPhilippineDate(this.latestScanData.createdAt)}`;
+        }
+
+        // Update status badge
+        const statusBadge = document.getElementById('detailStatusBadge');
+        if (statusBadge) {
+            statusBadge.textContent = this.latestScanData.status;
+            statusBadge.className = 'detail-status-badge';
+            if (this.latestScanData.status === 'Safe') {
+                statusBadge.classList.add('safe');
+            } else if (this.latestScanData.status === 'At Risk') {
+                statusBadge.classList.add('at-risk');
+            } else if (this.latestScanData.status === 'Spoiled') {
+                statusBadge.classList.add('spoiled');
+            }
+        }
+
+        // Update risk score
+        const riskScoreElement = document.getElementById('detailRiskScore');
+        if (riskScoreElement) {
+            riskScoreElement.textContent = `Risk: ${this.latestScanData.riskScore}%`;
+        }
+
+        // Update recommendations list
+        const recommendationsList = document.getElementById('recommendationsList');
+        if (recommendationsList) {
+            recommendationsList.innerHTML = '';
+            
+            // Add main recommendation if available
+            if (mainRecommendation) {
+                const mainRecItem = document.createElement('div');
+                mainRecItem.className = 'recommendation-item';
+                mainRecItem.innerHTML = `
+                    <div class="recommendation-icon">⚠️</div>
+                    <div class="recommendation-content">
+                        <div class="recommendation-title">Primary Recommendation</div>
+                        <div class="recommendation-text">${mainRecommendation}</div>
                                         </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${detailRecommendations.length > 0 ? `
-                                    <div class="detail-recommendations" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:16px;">
-                                        <div style="color:#b8c5e8;font-size:12px;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Detailed Actions:</div>
-                                        <ul style="margin:0;padding:0;list-style:none;">
-                                            ${detailRecommendations.map((detail, index) => {
+                `;
+                recommendationsList.appendChild(mainRecItem);
+            }
+
+            // Add detail recommendations
+            detailRecommendations.forEach((detail, index) => {
                                                 const detailText = typeof detail === 'object' ? JSON.stringify(detail) : String(detail);
-                                                return `
-                                                <li style="display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;padding:8px 0;border-bottom:1px solid #3a4a6b;">
-                                                    <div style="background:linear-gradient(135deg,#4a9eff 0%,#667eea 100%);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:2px;">${index + 1}</div>
-                                                    <div style="color:#e0e6f6;font-size:14px;line-height:1.5;flex:1;">${detailText}</div>
-                                                </li>
-                                                `;
-                                            }).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            <div class="sensor-details-section">
-                                <h4 style="color:#fff;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;">
-                                    <i class="bi bi-activity" style="color:#4a9eff;font-size:1.2rem;"></i>
-                                    Sensor Readings
-                                </h4>
-                                <div class="sensor-details-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
-                                    <div class="sensor-detail-item" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:16px;text-align:center;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                        <div class="sensor-detail-label" style="color:#b8c5e8;font-size:11px;margin-bottom:6px;text-transform:uppercase;font-weight:500;letter-spacing:0.5px;">Temperature</div>
-                                        <div class="sensor-detail-value" style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px;">${this.latestScanData.sensors.temperature}</div>
-                                        <div class="sensor-detail-status good" style="color:#28a745;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Optimal</div>
-                                    </div>
-                                    <div class="sensor-detail-item" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:16px;text-align:center;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                        <div class="sensor-detail-label" style="color:#b8c5e8;font-size:11px;margin-bottom:6px;text-transform:uppercase;font-weight:500;letter-spacing:0.5px;">Humidity</div>
-                                        <div class="sensor-detail-value" style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px;">${this.latestScanData.sensors.humidity}</div>
-                                        <div class="sensor-detail-status good" style="color:#28a745;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Good</div>
-                                    </div>
-                                    <div class="sensor-detail-item" style="background:#2a3658;border:1px solid #3a4a6b;border-radius:10px;padding:16px;text-align:center;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                        <div class="sensor-detail-label" style="color:#b8c5e8;font-size:11px;margin-bottom:6px;text-transform:uppercase;font-weight:500;letter-spacing:0.5px;">Gas Level</div>
-                                        <div class="sensor-detail-value" style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px;">${this.latestScanData.sensors.gas}</div>
-                                        <div class="sensor-detail-status good" style="color:#28a745;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Normal</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="recommendations-footer" style="border-top:1px solid #2b3a66;padding:20px;display:flex;justify-content:flex-end;">
-                        <button type="button" class="config-modal-submit" style="background:linear-gradient(135deg,#4a9eff 0%,#667eea 100%);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(74,158,255,0.3);" onclick="latestScanManager.closeRecommendations()">
-                            Close
-                        </button>
-                    </div>
-                </div>
+                const detailItem = document.createElement('div');
+                detailItem.className = 'recommendation-item';
+                detailItem.innerHTML = `
+                    <div class="recommendation-icon">${index + 1}</div>
+                    <div class="recommendation-content">
+                        <div class="recommendation-title">Action ${index + 1}</div>
+                        <div class="recommendation-text">${detailText}</div>
             </div>
         `;
+                recommendationsList.appendChild(detailItem);
+            });
+        }
 
-        // Add modal to page
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Add click handler for backdrop
-        const modal = document.getElementById('foodRecommendationsModal');
-        const backdrop = modal.querySelector('.config-modal-backdrop');
-        
-        backdrop.addEventListener('click', () => {
-            this.closeRecommendations();
-        });
-        
-        // Add escape key handler
-        const escapeHandler = (e) => {
-            if (e.key === 'Escape') {
-                this.closeRecommendations();
-                document.removeEventListener('keydown', escapeHandler);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
+        // Update sensor details
+        const sensorGrid = document.getElementById('sensorDetailsGrid');
+        if (sensorGrid) {
+            sensorGrid.innerHTML = '';
+            
+            const sensors = [
+                { label: 'Temperature', value: this.latestScanData.sensors?.temperature || 'N/A', status: 'good', statusText: 'Optimal' },
+                { label: 'Humidity', value: this.latestScanData.sensors?.humidity || 'N/A', status: 'good', statusText: 'Good' },
+                { label: 'Gas Level', value: this.latestScanData.sensors?.gas || 'N/A', status: 'good', statusText: 'Normal' }
+            ];
+
+            sensors.forEach(sensor => {
+                const item = document.createElement('div');
+                item.className = 'sensor-detail-item';
+                item.innerHTML = `
+                    <div class="sensor-detail-label">${sensor.label}</div>
+                    <div class="sensor-detail-value">${sensor.value}</div>
+                    <div class="sensor-detail-status ${sensor.status}">${sensor.statusText}</div>
+                `;
+                sensorGrid.appendChild(item);
+            });
+        }
     }
 
     /**
@@ -905,7 +933,11 @@ class LatestScanManager {
     closeRecommendations() {
         const modal = document.getElementById('foodRecommendationsModal');
         if (modal) {
-            modal.remove();
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            
+            // Re-enable body scroll when modal is closed
+            document.body.classList.remove('modal-open');
         }
     }
 

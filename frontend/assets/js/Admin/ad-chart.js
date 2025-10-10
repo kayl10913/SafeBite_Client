@@ -374,17 +374,41 @@ async function fetchRecentReviews() {
 // Function to display recent reviews
 function displayRecentReviews(reviews) {
   const container = document.getElementById('recent-reviews-container');
+  const dateElement = document.getElementById('reviews-date');
+  
   if (!container) return;
 
+  // Update the date display to show today's date
+  if (dateElement) {
+    const today = new Date();
+    const todayString = today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    dateElement.textContent = todayString;
+  }
+
   if (!reviews || reviews.length === 0) {
-    container.innerHTML = '<div class="no-reviews">No reviews available</div>';
+    container.innerHTML = `
+      <div class="no-reviews" style="text-align:center;padding:40px 20px;color:#8a9bb5;">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.6;">📝</div>
+        <div style="font-size:16px;font-weight:500;margin-bottom:8px;">No reviews for today</div>
+        <div style="font-size:14px;opacity:0.8;">Check back later for new feedback</div>
+      </div>
+    `;
     return;
   }
 
   const reviewsHTML = reviews.map(review => {
     const stars = '★'.repeat(review.star_rating || 0);
     const sentimentClass = `sentiment-${review.sentiment?.toLowerCase() || 'neutral'}`;
-    const date = new Date(review.created_at).toLocaleDateString();
+    const time = new Date(review.created_at).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
     
     return `
       <div class="review-item">
@@ -397,7 +421,7 @@ function displayRecentReviews(reviews) {
         <div class="review-text">${review.feedback_text}</div>
         <div class="review-meta">
           <span class="review-sentiment ${sentimentClass}">${review.sentiment || 'Neutral'}</span>
-          <span>${date}</span>
+          <span>${time}</span>
         </div>
       </div>
     `;

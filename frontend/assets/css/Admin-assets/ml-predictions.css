@@ -60,6 +60,7 @@
 /* Update Training Data Modal Styles */
 .update-modal {
 	max-width: 600px;
+	max-height: 90vh;
 	background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
 	border: 1px solid #334155;
 	border-radius: 12px;
@@ -70,6 +71,18 @@
 	left: 50%;
 	transform: translate(-50%, -50%);
 	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	margin: 0 !important;
+}
+
+/* Override modal-content styles for update modal */
+.modal-content.update-modal {
+	margin: 0 !important;
+	position: fixed !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate(-50%, -50%) !important;
 }
 
 .update-modal-header {
@@ -126,6 +139,8 @@
 .update-modal-body {
 	padding: 16px;
 	background: #1e293b;
+	flex: 1;
+	overflow-y: auto;
 }
 
 .update-modal-info {
@@ -302,6 +317,8 @@
 	padding: 14px 16px;
 	background: #0f172a;
 	border-top: 1px solid #334155;
+	position: relative;
+	z-index: 1;
 }
 
 .update-modal-btn {

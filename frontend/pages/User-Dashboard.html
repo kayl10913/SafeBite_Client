@@ -858,6 +858,404 @@
     justify-content: center;
   }
 
+  /* Config Modal System - Fixed Positioning */
+  .config-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .config-modal.show {
+    display: flex;
+  }
+
+  .config-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .config-modal-content {
+    position: relative;
+    background: #212c4d;
+    border: 1px solid #2b3a66;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+    z-index: 10001;
+  }
+
+  .config-modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #2b3a66;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .config-modal-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .config-modal-close {
+    background: none;
+    border: none;
+    color: #bfc9da;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .config-modal-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .config-modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #2b3a66;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .config-modal-submit {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .config-modal-cancel {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Food Recommendations Modal Specific Styles */
+  #foodRecommendationsModal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10000 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #foodRecommendationsModal.show {
+    display: flex !important;
+  }
+
+  #foodRecommendationsModal .config-modal-content {
+    position: relative !important;
+    z-index: 10001 !important;
+    background: #212c4d !important;
+    border: 1px solid #2b3a66 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4) !important;
+    max-width: 600px !important;
+    width: 90% !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    animation: modalSlideIn 0.3s ease-out !important;
+  }
+
+  /* Recommendations Modal Content Styles */
+  .recommendations-body {
+    padding: 20px;
+  }
+
+  .food-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #2b3a66;
+  }
+
+  .food-detail-info h3 {
+    color: #ffffff;
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .food-detail-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .detail-category {
+    background: #4a9eff;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .detail-created {
+    color: #9fb8ff;
+    font-size: 0.9rem;
+  }
+
+  .food-detail-status {
+    text-align: right;
+  }
+
+  .detail-status-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .detail-status-badge.safe {
+    background: #28a745;
+    color: #ffffff;
+  }
+
+  .detail-status-badge.at-risk {
+    background: #ffc107;
+    color: #000000;
+  }
+
+  .detail-status-badge.spoiled {
+    background: #dc3545;
+    color: #ffffff;
+  }
+
+  .detail-risk-score {
+    color: #9fb8ff;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .recommendations-content {
+    margin-top: 20px;
+  }
+
+  .recommendations-section h4 {
+    color: #ffffff;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #2a3658;
+    border: 1px solid #3a4a6b;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .recommendation-item:hover {
+    background: #2f3d63;
+    border-color: #4a5a7b;
+    transform: translateY(-1px);
+  }
+
+  .recommendation-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .recommendation-content {
+    flex: 1;
+  }
+
+  .recommendation-title {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .recommendation-text {
+    color: #e0e6f6;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .sensor-details-section {
+    margin-top: 24px;
+  }
+
+  .sensor-details-section h4 {
+    color: #ffffff;
+    margin: 20px 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .sensor-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .sensor-detail-item {
+    background: #2a3658;
+    border: 1px solid #3a4a6b;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .sensor-detail-label {
+    color: #9fb8ff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .sensor-detail-value {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .sensor-detail-status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .sensor-detail-status.good {
+    background: #28a745;
+    color: #ffffff;
+  }
+
+  .sensor-detail-status.warning {
+    background: #ffc107;
+    color: #000000;
+  }
+
+  .sensor-detail-status.danger {
+    background: #dc3545;
+    color: #ffffff;
+  }
+
+  /* Responsive adjustments for recommendations modal */
+  @media (max-width: 768px) {
+    #foodRecommendationsModal .config-modal-content {
+      width: 95% !important;
+      max-width: 95% !important;
+      margin: 20px;
+    }
+
+    .food-detail-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .food-detail-status {
+      text-align: left;
+    }
+
+    .sensor-details-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Additional floating improvements */
+  #foodRecommendationsModal {
+    backdrop-filter: blur(4px);
+  }
+
+  #foodRecommendationsModal .config-modal-content {
+    transform: translateY(0);
+    transition: all 0.3s ease-out;
+  }
+
+  #foodRecommendationsModal.show .config-modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  /* Ensure modal is always on top */
+  #foodRecommendationsModal {
+    z-index: 10000 !important;
+  }
+
+  #foodRecommendationsModal .config-modal-content {
+    z-index: 10001 !important;
+  }
+
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+  }
+
+  /* Enhanced backdrop */
+  #foodRecommendationsModal .config-modal-backdrop {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+  }
+
   .modal-system.show {
     display: flex;
   }
@@ -2855,6 +3253,10 @@
       if (element) {
         element.addEventListener('click', function() {
           recommendationsModal.style.display = 'none';
+          recommendationsModal.classList.remove('show');
+          
+          // Re-enable body scroll when modal is closed
+          document.body.classList.remove('modal-open');
         });
       }
     });
@@ -3018,8 +3420,12 @@
       sensorGrid.appendChild(item);
     });
 
-    // Show modal
+    // Show modal with proper floating positioning
     modal.style.display = 'flex';
+    modal.classList.add('show');
+    
+    // Prevent body scroll when modal is open
+    document.body.classList.add('modal-open');
   }
 
   // Function to update latest scan result
@@ -3040,7 +3446,7 @@
       categoryBadge.textContent = scanData.category || 'Unknown';
       categoryBadge.className = `scan-category-badge ${(scanData.category || '').toLowerCase()}`;
     }
-    if (createdDate) createdDate.textContent = scanData.created || new Date().toLocaleDateString();
+    if (createdDate) createdDate.textContent = scanData.created || formatPhilippineDate(new Date());
 
     // Update status
     const statusBadge = scanResultCard.querySelector('.scan-status-badge');
@@ -3077,6 +3483,47 @@
 
   // Make updateLatestScanResult globally available
   window.updateLatestScanResult = updateLatestScanResult;
+
+  // Format date to Philippine time
+  function formatPhilippineDate(date) {
+    if (!date) return new Date().toLocaleDateString('en-PH');
+    
+    // Convert to Philippine time (UTC+8)
+    const phDate = new Date(date);
+    const phTime = new Date(phDate.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for PH time
+    
+    return phTime.toLocaleDateString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Manila'
+    });
+  }
+
+  // Test function for recommendations modal
+  window.testRecommendationsModal = function() {
+    console.log('🧪 Testing recommendations modal...');
+    const modal = document.getElementById('foodRecommendationsModal');
+    if (!modal) {
+      console.error('❌ Modal not found');
+      return;
+    }
+    
+    console.log('✅ Modal found, showing...');
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+    
+    // Auto close after 3 seconds for testing
+    setTimeout(() => {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      console.log('✅ Modal test completed');
+    }, 3000);
+  };
 
   // Alert functionality
   document.addEventListener('DOMContentLoaded', function() {
@@ -3405,7 +3852,7 @@
             priority: item.PRIORITY || item.priority || item.priority_level || 'Low',
             status: item.STATUS || item.status || item.feedback_status || 'Active',
             rating: finalRating,
-            date: item.created_at || item.date || item.submission_date || new Date().toLocaleDateString(),
+            date: item.created_at || item.date || item.submission_date || formatPhilippineDate(new Date()),
             // Admin response fields - try multiple variations
             admin_notes: item.admin_notes || item.adminNotes || item['ADMIN NOTES'] || '',
             response_text: item.response_text || item.responseText || item['RESPONSE TEXT'] || ''
@@ -3498,7 +3945,7 @@
         priority: item.priority || 'Low',
         status: item.status || 'Active',
         rating: parseInt(item.rating) || 0,
-        date: item.date || new Date().toLocaleDateString()
+        date: item.date || formatPhilippineDate(new Date())
       };
       
       return `
@@ -3559,7 +4006,7 @@
         priority: item.priority || 'Low',
         status: item.status || 'Active',
         rating: parseInt(item.rating) || 0,
-        date: item.date || new Date().toLocaleDateString()
+        date: item.date || formatPhilippineDate(new Date())
       };
       
       return `
