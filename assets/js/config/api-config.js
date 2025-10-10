@@ -6,7 +6,7 @@ const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/i.test(HOSTNAME) || /^(10\.|192
 
 const API_CONFIG = {
     // Always use Render backend in all environments (no localhost)
-    BASE_URL: RENDER_BASE,
+    BASE_URL: 'https://safebite-server-zh2r.onrender.com',
     
     // API Endpoints
     ENDPOINTS: {
