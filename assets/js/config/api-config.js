@@ -90,6 +90,14 @@ const API_CONFIG = {
                     const fullUrl = `${API_CONFIG.BASE_URL}${input}`;
                     return originalFetch(fullUrl, init);
                 }
+                // Rewrite absolute calls pointing to current origin + /api/... to BASE_URL
+                if (typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'))) {
+                    const currentOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+                    if (currentOrigin && input.startsWith(`${currentOrigin}/api/`) && API_CONFIG.BASE_URL !== currentOrigin) {
+                        const rewritten = input.replace(currentOrigin, API_CONFIG.BASE_URL);
+                        return originalFetch(rewritten, init);
+                    }
+                }
                 // If input is a Request object with relative "/api/" URL
                 if (input && typeof Request !== 'undefined' && input instanceof Request) {
                     const url = input.url || '';
