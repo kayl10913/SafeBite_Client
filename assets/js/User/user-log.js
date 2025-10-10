@@ -84,7 +84,7 @@ window.initUserLogPage = function() {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('sessionToken');
         localStorage.removeItem('sessionExpires');
-        window.location.href = '/login';
+        window.location.href = '/pages/Login.html';
         return false;
       }
     }

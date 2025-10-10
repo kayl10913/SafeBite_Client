@@ -1057,7 +1057,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast(`Welcome back, ${data.user.full_name || data.user.first_name}! Redirecting to User Dashboard...`, 'success');
                 
                 setTimeout(() => {
-                    window.location.href = '/user-dashboard'; // Use Express route
+                    // Redirect to static dashboard page on Hostinger
+                    window.location.href = '/pages/User-Dashboard.html';
                 }, 1000);
             } else {
                 // Show backend error message if present

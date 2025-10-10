@@ -12,19 +12,19 @@ const Navigation = {
                 url = '/';
                 break;
             case 'login':
-                url = '/login';
+                url = '/pages/Login.html';
                 break;
             case 'admin-login':
-                url = '/admin-login';
+                url = '/pages/Admin-Login.html';
                 break;
             case 'user-dashboard':
-                url = '/user-dashboard';
+                url = '/pages/User-Dashboard.html';
                 break;
             case 'admin-dashboard':
-                url = '/admin-dashboard';
+                url = '/pages/ad-dashboard.html';
                 break;
             case 'signup':
-                url = '/login'; // Signup is handled within login page
+                url = '/pages/Login.html'; // Signup is handled within login page
                 break;
             default:
                 url = '/';
@@ -68,9 +68,9 @@ const Navigation = {
             case 'admin-login':
                 return currentPath === '/admin-login';
             case 'user-dashboard':
-                return currentPath === '/user-dashboard';
+                return currentPath.endsWith('/pages/User-Dashboard.html');
             case 'admin-dashboard':
-                return currentPath === '/admin-dashboard';
+                return currentPath.endsWith('/pages/ad-dashboard.html');
             default:
                 return false;
         }
@@ -82,8 +82,8 @@ const Navigation = {
         if (currentPath === '/') return 'home';
         if (currentPath === '/login') return 'login';
         if (currentPath === '/admin-login') return 'admin-login';
-        if (currentPath === '/user-dashboard') return 'user-dashboard';
-        if (currentPath === '/admin-dashboard') return 'admin-dashboard';
+        if (currentPath.endsWith('/pages/User-Dashboard.html')) return 'user-dashboard';
+        if (currentPath.endsWith('/pages/ad-dashboard.html')) return 'admin-dashboard';
         return 'unknown';
     },
     

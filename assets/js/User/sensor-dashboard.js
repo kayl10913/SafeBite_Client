@@ -524,7 +524,7 @@ class SensorDashboard {
                            localStorage.getItem('session_token');
       if (!sessionToken) {
         console.error('No session token found - redirecting to login');
-        window.location.href = '/login';
+        window.location.href = '/pages/Login.html';
         return;
       }
       
@@ -539,7 +539,7 @@ class SensorDashboard {
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication required - user not logged in');
-          window.location.href = '/login';
+          window.location.href = '/pages/Login.html';
         }
         // Do not blank UI on transient errors
         return;
@@ -2508,7 +2508,7 @@ class SensorDashboard {
                            localStorage.getItem('session_token');
       if (!sessionToken) {
         console.error('No session token found - redirecting to login');
-        window.location.href = '/login';
+        window.location.href = '/pages/Login.html';
         return;
       }
       

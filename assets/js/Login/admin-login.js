@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('About to redirect to ad-dashboard.html');
                 setTimeout(() => {
                     console.log('Executing redirect to ad-dashboard.html');
-                    window.location.href = '/admin-dashboard'; // Use Express route
+                    window.location.href = '/pages/ad-dashboard.html';
                 }, 1000);
             } else {
                 showToast(data.error || 'Admin login failed. Please check credentials and try again.', 'error');

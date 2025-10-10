@@ -153,7 +153,7 @@ function fetchDashboardStats() {
   if (!jwtToken) {
     console.error('No JWT token found. Please log in again.');
     // Redirect to admin login if no token
-    window.location.href = '/admin-login';
+    window.location.href = '/pages/Admin-Login.html';
     return;
   }
   
@@ -168,7 +168,7 @@ function fetchDashboardStats() {
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication failed. Redirecting to login...');
-          window.location.href = '/admin-login';
+          window.location.href = '/pages/Admin-Login.html';
           return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);

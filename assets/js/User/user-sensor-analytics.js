@@ -32,7 +32,7 @@ class UserSensorAnalytics {
             
             if (!sessionToken) {
                 console.error('No session token found - redirecting to login');
-                window.location.href = '/login';
+                window.location.href = '/pages/Login.html';
                 return;
             }
 
@@ -46,7 +46,7 @@ class UserSensorAnalytics {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Authentication required - user not logged in');
-                    window.location.href = '/login';
+                    window.location.href = '/pages/Login.html';
                     return;
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
