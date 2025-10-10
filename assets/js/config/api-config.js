@@ -5,8 +5,8 @@ const HOSTNAME = (typeof window !== 'undefined' && window.location && window.loc
 const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/i.test(HOSTNAME) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(HOSTNAME);
 
 const API_CONFIG = {
-    // In production or any non-local network host, route API to Render backend
-    BASE_URL: IS_LOCALHOST ? DEFAULT_BASE : RENDER_BASE,
+    // Always use Render backend in all environments (no localhost)
+    BASE_URL: RENDER_BASE,
     
     // API Endpoints
     ENDPOINTS: {
