@@ -369,7 +369,8 @@ window.initUserLogPage = function() {
       const base = window.buildApiUrl('/api/users/logs');
       apiUrl = `${base}?${apiParams.toString()}`;
     } else {
-      apiUrl = `http://localhost:3000/api/users/logs?${apiParams.toString()}`;
+      // Fallback to production backend when central builder is unavailable
+      apiUrl = `https://safebite-server-zh2r.onrender.com/api/users/logs?${apiParams.toString()}`;
     }
     console.log('API URL:', apiUrl);
     

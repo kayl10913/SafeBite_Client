@@ -1,8 +1,11 @@
 // API Configuration for SafeBite Node.js Backend
-console.log('API config loading...');
+const DEFAULT_BASE = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000';
+const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
+const HOSTNAME = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
+
 const API_CONFIG = {
-    // Base API URL - change this if your server runs on a different port
-    BASE_URL: (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000',
+    // If site is on safebiteph.com, point to Render backend; otherwise use current origin
+    BASE_URL: (HOSTNAME && /safebiteph\.com$/i.test(HOSTNAME)) ? RENDER_BASE : DEFAULT_BASE,
     
     // API Endpoints
     ENDPOINTS: {
@@ -319,10 +322,7 @@ const AdminAPI = {
         }
         // All Time: no date parameters needed
         
-        console.log('🔍 Most Used Sensor API params:', params.toString());
-        console.log('🔍 Date range type:', dateRangeType);
-        console.log('🔍 Start date:', startDate);
-        console.log('🔍 End date:', endDate);
+        // debug logs removed
         
         const response = await makeApiRequest(`${API_CONFIG.ENDPOINTS.ADMIN.REPORTS.MOST_USED_SENSOR}?${params}`);
         return response;
@@ -360,16 +360,10 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { API_CONFIG, makeApiRequest, Auth, AdminAPI, SensorAPI, buildApiUrl };
 } else {
     // Browser environment
-    console.log('Setting up API objects in window...');
     window.API_CONFIG = API_CONFIG;
     window.makeApiRequest = makeApiRequest;
     window.Auth = Auth;
     window.AdminAPI = AdminAPI;
     window.SensorAPI = SensorAPI;
     window.buildApiUrl = buildApiUrl;
-    console.log('API objects set up:', {
-        API_CONFIG: !!window.API_CONFIG,
-        Auth: !!window.Auth,
-        AdminAPI: !!window.AdminAPI
-    });
 }
