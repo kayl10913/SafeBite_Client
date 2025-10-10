@@ -1,5 +1,4 @@
 // API Configuration for SafeBite Node.js Backend
-const DEFAULT_BASE = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000';
 const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
 const HOSTNAME = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
 const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/i.test(HOSTNAME) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(HOSTNAME);
