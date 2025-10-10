@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!sessionToken) {
             // Redirect to login if no token is found
-            window.location.href = '/login';
+            window.location.href = '/pages/Login.html';
             return;
         }
         
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Redirect to login page after a short delay
                 setTimeout(() => {
-                    window.location.href = '/login';
+                    window.location.href = '/pages/Login.html';
                 }, 1500);
             })
             .catch(error => {
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showLogoutMessage();
                 
                 setTimeout(() => {
-                    window.location.href = '/login';
+                    window.location.href = '/pages/Login.html';
                 }, 1500);
             });
         } else {
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showLogoutMessage();
             
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/pages/Login.html';
             }, 1500);
         }
     }
