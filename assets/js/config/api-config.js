@@ -2,10 +2,11 @@
 const DEFAULT_BASE = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000';
 const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
 const HOSTNAME = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
+const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/i.test(HOSTNAME) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(HOSTNAME);
 
 const API_CONFIG = {
-    // If site is on safebiteph.com, point to Render backend; otherwise use current origin
-    BASE_URL: (HOSTNAME && /safebiteph\.com$/i.test(HOSTNAME)) ? RENDER_BASE : DEFAULT_BASE,
+    // In production or any non-local network host, route API to Render backend
+    BASE_URL: IS_LOCALHOST ? DEFAULT_BASE : RENDER_BASE,
     
     // API Endpoints
     ENDPOINTS: {
@@ -78,6 +79,35 @@ const API_CONFIG = {
         }
     }
 };
+
+// Intercept fetch to route relative "/api/..." calls to the correct BASE_URL in production
+(() => {
+    if (typeof window !== 'undefined' && typeof window.fetch === 'function' && !window.__safebiteFetchPatched) {
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+            try {
+                // Only rewrite when input is a string and starts with "/api/"
+                if (typeof input === 'string' && input.startsWith('/api/')) {
+                    const fullUrl = `${API_CONFIG.BASE_URL}${input}`;
+                    return originalFetch(fullUrl, init);
+                }
+                // If input is a Request object with relative "/api/" URL
+                if (input && typeof Request !== 'undefined' && input instanceof Request) {
+                    const url = input.url || '';
+                    // Relative Request URLs in browsers are resolved to absolute using current origin,
+                    // so detect if it points to current origin + /api/ and rewrite to BASE_URL
+                    const currentOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+                    if (currentOrigin && url.startsWith(`${currentOrigin}/api/`) && API_CONFIG.BASE_URL !== currentOrigin) {
+                        const rewritten = url.replace(currentOrigin, API_CONFIG.BASE_URL);
+                        return originalFetch(rewritten, init);
+                    }
+                }
+            } catch (_) {}
+            return originalFetch(input, init);
+        };
+        window.__safebiteFetchPatched = true;
+    }
+})();
 
 // Helper function to build full API URL
 function buildApiUrl(endpoint) {
