@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Real signup process with Node.js backend
-    async function performSignup({ firstName, lastName, email, password, contactNumber, testerTypeId, recaptchaToken }) {
+    async function performSignup({ firstName, lastName, email, password, confirmPassword, contactNumber, testerTypeId, recaptchaToken }) {
         try {
             console.log('Attempting signup to Node.js API...');
             
@@ -1089,11 +1089,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 username: email || (firstName + lastName).toLowerCase(),
                 email: email,
                 password: password,
-                confirm_password: password, // mirror to satisfy backend requirement
+                confirm_password: confirmPassword || password,
                 contact_number: contactNumber || null,
                 tester_type_id: testerTypeId ? parseInt(testerTypeId, 10) : null,
                 recaptcha_token: recaptchaToken
             };
+            console.log('Signup payload to backend:', userData);
             
             // Use the Auth helper from api-config.js
             const data = await Auth.register(userData);
