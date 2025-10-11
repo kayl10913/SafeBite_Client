@@ -1,0 +1,32 @@
+# SafeBite Error Page Configuration for Hostinger
+
+# Custom Error Pages
+ErrorDocument 400 /pages/400.html
+ErrorDocument 401 /pages/401.html
+ErrorDocument 403 /pages/403.html
+ErrorDocument 404 /pages/404.html
+ErrorDocument 500 /pages/500.html
+
+# Enable URL Rewriting
+RewriteEngine On
+
+# Handle SPA routing - redirect all non-file requests to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/pages/
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !^/css/
+RewriteCond %{REQUEST_URI} !^/js/
+RewriteCond %{REQUEST_URI} !^/images/
+RewriteRule ^(.*)$ /index.html [L]
+
+# Security headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+
+# Cache static assets
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+</FilesMatch>

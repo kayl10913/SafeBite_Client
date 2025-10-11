@@ -3,6 +3,9 @@ const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
 const HOSTNAME = 'https://safebite-server-zh2r.onrender.com';
 const IS_LOCALHOST = 'https://safebite-server-zh2r.onrender.com';
 
+// Import error handler for Hostinger + Render setup
+// This will be loaded before this file in your HTML
+
 const API_CONFIG = {
     // Always use Render backend in all environments (no localhost)
     BASE_URL: 'https://safebite-server-zh2r.onrender.com',
@@ -159,12 +162,24 @@ async function makeApiRequest(endpoint, options = {}) {
         }
         
         if (!response.ok) {
+            // Use error handler for Hostinger + Render setup
+            if (window.SafeBiteErrorHandler) {
+                window.SafeBiteErrorHandler.handleApiError(response, data.error || data.message);
+                return null; // Don't throw, error handler will redirect
+            }
             throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
         }
         
         return data;
     } catch (error) {
         console.error('API Request Error:', error);
+        
+        // Use error handler for network errors
+        if (window.SafeBiteErrorHandler && !error.status) {
+            window.SafeBiteErrorHandler.handleSafeBiteError(error, 'API Request');
+            return null;
+        }
+        
         throw error;
     }
 }
