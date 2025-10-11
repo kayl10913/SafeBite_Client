@@ -20,22 +20,22 @@ class SafeBiteErrorHandler {
 
         switch (status) {
             case 400:
-                errorPage = '/pages/400.html';
+                errorPage = 'pages/400.html';
                 break;
             case 401:
-                errorPage = '/pages/401.html';
+                errorPage = 'pages/401.html';
                 break;
             case 403:
-                errorPage = '/pages/403.html';
+                errorPage = 'pages/403.html';
                 break;
             case 404:
-                errorPage = '/pages/404.html';
+                errorPage = 'pages/404.html';
                 break;
             case 500:
-                errorPage = '/pages/500.html';
+                errorPage = 'pages/500.html';
                 break;
             default:
-                errorPage = '/pages/500.html';
+                errorPage = 'pages/500.html';
         }
 
         // Log the error for debugging
@@ -77,7 +77,7 @@ class SafeBiteErrorHandler {
         } catch (error) {
             console.error('Network error:', error);
             // Redirect to 500 error page for network issues
-            window.location.href = '/pages/500.html';
+            window.location.href = 'pages/500.html';
             return null;
         }
     }
@@ -92,7 +92,7 @@ class SafeBiteErrorHandler {
             this.handleApiError({ status: error.status });
         } else {
             // Unknown error - redirect to 500 page
-            window.location.href = '/pages/500.html';
+            window.location.href = 'pages/500.html';
         }
     }
 
@@ -113,7 +113,7 @@ class SafeBiteErrorHandler {
             console.error('JavaScript error:', event.error);
             // Only redirect to error page for critical errors
             if (event.error && event.error.name === 'TypeError') {
-                window.location.href = '/pages/500.html';
+                window.location.href = 'pages/500.html';
             }
         });
     }

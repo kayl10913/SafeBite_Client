@@ -500,9 +500,9 @@
         </div>
       </footer>
 
-    <!-- Load API config (buildApiUrl, interceptor) before page script -->
+    <!-- Load error handler first, then API config, then page script -->
+    <script src="assets/js/config/error-handler.js"></script>
     <script src="assets/js/config/api-config.js"></script>
     <script src="assets/js/Pages/index.js"></script>
-    <script src="assets/js/config/error-handler.js"></script>
 </body>
 </html>

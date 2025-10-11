@@ -490,10 +490,9 @@
         </div>
     </div>
 
-    <!-- Load API configuration first -->
+    <!-- Load error handler first, then API config, then login script -->
+    <script src="../assets/js/config/error-handler.js"></script>
     <script src="../assets/js/config/api-config.js"></script>
-    <script src="assets/js/config/error-handler.js"></script>
-    <!-- Load login script after API config -->
     <script src="../assets/js/Login/login.js"></script>
     
 </body>
