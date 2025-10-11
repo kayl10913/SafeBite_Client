@@ -1,4 +1,4 @@
-# SafeBite Error Page Configuration for Hostinger
+# SafeBite Clean URL Configuration for Hostinger
 
 # Custom Error Pages
 ErrorDocument 400 /pages/400.html
@@ -10,6 +10,19 @@ ErrorDocument 500 /pages/500.html
 # Enable URL Rewriting
 RewriteEngine On
 
+# Clean URL Routes for SafeBite Pages
+RewriteRule ^login/?$ /pages/Login.html [L]
+RewriteRule ^admin/?$ /pages/Admin-Login.html [L]
+RewriteRule ^dashboard/?$ /pages/User-Dashboard.html [L]
+RewriteRule ^admin-dashboard/?$ /pages/ad-dashboard.html [L]
+
+# Error page clean URLs
+RewriteRule ^error/400/?$ /pages/400.html [L]
+RewriteRule ^error/401/?$ /pages/401.html [L]
+RewriteRule ^error/403/?$ /pages/403.html [L]
+RewriteRule ^error/404/?$ /pages/404.html [L]
+RewriteRule ^error/500/?$ /pages/500.html [L]
+
 # Handle SPA routing - redirect all non-file requests to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -18,6 +31,11 @@ RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !^/css/
 RewriteCond %{REQUEST_URI} !^/js/
 RewriteCond %{REQUEST_URI} !^/images/
+RewriteCond %{REQUEST_URI} !^/login
+RewriteCond %{REQUEST_URI} !^/admin
+RewriteCond %{REQUEST_URI} !^/dashboard
+RewriteCond %{REQUEST_URI} !^/admin-dashboard
+RewriteCond %{REQUEST_URI} !^/error/
 RewriteRule ^(.*)$ /index.html [L]
 
 # Security headers
