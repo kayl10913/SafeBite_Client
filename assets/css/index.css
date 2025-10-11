@@ -189,6 +189,10 @@ body {
     transform: translateX(0);
 }
 
+.developers.section .content.animate {
+    transform: scale(1);
+}
+
 .contact.section .content.animate {
     transform: translateY(0);
 }
@@ -204,6 +208,10 @@ body {
 
 .testimonials.section .content {
     transform: translateX(50px);
+}
+
+.developers.section .content {
+    transform: scale(0.8);
 }
 
 /* Enhanced scroll snapping styles */
@@ -234,6 +242,10 @@ body {
 }
 
 .testimonials.section {
+    background: linear-gradient(135deg, rgba(0, 58, 107, 0.7) 0%, rgba(27, 88, 134, 0.7) 50%, rgba(55, 118, 161, 0.7) 100%);
+}
+
+.developers.section {
     background: linear-gradient(135deg, rgba(0, 58, 107, 0.7) 0%, rgba(27, 88, 134, 0.7) 50%, rgba(55, 118, 161, 0.7) 100%);
 }
 
@@ -1003,6 +1015,103 @@ body {
 }
 
 /* Testimonials Section */
+.developers {
+    padding: 8rem 0;
+    background: linear-gradient(135deg, rgba(0, 58, 107, 0.7) 0%, rgba(27, 88, 134, 0.7) 50%, rgba(55, 118, 161, 0.7) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.developers-content {
+    position: relative;
+    z-index: 2;
+}
+
+.developers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.developer-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.developer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(110, 177, 214, 0.1) 0%, rgba(89, 207, 241, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.developer-card:hover::before {
+    opacity: 1;
+}
+
+.developer-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: rgba(110, 177, 214, 0.3);
+}
+
+.developer-image {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 1.5rem;
+}
+
+.dev-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.developer-card:hover .dev-photo {
+    border-color: rgba(110, 177, 214, 0.6);
+    transform: scale(1.05);
+}
+
+.developer-info {
+    position: relative;
+    z-index: 2;
+}
+
+.developer-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.developer-title {
+    font-size: 1rem;
+    color: #6EB1D6;
+    font-weight: 500;
+    margin: 0;
+}
+
 .testimonials {
     padding: 8rem 0;
     background: linear-gradient(135deg, rgba(0, 58, 107, 0.7) 0%, rgba(27, 88, 134, 0.7) 50%, rgba(55, 118, 161, 0.7) 100%);
@@ -1918,34 +2027,39 @@ body {
     }
 
     .about {
-        padding: 4rem 0;
+        padding: 2rem 0;
     }
 
     .about-content {
         grid-template-columns: 1fr;
         text-align: center;
-        gap: 1.5rem;
+        gap: 1rem;
     }
 
     .about-description {
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        line-height: 1.6;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
     }
 
     .about-features {
-        margin-top: 1rem;
+        margin-top: 0.75rem;
     }
 
     .about-feature {
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
-        gap: 0.75rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+        gap: 0.5rem;
     }
 
     .about-feature i {
-        font-size: 1rem;
-        width: 16px;
+        font-size: 0.9rem;
+        width: 14px;
+    }
+
+    .system-image {
+        max-width: 80%;
+        height: auto;
     }
 
     .section-title {
@@ -1962,6 +2076,28 @@ body {
         grid-template-columns: 1fr 1fr;
         gap: 0.75rem;
         max-width: 100%;
+    }
+
+    .developers-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .developer-card {
+        padding: 1.5rem;
+    }
+
+    .dev-photo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .developer-name {
+        font-size: 1.1rem;
+    }
+
+    .developer-title {
+        font-size: 0.9rem;
     }
 
     .feature-card {
@@ -2060,6 +2196,63 @@ body {
     .features-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+    }
+
+    .developers-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .developer-card {
+        padding: 2rem;
+    }
+
+    .dev-photo {
+        width: 150px;
+        height: 150px;
+    }
+
+    .developer-name {
+        font-size: 1.25rem;
+    }
+
+    .developer-title {
+        font-size: 1rem;
+    }
+
+    /* Pyramid layout for mobile: Kyle at top center, Kian and Mark below */
+    .developers-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .developers-grid .developer-card:nth-child(1) {
+        order: 2; /* Kian goes to position 2 (bottom left) */
+    }
+
+    .developers-grid .developer-card:nth-child(2) {
+        order: 1; /* Kyle goes to position 1 (top center) */
+    }
+
+    .developers-grid .developer-card:nth-child(3) {
+        order: 3; /* Mark goes to position 3 (bottom right) */
+    }
+
+    /* Create pyramid bottom row with Kian and Mark side by side - same size as Kyle */
+    .developers-grid .developer-card:nth-child(1),
+    .developers-grid .developer-card:nth-child(3) {
+        display: inline-block;
+        width: 100%;
+        max-width: 300px;
+        margin: 0;
+    }
+
+    /* Ensure all cards have the same size */
+    .developers-grid .developer-card {
+        width: 100%;
+        max-width: 300px;
     }
 
     .feature-card {
@@ -2177,6 +2370,28 @@ body {
         gap: 0.5rem;
     }
 
+    .developers-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .developer-card {
+        padding: 1rem;
+    }
+
+    .dev-photo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .developer-name {
+        font-size: 1rem;
+    }
+
+    .developer-title {
+        font-size: 0.8rem;
+    }
+
     .feature-card {
         padding: 0.6rem;
         border-radius: 8px;
@@ -2205,31 +2420,36 @@ body {
     }
 
     .about {
-        padding: 3rem 0;
+        padding: 1.5rem 0;
     }
 
     .about-content {
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .about-description {
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
     }
 
     .about-features {
-        margin-top: 0.75rem;
+        margin-top: 0.5rem;
     }
 
     .about-feature {
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-        gap: 0.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+        gap: 0.4rem;
     }
 
     .about-feature i {
-        font-size: 0.9rem;
-        width: 14px;
+        font-size: 0.85rem;
+        width: 12px;
+    }
+
+    .system-image {
+        max-width: 70%;
+        height: auto;
     }
 
     .contact-content {
@@ -2564,6 +2784,28 @@ body {
         gap: 0.3rem;
     }
 
+    .developers-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.3rem;
+    }
+
+    .developer-card {
+        padding: 0.8rem;
+    }
+
+    .dev-photo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .developer-name {
+        font-size: 0.9rem;
+    }
+
+    .developer-title {
+        font-size: 0.7rem;
+    }
+
     .feature-card {
         padding: 0.4rem;
         border-radius: 4px;
@@ -2593,31 +2835,36 @@ body {
     }
 
     .about {
-        padding: 2.5rem 0;
+        padding: 1rem 0;
     }
 
     .about-content {
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
     .about-description {
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
     }
 
     .about-features {
-        margin-top: 0.5rem;
+        margin-top: 0.4rem;
     }
 
     .about-feature {
-        font-size: 0.8rem;
-        margin-bottom: 0.4rem;
-        gap: 0.4rem;
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+        gap: 0.3rem;
     }
 
     .about-feature i {
-        font-size: 0.85rem;
-        width: 12px;
+        font-size: 0.8rem;
+        width: 10px;
+    }
+
+    .system-image {
+        max-width: 60%;
+        height: auto;
     }
 
     .contact-content {
