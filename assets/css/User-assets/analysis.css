@@ -652,6 +652,57 @@
     min-width: 0;
     max-width: 98vw;
     width: 100%;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .analysis-card-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+  
+  .analysis-form-row {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .analysis-form-group {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .analysis-form-group label {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .analysis-form-group input,
+  .analysis-form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    box-sizing: border-box;
+    border: 1px solid #4a7ba7;
+    background: #1a4d80;
+    color: #ffffff;
+  }
+  
+  .analysis-form-group input:focus,
+  .analysis-form-group select:focus {
+    outline: none;
+    border-color: #4a7ba7;
+    box-shadow: 0 0 0 2px rgba(74, 123, 250, 0.2);
   }
 }
 
@@ -669,14 +720,68 @@
     gap: 20px;
   }
   .analysis-card {
-    padding: 10px 2px;
+    padding: 12px;
     min-height: 0;
-    border-radius: 14px;
+    border-radius: 12px;
+    margin-bottom: 16px;
   }
+  
+  .analysis-input-card {
+    padding: 12px;
+    min-height: 0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .analysis-card-title {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
   .analysis-form-row {
-    flex-direction: column;
-    gap: 12px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
   }
+  
+  .analysis-form-group {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .analysis-form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .analysis-form-group input,
+  .analysis-form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    box-sizing: border-box;
+    border: 1px solid #4a7ba7;
+    background: #1a4d80;
+    color: #ffffff;
+  }
+  
+  .analysis-form-group input:focus,
+  .analysis-form-group select:focus {
+    outline: none;
+    border-color: #4a7ba7;
+    box-shadow: 0 0 0 2px rgba(74, 123, 250, 0.2);
+  }
+  
   .analysis-btn {
     height: 48px;
     font-size: 1.05rem;
