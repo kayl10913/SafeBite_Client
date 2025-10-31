@@ -297,6 +297,26 @@
                 </div>
               </div>
             </div>
+            
+            <!-- User Confirm Modal (for clearing history etc.) -->
+            <div id="userConfirmModal" class="modal" style="display:none;">
+              <div class="modal-content" style="max-width:460px;">
+                <div class="modal-header" style="padding: 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 8px 8px 0 0;">
+                  <div class="modal-title" style="display:flex;align-items:center;gap:10px;">
+                    <i class="bi bi-exclamation-triangle" style="color:#ffc107;"></i>
+                    <h3 id="userConfirmTitle" style="margin:0;">Confirm</h3>
+                  </div>
+                  <button type="button" class="modal-close" aria-label="Close" onclick="(function(){document.getElementById('userConfirmModal').style.display='none';})();">&times;</button>
+                </div>
+                <div class="modal-body" style="padding:24px;">
+                  <p id="userConfirmMessage" style="margin:0;">Are you sure?</p>
+                </div>
+                <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding: 16px 24px 24px;">
+                  <button id="userConfirmNo" class="btn btn-secondary">No</button>
+                  <button id="userConfirmYes" class="btn btn-primary">Yes</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -844,6 +864,8 @@
 <!-- Food Selected Confirmation with Smart Training -->
 <div class="food-selected-confirmation" id="foodSelectedConfirmation">
   <div class="food-selected-card" id="food-selected-card">
+    <button type="button" class="modal-close" id="closeFoodSelected" aria-label="Close"
+      onclick="document.getElementById('foodSelectedConfirmation').style.display='none'">&times;</button>
     <h2>🧠 Smart Training Ready</h2>
     <div class="food-selected-info">
       <p id="selectedFoodInfo">Salmon Fillet from Seafood category ready</p>

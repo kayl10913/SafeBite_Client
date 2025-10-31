@@ -1547,12 +1547,47 @@ class FoodSelection {
       return;
     }
 
-    const confirmed = confirm('Clear all food scanning history? This cannot be undone.');
-    if (!confirmed) return;
+    this.showUserConfirmModal('Confirm', 'Clear all food scanning history? This cannot be undone.')
+      .then((confirmed) => {
+        if (!confirmed) return;
 
-    this.foodHistory = [];
-    this.saveFoodHistory();
-    this.renderFoodHistory();
+        this.foodHistory = [];
+        this.saveFoodHistory();
+        this.renderFoodHistory();
+      });
+  }
+
+  // Lightweight confirm modal for user actions (e.g., clearing history)
+  showUserConfirmModal(title, message) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('userConfirmModal');
+      const titleEl = document.getElementById('userConfirmTitle');
+      const msgEl = document.getElementById('userConfirmMessage');
+      const yesBtn = document.getElementById('userConfirmYes');
+      const noBtn = document.getElementById('userConfirmNo');
+
+      if (!modal || !titleEl || !msgEl || !yesBtn || !noBtn) {
+        // Fallback to native confirm if modal not present
+        resolve(window.confirm(message || 'Are you sure?'));
+        return;
+      }
+
+      // Use innerText for title and innerText for message content
+      titleEl.innerText = title || 'Confirm';
+      // allow simple text; HTML icons are already in the header
+      msgEl.innerText = message || 'Are you sure?';
+
+      const cleanup = () => {
+        yesBtn.onclick = null;
+        noBtn.onclick = null;
+        modal.style.display = 'none';
+      };
+
+      noBtn.onclick = () => { cleanup(); resolve(false); };
+      yesBtn.onclick = () => { cleanup(); resolve(true); };
+
+      modal.style.display = 'block';
+    });
   }
 
   // Check and update any "scanned" items that might have analysis results available

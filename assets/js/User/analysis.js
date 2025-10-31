@@ -314,10 +314,26 @@ window.initAnalysisPage = function() {
         const a = data.analysis;
         const risk = a.riskLevel || 'Unknown';
         const color = risk === 'High' ? '#dc3545' : (risk === 'Medium' ? '#ffc107' : '#28a745');
-        const score = typeof a.riskScore !== 'undefined' ? ` (Score: ${a.riskScore})` : '';
+        const score = '';
         const shelf = a.estimatedShelfLifeHours ? `${a.estimatedShelfLifeHours}h` : '—';
         const factors = Array.isArray(a.keyFactors) ? a.keyFactors.map(f=>`<li>${escapeHtml(String(f))}</li>`).join('') : '';
-        const recs = Array.isArray(a.recommendations) ? a.recommendations.map(f=>`<li>${escapeHtml(String(f))}</li>`).join('') : '';
+        // Normalize recommendations from either array or { main, details[] }
+        let recMainText = '';
+        let recItems = [];
+        if (Array.isArray(a.recommendations)) {
+          recItems = a.recommendations;
+        } else if (a.recommendations && typeof a.recommendations === 'object') {
+          if (a.recommendations.main) recMainText = String(a.recommendations.main);
+          if (Array.isArray(a.recommendations.details)) {
+            recItems = a.recommendations.details;
+          } else if (a.recommendations.details && typeof a.recommendations.details === 'object') {
+            // Support object of key->text
+            recItems = Object.values(a.recommendations.details);
+          } else if (a.recommendations.items && Array.isArray(a.recommendations.items)) {
+            recItems = a.recommendations.items;
+          }
+        }
+        const recs = recItems.filter(Boolean).map(f=>`<li>${escapeHtml(String(f))}</li>`).join('');
         resultsOutput.innerHTML = `
           <div style="font-size:1.3rem;font-weight:700;">Spoilage Risk: <span style="color:${color}">${escapeHtml(risk)}</span>${score}</div>
           <div>Food: <b>${escapeHtml(foodTypeName || '')}</b></div>
@@ -330,6 +346,7 @@ window.initAnalysisPage = function() {
             </div>
             <div style="flex:1;">
               <div style="font-weight:700;margin-bottom:6px;">Recommendations</div>
+              ${recMainText ? `<div style="margin:0 0 6px 0;">${escapeHtml(recMainText)}</div>` : ''}
               <ul style="padding-left:18px; margin:0;">${recs}</ul>
             </div>
           </div>
