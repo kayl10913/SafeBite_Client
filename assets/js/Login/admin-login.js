@@ -370,6 +370,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
+    // Forgot password link handler
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showToast('Please contact support to reset admin password.', 'info');
+        });
+    }
+
     // Keyboard shortcuts (only for login form on admin page)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
