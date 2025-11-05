@@ -1,6 +1,120 @@
 // js/spa.js
 // Handles Single-Page Application content loading
 
+// Utility function to auto-format JSON in textarea fields with AI fallback
+async function autoFormatJSONField(textarea) {
+  try {
+    const value = textarea.value.trim();
+    if (!value) return; // Empty, no need to format
+    
+    // Try to parse and re-stringify with formatting
+    const parsed = JSON.parse(value);
+    const formatted = JSON.stringify(parsed, null, 2);
+    
+    // Only update if different to avoid unnecessary cursor movement
+    if (textarea.value !== formatted) {
+      textarea.value = formatted;
+      
+      // Visual feedback - green border for success
+      textarea.style.borderColor = '#4CAF50';
+      textarea.style.transition = 'border-color 0.3s ease';
+      setTimeout(() => {
+        textarea.style.borderColor = '';
+      }, 500);
+    }
+  } catch (error) {
+    // Invalid JSON - try AI formatting
+    console.warn('Invalid JSON detected, using AI to format:', error.message);
+    
+    // Show loading state
+    textarea.style.borderColor = '#2196F3';
+    textarea.style.transition = 'border-color 0.3s ease';
+    const originalValue = textarea.value;
+    textarea.placeholder = '🤖 AI is formatting your text...';
+    
+    try {
+      // Get current sensor data from form if available
+      const currentData = {
+        temperature: document.getElementById('updateTemperature')?.value || document.getElementById('mlTemperature')?.value,
+        humidity: document.getElementById('updateHumidity')?.value || document.getElementById('mlHumidity')?.value,
+        gas_level: document.getElementById('updatePh')?.value || document.getElementById('mlPh')?.value,
+        food_name: document.getElementById('updateFoodName')?.value || document.getElementById('mlFoodName')?.value,
+        actual_status: document.getElementById('updateActualStatus')?.value || document.getElementById('mlActualStatus')?.value
+      };
+      
+      // Call AI formatting endpoint
+      const response = await fetch('/api/ml-training/format-env-factors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
+        },
+        body: JSON.stringify({ 
+          text: originalValue,
+          currentData: currentData 
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.json) {
+        // AI successfully formatted the text
+        textarea.value = result.json;
+        textarea.style.borderColor = '#4CAF50';
+        
+        // Show success message
+        if (!result.wasAlreadyJson) {
+          showToastNotification('✨ AI formatted your text into JSON!', 'success');
+        }
+        
+        setTimeout(() => {
+          textarea.style.borderColor = '';
+        }, 1000);
+      } else {
+        throw new Error(result.message || 'AI formatting failed');
+      }
+    } catch (aiError) {
+      console.error('AI formatting error:', aiError);
+      // Restore original value and show error
+      textarea.value = originalValue;
+      textarea.style.borderColor = '#ff9800';
+      textarea.placeholder = 'Enter valid JSON or plain text (AI will format it)';
+      
+      showToastNotification('⚠️ Could not format text. Try simpler input or valid JSON.', 'warning');
+      
+      setTimeout(() => {
+        textarea.style.borderColor = '';
+      }, 1500);
+    }
+  }
+}
+
+// Toast notification helper (global)
+window.showToastNotification = function(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : '#2196F3'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10001;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideInRight 0.3s ease;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+};
+
 function showDashboard() {
   const mainContent = document.getElementById('main-content');
   const template = document.getElementById('dashboard-template');
@@ -464,6 +578,26 @@ function openMlTrainingModal() {
   const mlTrainingDataModal = document.getElementById('mlTrainingDataModal');
   if (mlTrainingDataModal) {
     mlTrainingDataModal.style.display = 'block';
+    
+    // Setup auto-format for environmental factors field
+    const mlEnvFactors = document.getElementById('mlEnvironmentalFactors');
+    if (mlEnvFactors && !mlEnvFactors.dataset.autoFormatInitialized) {
+      // Format on blur (when user leaves the field)
+      mlEnvFactors.addEventListener('blur', function() {
+        autoFormatJSONField(this);
+      });
+      
+      // Format on Ctrl+Enter or Cmd+Enter
+      mlEnvFactors.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          autoFormatJSONField(this);
+        }
+      });
+      
+      mlEnvFactors.dataset.autoFormatInitialized = 'true';
+    }
+    
     // Focus on first input
     const firstInput = document.getElementById('mlFoodName');
     if (firstInput) {
@@ -647,6 +781,15 @@ function updateTrainingData() {
       updateActualStatus && updateSource && updateDataQuality && updateEnvironmentalFactors && updateTrainingDataBtn) {
     
     console.log('📝 Using main modal form data');
+    
+    // Get environmental factors - use new value if entered, otherwise use original data
+    let envFactorsValue = updateEnvironmentalFactors.value.trim();
+    if (!envFactorsValue && updateEnvironmentalFactors.dataset.originalJson) {
+      // If user didn't enter new text, use the original stored data
+      envFactorsValue = updateEnvironmentalFactors.dataset.originalJson;
+      console.log('📦 Using original environmental factors data (user did not modify)');
+    }
+    
     formData = {
       foodName: updateFoodName.value,
       category: updateCategory.value,
@@ -656,7 +799,7 @@ function updateTrainingData() {
       actualStatus: updateActualStatus.value,
       source: updateSource.value,
       dataQuality: parseInt(updateDataQuality.value),
-      environmentalFactors: updateEnvironmentalFactors.value
+      environmentalFactors: envFactorsValue
     };
     trainingId = updateTrainingDataBtn.getAttribute('data-training-id');
   } else {
@@ -676,6 +819,14 @@ function updateTrainingData() {
     if (tempFoodName && tempCategory && tempTemperature && tempHumidity && tempPh && 
         tempActualStatus && tempSource && tempDataQuality && tempEnvironmentalFactors && tempSaveBtn) {
       
+      // Get environmental factors - use new value if entered, otherwise use original data
+      let tempEnvFactorsValue = tempEnvironmentalFactors.value.trim();
+      if (!tempEnvFactorsValue && tempEnvironmentalFactors.dataset.originalJson) {
+        // If user didn't enter new text, use the original stored data
+        tempEnvFactorsValue = tempEnvironmentalFactors.dataset.originalJson;
+        console.log('📦 Using original environmental factors data (user did not modify)');
+      }
+      
       formData = {
         foodName: tempFoodName.value,
         category: tempCategory.value,
@@ -685,7 +836,7 @@ function updateTrainingData() {
         actualStatus: tempActualStatus.value,
         source: tempSource.value,
         dataQuality: parseInt(tempDataQuality.value),
-        environmentalFactors: tempEnvironmentalFactors.value
+        environmentalFactors: tempEnvFactorsValue
       };
       trainingId = tempSaveBtn.getAttribute('data-training-id');
     }

@@ -567,24 +567,125 @@ body.modal-open {
 .modal-info .modal-icon { color: #4a9eff; }
 
 /* Edit Account Modal Styles */
+#editAccountModal {
+  display: none;
+}
+
+#editAccountModal.show {
+  display: flex !important;
+}
+
+#editAccountModal .config-modal-content {
+  max-width: 550px;
+  width: 90%;
+  max-height: 90vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
 #editAccountModal .edit-account-modal { 
   background:#1b2540; 
   border:1px solid #26345c; 
   color:#e6ecff; 
-  box-shadow:0 20px 50px rgba(0,0,0,0.4); 
+  box-shadow:0 20px 50px rgba(0,0,0,0.4);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: visible;
+  position: relative;
 }
+
 #editAccountModal .config-modal-header { 
-  border-bottom:1px solid #26345c; 
+  border-bottom:1px solid #26345c;
+  padding: 24px 24px 20px;
+  text-align:center;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
 }
+
+#editAccountModal .config-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #bfc9da !important;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+#editAccountModal .config-modal-close:hover { 
+  color:#ffffff !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 #editAccountModal .edit-account-avatar { 
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   background:linear-gradient(135deg,#4a9eff 0%,#7bb3ff 100%); 
-  box-shadow:0 6px 18px rgba(74,158,255,0.35); 
+  box-shadow:0 6px 18px rgba(74,158,255,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
 }
+
 #editAccountModal .config-modal-title { 
-  color:#ffffff; 
+  color:#ffffff;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  display: block;
+}
+
+#editAccountModal .config-modal-form {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(90vh - 200px);
+}
+
+#editAccountModal .edit-account-section {
+  margin-bottom: 0;
 }
 
 /* Inputs */
+#editAccountModal .config-modal-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#editAccountModal .config-modal-group label {
+  color: #cfe0ff !important;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#editAccountModal .config-modal-group label i {
+  color: #4a9eff;
+  font-size: 16px;
+}
+
 #editAccountModal input[type="text"],
 #editAccountModal input[type="email"],
 #editAccountModal input[type="tel"],
@@ -595,110 +696,264 @@ body.modal-open {
   border:1px solid #31426f !important;
   color:#e6ecff !important;
   border-radius:10px !important;
-  padding:12px 12px !important;
+  padding:12px 14px !important;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
+
+#editAccountModal input[type="password"] {
+  padding-right: 42px !important;
+}
+
 #editAccountModal input::placeholder { 
   color:#9fb0d6; 
   opacity:0.85; 
 }
+
 #editAccountModal input:focus,
 #editAccountModal select:focus {
   outline:none;
   border-color:#4a9eff !important;
   box-shadow:0 0 0 3px rgba(74,158,255,0.2);
+  background: #252f4e !important;
 }
 
-/* Field labels */
-#editAccountModal label { 
-  color:#cfe0ff !important; 
-}
 #editAccountModal .config-modal-row { 
-  margin-bottom:16px; 
+  margin-bottom: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
+
+#editAccountModal .config-modal-row:last-of-type {
+  margin-bottom: 0;
+}
+
+#editAccountModal .config-modal-row .config-modal-group {
+  flex: 1;
+}
+
 #editAccountModal .edit-account-divider { 
-  border-top:1px solid #26345c !important; 
+  border-top:1px solid #26345c !important;
+  margin-top: 24px;
+  padding-top: 24px;
+  display: block;
+}
+
+#editAccountModal .edit-account-divider h3 {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 18px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#editAccountModal .edit-account-divider h3::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(135deg, #4a9eff 0%, #7bb3ff 100%);
+  border-radius: 2px;
 }
 
 /* Tester type display pill */
 #editAccountModal #editTesterTypeDisplay { 
-  display:flex; 
-  align-items:center; 
-  min-height:44px; 
-}
-#editAccountModal #editTesterTypeText { 
-  color:#d9e6ff; 
-  font-weight:500; 
+  display:flex !important; 
+  align-items:center !important; 
+  min-height: 44px;
+  padding: 12px 14px !important;
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
-/* Buttons */
-#editAccountModal .config-modal-footer { 
-  border-top:1px solid #26345c; 
+#editAccountModal #editTesterTypeText { 
+  color:#d9e6ff !important; 
+  font-weight:500;
+  font-size: 14px;
+  width: 100%;
 }
+
+/* Password toggle button */
+#editAccountModal .config-modal-group > div {
+  position: relative;
+}
+
+#editAccountModal .password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9fb0d6 !important;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+#editAccountModal .password-toggle:hover { 
+  color:#cfe0ff !important;
+}
+
+#editAccountModal .password-toggle i {
+  font-size: 16px;
+}
+
+/* Footer buttons */
+#editAccountModal .config-modal-footer { 
+  border-top:1px solid #26345c;
+  padding: 20px 24px;
+  display: flex !important;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  background: #1b2540;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  margin-top: auto;
+  position: relative;
+  z-index: 10;
+}
+
 #editAccountModal .config-modal-cancel { 
   background:#202b4a !important; 
   border:1px solid #31426f !important; 
   color:#e6ecff !important; 
-  border-radius:10px; 
-  transition:all .15s ease; 
+  border-radius:10px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:all .15s ease;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+  justify-content: center;
 }
+
 #editAccountModal .config-modal-cancel:hover { 
   filter:brightness(1.08); 
-  border-color:#3b4f84 !important; 
+  border-color:#3b4f84 !important;
 }
+
+#editAccountModal .config-modal-cancel:focus {
+  outline: 2px solid #4a9eff;
+  outline-offset: 2px;
+}
+
+#editAccountModal .config-modal-cancel:active {
+  transform: scale(0.98);
+}
+
 #editAccountModal .config-modal-submit { 
   background:linear-gradient(135deg,#4a9eff 0%, #3f8de6 100%) !important; 
   border:none !important; 
   color:#fff !important; 
-  border-radius:10px; 
+  border-radius:10px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
   box-shadow:0 10px 20px rgba(74,158,255,0.25); 
-  transition:transform .05s ease, box-shadow .15s ease; 
+  transition:transform .05s ease, box-shadow .15s ease;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+  justify-content: center;
 }
+
 #editAccountModal .config-modal-submit:hover { 
   transform:translateY(-1px); 
   box-shadow:0 12px 22px rgba(74,158,255,0.32); 
 }
+
 #editAccountModal .config-modal-submit:active { 
   transform:translateY(0); 
   box-shadow:0 8px 18px rgba(74,158,255,0.22); 
 }
 
-/* Password toggle button */
-#editAccountModal .password-toggle { 
-  color:#9fb0d6 !important; 
-}
-#editAccountModal .password-toggle:hover { 
-  color:#cfe0ff !important; 
+#editAccountModal .config-modal-submit:focus {
+  outline: 2px solid #7bb3ff;
+  outline-offset: 2px;
 }
 
-/* Close button */
-#editAccountModal .config-modal-close { 
-  color:#bfc9da !important; 
+#editAccountModal .config-modal-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
-#editAccountModal .config-modal-close:hover { 
-  color:#ffffff !important; 
+
+#editAccountModal .config-modal-submit i {
+  font-size: 16px;
 }
 
 /* Hide scrollbars visually but keep scrolling enabled in Edit Account modal */
-  #editAccountModal .config-modal-content,
-  #editAccountModal .edit-account-modal { 
-    overflow-y: auto !important; 
-    -ms-overflow-style: none; /* IE/Edge */
-    scrollbar-width: none;    /* Firefox - fallback for older browsers */
+#editAccountModal .config-modal-form { 
+  overflow-y: auto !important; 
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: #31426f #1b2540;
+}
+
+#editAccountModal .config-modal-form::-webkit-scrollbar { 
+  width: 6px; 
+}
+
+#editAccountModal .config-modal-form::-webkit-scrollbar-track {
+  background: #1b2540;
+  border-radius: 3px;
+}
+
+#editAccountModal .config-modal-form::-webkit-scrollbar-thumb {
+  background: #31426f;
+  border-radius: 3px;
+}
+
+#editAccountModal .config-modal-form::-webkit-scrollbar-thumb:hover {
+  background: #3b4f84;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  #editAccountModal .config-modal-content {
+    width: 95%;
+    max-height: 95vh;
   }
-#editAccountModal .config-modal-content::-webkit-scrollbar,
-#editAccountModal .edit-account-modal::-webkit-scrollbar { 
-  width: 0; 
-  height: 0; 
-}
-#editAccountModal .config-modal-header { 
-  text-align:center; 
-  display:flex; 
-  flex-direction: column; 
-  align-items: center;
-}
-#editAccountModal .config-modal-title { 
-  display:block; 
-  margin-top:8px; 
+  
+  #editAccountModal .config-modal-form {
+    padding: 20px;
+  }
+  
+  #editAccountModal .config-modal-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  #editAccountModal .config-modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  #editAccountModal .config-modal-cancel,
+  #editAccountModal .config-modal-submit {
+    width: 100%;
+    justify-content: center;
+    min-width: auto;
+  }
+  
+  #editAccountModal .config-modal-footer {
+    padding: 16px 20px;
+  }
 }
 
 /* Battery Status Styles */

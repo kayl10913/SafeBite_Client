@@ -317,30 +317,30 @@
               <h4 class="update-modal-section-title">
                 <span>📊</span> Status & Quality
               </h4>
-              <div class="update-modal-form-row">
+              <div class="update-modal-form-row-three">
                 <div class="update-modal-form-group">
                   <label for="updateActualStatus" class="update-modal-label">Actual Status</label>
                   <select id="updateActualStatus" name="actualStatus" required class="update-modal-select">
                     <option value="">Select status</option>
-                    <option value="safe" class="update-modal-option safe">✅ Safe</option>
-                    <option value="caution" class="update-modal-option caution">⚠️ Caution</option>
-                    <option value="unsafe" class="update-modal-option unsafe">❌ Unsafe</option>
+                    <option value="safe" class="update-modal-option safe">Safe</option>
+                    <option value="caution" class="update-modal-option caution">Caution</option>
+                    <option value="unsafe" class="update-modal-option unsafe">Unsafe</option>
                   </select>
+                </div>
+                <div class="update-modal-form-group">
+                  <label for="updateDataQuality" class="update-modal-label">Data Quality (%)</label>
+                  <input type="number" id="updateDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
                 </div>
                 <div class="update-modal-form-group">
                   <label for="updateSource" class="update-modal-label">Data Source</label>
                   <select id="updateSource" name="source" required class="update-modal-select">
                     <option value="">Select source</option>
-                    <option value="manual" class="update-modal-option">👤 Manual</option>
-                    <option value="sensor" class="update-modal-option">📡 Sensor</option>
-                    <option value="user_feedback" class="update-modal-option">💬 User Feedback</option>
-                    <option value="expert" class="update-modal-option">🎓 Expert</option>
+                    <option value="manual" class="update-modal-option">Manual</option>
+                    <option value="sensor" class="update-modal-option">Sensor</option>
+                    <option value="user_feedback" class="update-modal-option">User Feedback</option>
+                    <option value="expert" class="update-modal-option">Expert</option>
                   </select>
                 </div>
-              </div>
-              <div class="update-modal-form-group">
-                <label for="updateDataQuality" class="update-modal-label">Data Quality (%)</label>
-                <input type="number" id="updateDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
               </div>
             </div>
             
@@ -350,7 +350,7 @@
                 <span>🌍</span> Environmental Factors
               </h4>
               <div class="update-modal-form-group">
-                <label for="updateEnvironmentalFactors" class="update-modal-label">Additional Environmental Data (JSON)</label>
+                <label for="updateEnvironmentalFactors" class="update-modal-label">Additional Environmental Data</label>
                 <textarea id="updateEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' class="update-modal-textarea" rows="3"></textarea>
               </div>
             </div>
@@ -1714,30 +1714,30 @@
           <h4 class="update-modal-section-title">
             <span>📋</span> Status & Quality
           </h4>
-          <div class="update-modal-form-row">
+          <div class="update-modal-form-row-three">
             <div class="update-modal-form-group">
               <label for="mlActualStatus" class="update-modal-label">Actual Status</label>
               <select id="mlActualStatus" name="actualStatus" required class="update-modal-select">
                 <option value="" class="update-modal-option">Select status</option>
-                <option value="safe" class="update-modal-option safe">✅ Safe</option>
-                <option value="caution" class="update-modal-option caution">⚠️ Caution</option>
-                <option value="unsafe" class="update-modal-option unsafe">❌ Unsafe</option>
+                <option value="safe" class="update-modal-option safe">Safe</option>
+                <option value="caution" class="update-modal-option caution">Caution</option>
+                <option value="unsafe" class="update-modal-option unsafe">Unsafe</option>
               </select>
+            </div>
+            <div class="update-modal-form-group">
+              <label for="mlDataQuality" class="update-modal-label">Data Quality (%)</label>
+              <input type="number" id="mlDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
             </div>
             <div class="update-modal-form-group">
               <label for="mlSource" class="update-modal-label">Data Source</label>
               <select id="mlSource" name="source" required class="update-modal-select">
                 <option value="" class="update-modal-option">Select source</option>
-                <option value="manual" class="update-modal-option">✋ Manual</option>
-                <option value="sensor" class="update-modal-option">📡 Sensor</option>
-                <option value="user_feedback" class="update-modal-option">💬 User Feedback</option>
-                <option value="expert" class="update-modal-option">🎓 Expert</option>
+                <option value="manual" class="update-modal-option">Manual</option>
+                <option value="sensor" class="update-modal-option">Sensor</option>
+                <option value="user_feedback" class="update-modal-option">User Feedback</option>
+                <option value="expert" class="update-modal-option">Expert</option>
               </select>
             </div>
-          </div>
-          <div class="update-modal-form-group">
-            <label for="mlDataQuality" class="update-modal-label">Data Quality (%)</label>
-            <input type="number" id="mlDataQuality" name="dataQuality" placeholder="95" min="0" max="100" step="1" required class="update-modal-input">
           </div>
         </div>
         
@@ -1747,7 +1747,7 @@
             <span>🌍</span> Environmental Factors
           </h4>
           <div class="update-modal-form-group">
-            <label for="mlEnvironmentalFactors" class="update-modal-label">Additional Environmental Data (JSON)</label>
+            <label for="mlEnvironmentalFactors" class="update-modal-label">Additional Environmental Data </label>
             <textarea id="mlEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' rows="3" class="update-modal-textarea"></textarea>
           </div>
         </div>

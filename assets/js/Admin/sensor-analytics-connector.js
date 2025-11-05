@@ -1422,8 +1422,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (dataQualityInput) dataQualityInput.value = Math.round((trainingData.quality_score || 0) * 100);
                 if (environmentalFactorsInput) {
                     const envFactors = trainingData.environmental_factors;
+                    const debugDiv = document.getElementById('envFactorsDebug');
+                    
+                    console.log('📊 Loading Environmental Factors:', envFactors);
+                    console.log('📊 Training Data Object:', trainingData);
+                    
                     if (envFactors) {
-                        environmentalFactorsInput.value = typeof envFactors === 'string' ? envFactors : JSON.stringify(envFactors, null, 2);
+                        let envValue = typeof envFactors === 'string' ? envFactors : JSON.stringify(envFactors, null, 2);
+                        
+                        console.log('📝 Environmental Factors Value:', envValue);
+                        console.log('📝 Value Length:', envValue.length);
+                        
+                        // Only filter out EXACT placeholder match (all 3 fields with exact values)
+                        const isExactPlaceholder = envValue === '{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' ||
+                                                  (envValue.includes('"notes": "Additional observations"') && 
+                                                   envValue.includes('"location": "Storage area"') && 
+                                                   envValue.includes('"conditions": "Normal"') &&
+                                                   !envValue.includes('gas_emission_analysis') &&
+                                                   !envValue.includes('storage_location'));
+                        
+                        if (!isExactPlaceholder) {
+                            // Don't load JSON into textarea - keep it empty for plain text input
+                            environmentalFactorsInput.value = '';
+                            environmentalFactorsInput.placeholder = '💡 Describe the food condition:\n\nExamples:\n• "Fresh appearance, no visible damage"\n• "Slight browning on edges"\n• "Strong odor detected"\n• "Soft texture, minor discoloration"\n\n✨ AI will analyze and generate detailed recommendations for optimal food handling.';
+                            
+                            console.log('✅ Showing current data in card view');
+                            if (debugDiv) {
+                                debugDiv.textContent = `✅ Loaded ${envValue.length} characters of environmental data`;
+                                debugDiv.style.color = '#4CAF50';
+                            }
+                            
+                            // Display user-friendly version (but keep original data stored)
+                            this.displayUserFriendlyEnvFactors(envValue, environmentalFactorsInput);
+                        } else {
+                            environmentalFactorsInput.value = '';
+                            environmentalFactorsInput.placeholder = '💡 Describe the food condition:\n\nExamples:\n• "Fresh appearance, no visible damage"\n• "Slight browning on edges"\n• "Strong odor detected"\n• "Soft texture, minor discoloration"\n\n✨ AI will analyze and generate detailed recommendations for optimal food handling.';
+                            console.log('🔄 Filtered out placeholder, showing empty field');
+                            if (debugDiv) {
+                                debugDiv.textContent = '⚠️ Old placeholder data was cleared. Please enter new data.';
+                                debugDiv.style.color = '#ff9800';
+                            }
+                        }
+                    } else {
+                        console.log('ℹ️ No environmental factors data');
+                        console.warn('⚠️ WARNING: environmental_factors is null/undefined in training data!');
+                        if (debugDiv) {
+                            debugDiv.textContent = 'ℹ️ No environmental factors data found for this entry.';
+                            debugDiv.style.color = '#888';
+                        }
+                    }
+                    
+                    // Add auto-format listeners to environmental factors field
+                    // Remove previous listeners if any
+                    const newEnvInput = environmentalFactorsInput.cloneNode(true);
+                    environmentalFactorsInput.parentNode.replaceChild(newEnvInput, environmentalFactorsInput);
+                    
+                    // Format on blur (when user leaves the field)
+                    newEnvInput.addEventListener('blur', () => {
+                        this.autoFormatJSON(newEnvInput);
+                    });
+                    
+                    // Format on Ctrl+Enter or Cmd+Enter
+                    newEnvInput.addEventListener('keydown', (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            this.autoFormatJSON(newEnvInput);
+                        }
+                    });
+                    
+                    // Auto-format initial value if present and not empty
+                    if (newEnvInput.value.trim()) {
+                        setTimeout(() => {
+                            this.autoFormatJSON(newEnvInput);
+                        }, 100);
                     }
                 }
                 
@@ -1556,7 +1627,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </h4>
                             <div class="update-modal-form-group">
                                 <label class="update-modal-label">Additional Environmental Data (JSON)</label>
-                                <textarea id="tempEnvironmentalFactors" name="environmentalFactors" placeholder='{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' class="update-modal-textarea" rows="3">${trainingData.environmental_factors ? (typeof trainingData.environmental_factors === 'string' ? trainingData.environmental_factors : JSON.stringify(trainingData.environmental_factors, null, 2)) : ''}</textarea>
+                                <textarea id="tempEnvironmentalFactors" name="environmentalFactors" placeholder='Type plain text or JSON (AI will format it automatically)' class="update-modal-textarea" rows="3">${trainingData.environmental_factors ? (typeof trainingData.environmental_factors === 'string' ? trainingData.environmental_factors : JSON.stringify(trainingData.environmental_factors, null, 2)) : ''}</textarea>
                             </div>
                         </div>
                     </form>
@@ -1591,6 +1662,47 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('tempUpdateModal').remove();
                     }
                 };
+                
+                // Auto-format JSON in Environmental Factors textarea
+                const envFactorsTextarea = document.getElementById('tempEnvironmentalFactors');
+                if (envFactorsTextarea) {
+                    console.log('📊 Temp Modal Environmental Factors:', envFactorsTextarea.value);
+                    
+                    // Check if it's placeholder text and clear it
+                    const isExactPlaceholder = envFactorsTextarea.value === '{"notes": "Additional observations", "location": "Storage area", "conditions": "Normal"}' ||
+                                              (envFactorsTextarea.value.includes('"notes": "Additional observations"') && 
+                                               envFactorsTextarea.value.includes('"location": "Storage area"') && 
+                                               envFactorsTextarea.value.includes('"conditions": "Normal"') &&
+                                               !envFactorsTextarea.value.includes('gas_emission_analysis') &&
+                                               !envFactorsTextarea.value.includes('storage_location'));
+                    
+                    if (isExactPlaceholder) {
+                        console.log('🔄 Clearing placeholder from temp modal');
+                        envFactorsTextarea.value = '';
+                    } else {
+                        console.log('✅ Showing current data in temp modal');
+                    }
+                    
+                    // Format on blur (when user leaves the field)
+                    envFactorsTextarea.addEventListener('blur', function() {
+                        this.autoFormatJSON(envFactorsTextarea);
+                    }.bind(this));
+                    
+                    // Format on Ctrl+Enter or Cmd+Enter
+                    envFactorsTextarea.addEventListener('keydown', function(e) {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            this.autoFormatJSON(envFactorsTextarea);
+                        }
+                    }.bind(this));
+                    
+                    // Auto-format initial value if present and not empty
+                    if (envFactorsTextarea.value.trim()) {
+                        setTimeout(() => {
+                            this.autoFormatJSON(envFactorsTextarea);
+                        }, 100);
+                    }
+                }
                 
             },
             saveTemporaryModal(trainingId) {
@@ -1656,6 +1768,299 @@ document.addEventListener('DOMContentLoaded', function() {
                     saveBtn.disabled = false;
                     saveBtn.textContent = 'Update Training Data';
                 });
+            },
+            
+            // Display environmental factors in user-friendly format
+            displayUserFriendlyEnvFactors(jsonString, textareaElement) {
+                try {
+                    const data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+                    const cardsContainer = document.getElementById('envFactorsCards');
+                    const displayDiv = document.getElementById('envFactorsDisplay');
+                    const editorDiv = document.getElementById('envFactorsEditor');
+                    const toggleBtn = document.getElementById('toggleEnvView');
+                    
+                    if (!cardsContainer || !displayDiv || !editorDiv) return;
+                    
+                    // Store original JSON for when switching back to editor
+                    if (textareaElement) {
+                        textareaElement.dataset.originalJson = jsonString;
+                    }
+                    
+                    // Build user-friendly cards
+                    let html = '';
+                    
+                    // AI Analysis Summary Card (if AI-generated)
+                    if (data.ai_analysis || data.confidence !== undefined) {
+                        const confidencePercent = data.confidence || 0;
+                        const confidenceColor = confidencePercent >= 70 ? '#4CAF50' : confidencePercent >= 40 ? '#FF9800' : '#f44336';
+                        html += `
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 14px; border-radius: 6px; margin-bottom: 10px; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="font-weight: bold; font-size: 15px; margin-bottom: 8px;">🤖 AI Analysis</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 13px; opacity: 0.9;">Confidence Level</div>
+                                        <div style="font-size: 20px; font-weight: bold;">${confidencePercent}%</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 13px; opacity: 0.9;">Status</div>
+                                        <div style="font-size: 16px; font-weight: bold; text-transform: uppercase;">${data.provided_status || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Storage Conditions Card (with sensor readings)
+                    if (data.storage_conditions) {
+                        const sc = data.storage_conditions;
+                        const timestamp = sc.timestamp ? new Date(sc.timestamp).toLocaleString() : 'N/A';
+                        html += `
+                            <div style="background: white; padding: 14px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 10px; font-size: 14px;">📊 Storage Conditions</div>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                    <div style="background: #fff3e0; padding: 10px; border-radius: 4px; border-left: 3px solid #FF9800;">
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">🌡️ Temperature</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.temperature !== undefined ? sc.temperature + '°C' : 'N/A'}</div>
+                                    </div>
+                                    <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; border-left: 3px solid #2196F3;">
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">💧 Humidity</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.humidity !== undefined ? Math.round(sc.humidity) + '%' : 'N/A'}</div>
+                                    </div>
+                                    <div style="background: #f3e5f5; padding: 10px; border-radius: 4px; border-left: 3px solid #9C27B0;">
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">🧪 Gas Level</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.gas_level !== undefined ? sc.gas_level + ' ppm' : 'N/A'}</div>
+                                    </div>
+                                    <div style="background: #fce4ec; padding: 10px; border-radius: 4px; border-left: 3px solid #E91E63;">
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">⏰ Timestamp</div>
+                                        <div style="font-size: 11px; font-weight: 600; color: #333;">${timestamp}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Storage Location Card
+                    if (data.storage_location) {
+                        html += `
+                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #4CAF50;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">📦 Storage Location</div>
+                                <div style="color: #666;">${data.storage_location}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Observations/Notes Card
+                    if (data.observations || data.notes) {
+                        html += `
+                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #2196F3;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">📝 Observations</div>
+                                <div style="color: #666;">${data.observations || data.notes}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Condition Card
+                    if (data.condition || data.conditions) {
+                        html += `
+                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #FF9800;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">🔍 Condition</div>
+                                <div style="color: #666;">${data.condition || data.conditions}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Food Item Card
+                    if (data.food_item) {
+                        html += `
+                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #9C27B0;">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">🍎 Food Item</div>
+                                <div style="color: #666;">${data.food_item}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Gas Emission Analysis Card (if present)
+                    if (data.gas_emission_analysis) {
+                        const gas = data.gas_emission_analysis;
+                        const riskLevel = (gas.risk_level || 'unknown').toLowerCase();
+                        const riskColor = riskLevel === 'low' ? '#4CAF50' : riskLevel === 'medium' ? '#FF9800' : '#f44336';
+                        const riskBg = riskLevel === 'low' ? '#e8f5e9' : riskLevel === 'medium' ? '#fff3e0' : '#ffebee';
+                        const riskIcon = riskLevel === 'low' ? '✅' : riskLevel === 'medium' ? '⚠️' : '❌';
+                        const statusIcon = (gas.status || '').toLowerCase() === 'safe' ? '🟢' : '🔴';
+                        
+                        html += `
+                            <div style="background: ${riskBg}; padding: 14px; border-radius: 6px; margin-bottom: 10px; border: 2px solid ${riskColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                <div style="font-weight: bold; color: #333; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                    <span>🔬</span> Gas Emission Analysis
+                                </div>
+                                <div style="display: grid; gap: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 4px;">
+                                        <div>
+                                            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 2px;">Risk Level</div>
+                                            <div style="font-size: 16px; font-weight: bold; color: ${riskColor}; text-transform: uppercase;">${riskIcon} ${gas.risk_level || 'N/A'}</div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 2px;">Status</div>
+                                            <div style="font-size: 16px; font-weight: bold; color: #333;">${statusIcon} ${gas.status || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                    ${gas.probability !== undefined ? `
+                                        <div style="background: white; padding: 10px; border-radius: 4px;">
+                                            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 6px;">Probability</div>
+                                            <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div style="background: ${riskColor}; height: 100%; width: ${gas.probability}%; transition: width 0.3s;"></div>
+                                            </div>
+                                            <div style="font-size: 12px; font-weight: 600; color: #333; margin-top: 4px;">${gas.probability}%</div>
+                                        </div>
+                                    ` : ''}
+                                    ${gas.recommendation ? `
+                                        <div style="background: white; padding: 10px; border-radius: 4px; border-left: 3px solid ${riskColor};">
+                                            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">💡 Recommendation</div>
+                                            <div style="font-size: 12px; color: #444; line-height: 1.5;">${gas.recommendation}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // If no common fields, show a generic card
+                    if (!html) {
+                        const entries = Object.entries(data).filter(([key]) => key !== 'gas_emission_analysis' && key !== 'provided_status' && key !== 'gas_emission_override');
+                        if (entries.length > 0) {
+                            html += `<div style="background: white; padding: 12px; border-radius: 4px; border-left: 4px solid #607D8B;">`;
+                            entries.forEach(([key, value]) => {
+                                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                const displayValue = typeof value === 'object' ? JSON.stringify(value) : value;
+                                html += `<div style="margin-bottom: 6px;"><strong>${displayKey}:</strong> ${displayValue}</div>`;
+                            });
+                            html += `</div>`;
+                        }
+                    }
+                    
+                    cardsContainer.innerHTML = html || '<div style="color: #888; text-align: center; padding: 20px;">No environmental data to display</div>';
+                    
+                    // Show user-friendly view by default
+                    displayDiv.style.display = 'block';
+                    editorDiv.style.display = 'none';
+                    
+                    // Toggle button functionality
+                    if (toggleBtn) {
+                        toggleBtn.onclick = () => {
+                            if (displayDiv.style.display === 'none') {
+                                displayDiv.style.display = 'block';
+                                editorDiv.style.display = 'none';
+                                toggleBtn.textContent = 'Switch to JSON';
+                            } else {
+                                displayDiv.style.display = 'none';
+                                editorDiv.style.display = 'block';
+                                toggleBtn.textContent = 'Switch to Cards';
+                                
+                                // Clear textarea for fresh plain text input
+                                if (textareaElement) {
+                                    textareaElement.value = '';
+                                    textareaElement.placeholder = '💡 Describe the food condition:\n\nExamples:\n• "Fresh appearance, no visible damage"\n• "Slight browning on edges"\n• "Strong odor detected"\n• "Soft texture, minor discoloration"\n\n✨ AI will analyze and generate detailed recommendations for optimal food handling.';
+                                    textareaElement.focus();
+                                }
+                            }
+                        };
+                    }
+                    
+                    // Edit button functionality
+                    const editBtn = document.getElementById('editEnvFactors');
+                    if (editBtn) {
+                        editBtn.onclick = () => {
+                            displayDiv.style.display = 'none';
+                            editorDiv.style.display = 'block';
+                            toggleBtn.textContent = 'Switch to Cards';
+                            
+                            // Clear textarea for fresh plain text input
+                            if (textareaElement) {
+                                textareaElement.value = '';
+                                textareaElement.placeholder = '💡 Describe the food condition:\n\nExamples:\n• "Fresh appearance, no visible damage"\n• "Slight browning on edges"\n• "Strong odor detected"\n• "Soft texture, minor discoloration"\n\n✨ AI will analyze and generate detailed recommendations for optimal food handling.';
+                                textareaElement.focus();
+                            }
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error displaying user-friendly env factors:', error);
+                }
+            },
+            
+            // Auto-format JSON in textarea with AI fallback
+            async autoFormatJSON(textarea) {
+                try {
+                    const value = textarea.value.trim();
+                    if (!value) return; // Empty, no need to format
+                    
+                    // Try to parse and re-stringify with formatting
+                    const parsed = JSON.parse(value);
+                    const formatted = JSON.stringify(parsed, null, 2);
+                    
+                    // Only update if different to avoid unnecessary cursor movement
+                    if (textarea.value !== formatted) {
+                        textarea.value = formatted;
+                        
+                        // Visual feedback
+                        textarea.style.borderColor = '#4CAF50';
+                        setTimeout(() => {
+                            textarea.style.borderColor = '';
+                        }, 500);
+                    }
+                } catch (error) {
+                    // Invalid JSON - try AI formatting
+                    console.warn('Invalid JSON detected, using AI to format:', error.message);
+                    
+                    // Show loading state
+                    textarea.style.borderColor = '#2196F3';
+                    const originalValue = textarea.value;
+                    textarea.placeholder = '🤖 AI is formatting your text...';
+                    
+                    try {
+                        // Call AI formatting endpoint
+                        const response = await fetch('/api/ml-training/format-env-factors', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
+                            },
+                            body: JSON.stringify({ text: originalValue })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success && result.json) {
+                            // AI successfully formatted the text
+                            textarea.value = result.json;
+                            textarea.style.borderColor = '#4CAF50';
+                            
+                            // Show success message
+                            if (!result.wasAlreadyJson && window.showToastNotification) {
+                                window.showToastNotification('✨ AI formatted your text into JSON!', 'success');
+                            }
+                            
+                            setTimeout(() => {
+                                textarea.style.borderColor = '';
+                            }, 1000);
+                        } else {
+                            throw new Error(result.message || 'AI formatting failed');
+                        }
+                    } catch (aiError) {
+                        console.error('AI formatting error:', aiError);
+                        // Restore original value and show error
+                        textarea.value = originalValue;
+                        textarea.style.borderColor = '#ff9800';
+                        textarea.placeholder = 'Enter valid JSON or plain text (AI will format it)';
+                        
+                        if (window.showToastNotification) {
+                            window.showToastNotification('⚠️ Could not format text. Try simpler input or valid JSON.', 'warning');
+                        }
+                        
+                        setTimeout(() => {
+                            textarea.style.borderColor = '';
+                        }, 1500);
+                    }
+                }
             }
         };
     }

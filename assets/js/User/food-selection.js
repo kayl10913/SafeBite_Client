@@ -23,34 +23,64 @@ class FoodSelection {
   // Gas emission threshold analysis function
   analyzeGasEmissionThresholds(gasLevel) {
     if (gasLevel >= 400) {
-      // High Risk (400+ ppm) - Spoilage Detected
+      // High Risk (400+ ppm) - Severe Spoilage Detected
       return {
         riskLevel: 'high',
         status: 'unsafe',
-        probability: 95,
-        confidence: 90,
-        recommendation: 'High Risk: Spoilage Detected (400+ ppm). Do not consume. Dispose of the food to avoid foodborne illness. Sanitize storage area to prevent cross-contamination.',
+        probability: 98,
+        confidence: 95,
+        recommendation: 'CRITICAL: Severe Spoilage Detected (400+ ppm). Do not consume. Dispose immediately to avoid foodborne illness. Sanitize storage area thoroughly.',
         threshold: '400+ ppm'
       };
     } else if (gasLevel >= 200) {
-      // Medium Risk (200-399 ppm) - Early Spoilage Signs
+      // High Risk (200-399 ppm) - Advanced Spoilage
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 90,
+        confidence: 90,
+        recommendation: 'CRITICAL: Advanced Spoilage Detected (200-399 ppm). Do not consume. Dispose immediately. Check for strong odors, discoloration, or slimy texture.',
+        threshold: '200-399 ppm'
+      };
+    } else if (gasLevel >= 100) {
+      // High Risk (100-199 ppm) - Spoilage Detected
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 85,
+        confidence: 88,
+        recommendation: 'CRITICAL: Spoilage Detected (100-199 ppm). Food is unsafe to consume. Dispose immediately. Inspect for off-odors, discoloration, or texture changes.',
+        threshold: '100-199 ppm'
+      };
+    } else if (gasLevel >= 70) {
+      // High Risk (70-99 ppm) - Spoilage Detected (Based on observations)
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 80,
+        confidence: 85,
+        recommendation: 'CRITICAL: Spoilage Detected (70-99 ppm). Food is unsafe to consume. Based on sensor observations, gas levels above 70 ppm indicate spoilage. Dispose immediately if strong smell or rot is observed.',
+        threshold: '70-99 ppm'
+      };
+    } else if (gasLevel >= 50) {
+      // Medium Risk (50-69 ppm) - Early Warning Signs
       return {
         riskLevel: 'medium',
         status: 'caution',
-        probability: 75,
+        probability: 60,
         confidence: 85,
-        recommendation: 'Medium Risk: Early Spoilage Signs (200-399 ppm). Consume soon (within 1–2 days). Refrigerate immediately if not yet stored. Check for changes in smell, texture, or color.',
-        threshold: '200-399 ppm'
+        recommendation: 'WARNING: Elevated Gas Levels (50-69 ppm). Food may be starting to spoil. Inspect carefully for any signs of spoilage (smell, color, texture). Consume within 24 hours or discard if suspicious.',
+        threshold: '50-69 ppm'
       };
     } else if (gasLevel >= 0) {
-      // Low Risk (0-199 ppm) - Fresh/Safe
+      // Low Risk (0-49 ppm) - Fresh/Safe
       return {
         riskLevel: 'low',
         status: 'safe',
-        probability: gasLevel > 150 ? 60 : 20,
+        probability: 20,
         confidence: 90,
-        recommendation: 'Low Risk: Fresh/Safe (0-199 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
-        threshold: '0-199 ppm'
+        recommendation: 'Low Risk: Fresh/Safe (0-49 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
+        threshold: '0-49 ppm'
       };
     }
     
@@ -1184,6 +1214,9 @@ class FoodSelection {
 
       // Prefer estimatedShelfLifeHours if provided; otherwise map risk
       const expiry = this.deriveExpiryFromAi(aiResult);
+
+      // Store expiry for use in ML prediction
+      this.predictedExpiry = expiry;
 
       // Check if scanning was cancelled before updating expiry
       if (this.isScanningCancelled) {
@@ -3027,39 +3060,92 @@ class FoodSelection {
     // Use standardized gas emission thresholds for all foods
     const gasAnalysis = this.analyzeGasEmissionThresholds(gasLevel);
     
-    // If gas analysis indicates high or medium risk, use that result
-    if (gasAnalysis.riskLevel === 'high' || gasAnalysis.riskLevel === 'medium') {
+    // Analyze environmental conditions
+    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
+    
+    // CRITICAL RULE: EITHER high humidity (>90%) OR gas (>70 ppm) triggers unsafe
+    // This is based on observations that either condition alone can indicate spoilage
+    const isUnsafeByHumidity = humidity > 90;
+    const isUnsafeByGas = gasLevel > 70;
+    
+    if (isUnsafeByHumidity || isUnsafeByGas) {
+      let criticalFactor = [];
+      let recommendation = 'CRITICAL: ';
+      
+      if (isUnsafeByHumidity && isUnsafeByGas) {
+        criticalFactor.push('humidity', 'gas');
+        recommendation += `Both extremely high humidity (${humidity.toFixed(1)}%) and elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      } else if (isUnsafeByHumidity) {
+        criticalFactor.push('humidity');
+        recommendation += `Extremely high humidity (${humidity.toFixed(1)}%) detected. `;
+      } else {
+        criticalFactor.push('gas');
+        recommendation += `Elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      }
+      
+      recommendation += `Food is unsafe to consume. Inspect immediately - if strong smell or rot is observed, dispose immediately. `;
+      recommendation += `This promotes rapid bacterial growth and spoilage.`;
+      
       return {
-        condition: gasAnalysis.status,
-        spoilageScore: gasAnalysis.probability,
+        condition: 'unsafe',
+        spoilageScore: isUnsafeByHumidity && isUnsafeByGas ? 95 : 85,
         temperature,
         humidity,
         gasLevel,
         assessment: {
           gasRisk: gasAnalysis.riskLevel,
           gasThreshold: gasAnalysis.threshold,
-          recommendation: gasAnalysis.recommendation
+          recommendation: recommendation,
+          environmental: envAnalysis,
+          environmentalOverride: isUnsafeByHumidity,
+          gasOverride: isUnsafeByGas,
+          criticalFactor: criticalFactor.join('_and_')
+        }
+      };
+    }
+    
+    // If gas analysis indicates high or medium risk (but gas <= 70), combine with environmental factors
+    if (gasAnalysis.riskLevel === 'high' || (gasAnalysis.riskLevel === 'medium' && gasAnalysis.status === 'caution')) {
+      // Combine with environmental factors
+      let finalSpoilageScore = gasAnalysis.probability;
+      let finalCondition = gasAnalysis.status;
+      
+      // Increase probability if environmental conditions are also poor
+      if (envAnalysis.overallRisk === 'high') {
+        finalSpoilageScore = Math.min(95, finalSpoilageScore + 15);
+        if (finalCondition === 'caution') finalCondition = 'unsafe';
+      } else if (envAnalysis.overallRisk === 'medium') {
+        finalSpoilageScore = Math.min(90, finalSpoilageScore + 10);
+      }
+      
+      return {
+        condition: finalCondition,
+        spoilageScore: finalSpoilageScore,
+        temperature,
+        humidity,
+        gasLevel,
+        assessment: {
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: `${gasAnalysis.recommendation} ${envAnalysis.overallRisk !== 'normal' ? envAnalysis.recommendation : ''}`,
+          environmental: envAnalysis
         }
       };
     }
 
-    // For low-risk gas levels, analyze environmental conditions based on baseline values
-    // Gas emission thresholds take priority - if gas is safe, food is generally safe
-    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
+    // For low-risk gas levels, analyze environmental conditions
+    let spoilageScore = gasAnalysis.probability;
+    let condition = gasAnalysis.status;
     
-    let spoilageScore = 20; // Base safe score for low gas levels
-    let condition = 'safe';
-    
-    // Apply environmental adjustments based on baseline conditions
+    // Apply environmental adjustments - environmental factors can significantly impact safety
     if (envAnalysis.overallRisk === 'high') {
-      spoilageScore += 20; // Minor increase for high environmental risk
+      // High environmental risk with low gas = elevated caution
+      spoilageScore = Math.min(75, spoilageScore + 35);
       condition = 'caution';
     } else if (envAnalysis.overallRisk === 'medium') {
-      spoilageScore += 10; // Very minor increase for medium environmental risk
+      spoilageScore = Math.min(60, spoilageScore + 25);
+      if (condition === 'safe') condition = 'caution';
     }
-    
-    // Cap spoilage score at 40% for low gas levels (since gas is the primary indicator)
-    spoilageScore = Math.min(spoilageScore, 40);
     
     return {
       condition,
@@ -3315,6 +3401,7 @@ class FoodSelection {
           temperature: temp,
           humidity: humidity,
           gas_level: gas,
+          expiration_date: this.predictedExpiry || null, // Include predicted expiry date
           spoilage_probability: aiAnalysisResult.success ? 
             (aiAnalysisResult.analysis.riskScore || 75) : 75,
           spoilage_status: (() => {
@@ -3328,6 +3415,7 @@ class FoodSelection {
             console.log('  Mapped Spoilage Status:', mappedStatus);
             console.log('  Display Override Status:', spoilageStatus);
             console.log('  Sensor Data:', { temp, humidity, gas });
+            console.log('  Predicted Expiry:', this.predictedExpiry || 'Not set');
             
             return mappedStatus;
           })(),

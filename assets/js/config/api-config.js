@@ -1,14 +1,18 @@
 // API Configuration for SafeBite Node.js Backend
 const RENDER_BASE = 'https://safebite-server-zh2r.onrender.com';
+const LOCALHOST_BASE = 'http://localhost:3000';
 const HOSTNAME = 'https://safebite-server-zh2r.onrender.com';
-const IS_LOCALHOST = 'https://safebite-server-zh2r.onrender.com';
+const IS_LOCALHOST = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 // Import error handler for Hostinger + Render setup
 // This will be loaded before this file in your HTML
 
 const API_CONFIG = {
-    // Always use Render backend in all environments (no localhost)
-    BASE_URL: 'https://safebite-server-zh2r.onrender.com',
+    // Use localhost in development, Render backend in production
+    BASE_URL: IS_LOCALHOST ? LOCALHOST_BASE : RENDER_BASE,
+    
+    // Debug logging
+    DEBUG: IS_LOCALHOST,
     
     // API Endpoints
     ENDPOINTS: {
@@ -77,7 +81,41 @@ const API_CONFIG = {
             ANALYZE: '/api/ai/analyze',
             CHAT: '/api/ai/chat',
             ANALYSIS_HISTORY: '/api/ai/analysis-history',
-            CHAT_HISTORY: '/api/ai/chat-history'
+            CHAT_HISTORY: '/api/ai/chat-history',
+            TRAINING: '/api/ai/training',
+            FOOD_ANALYSIS: '/api/ai/food-analysis'
+        },
+        
+        // ML endpoints
+        ML: {
+            PREDICTION: '/api/ml/prediction',
+            TRAINING: '/api/ml-training',
+            MODELS: '/api/ml-models',
+            WORKFLOW: '/api/ml-workflow',
+            ANALYTICS: '/api/ml/analytics'
+        },
+        
+        // Analytics endpoints
+        ANALYTICS: {
+            SENSOR: '/api/sensor-analytics',
+            SPOILAGE: '/api/spoilage-analytics',
+            STATISTICS: '/api/statistics'
+        },
+        
+        // Device management endpoints
+        DEVICE: {
+            MANAGEMENT: '/api/device-management',
+            ALERTS: '/api/alerts'
+        },
+        
+        // Feedback endpoints
+        FEEDBACK: {
+            STATISTICS: '/api/feedbacks/statistics',
+            ALL: '/api/feedbacks',
+            FILTER: '/api/feedbacks/filter',
+            UPDATE: '/api/feedbacks',
+            BY_TYPE: '/api/feedbacks/type',
+            BY_USER: '/api/feedbacks/user'
         }
     }
 };
@@ -127,6 +165,12 @@ function buildApiUrl(endpoint) {
 // Helper function to make authenticated API requests
 async function makeApiRequest(endpoint, options = {}) {
     const url = buildApiUrl(endpoint);
+    
+    // Debug logging for localhost
+    if (API_CONFIG.DEBUG) {
+        console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+    }
+    
     // Check for JWT token in multiple possible locations for compatibility
     const token = localStorage.getItem('jwt_token') || 
                   localStorage.getItem('sessionToken') || 
@@ -162,12 +206,22 @@ async function makeApiRequest(endpoint, options = {}) {
         }
         
         if (!response.ok) {
+            // Debug logging for localhost
+            if (API_CONFIG.DEBUG) {
+                console.error(`❌ API Error: ${response.status} ${response.statusText}`, data);
+            }
+            
             // Use error handler for Hostinger + Render setup
             if (window.SafeBiteErrorHandler) {
                 window.SafeBiteErrorHandler.handleApiError(response, data.error || data.message);
                 return null; // Don't throw, error handler will redirect
             }
             throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        // Debug logging for successful responses
+        if (API_CONFIG.DEBUG) {
+            console.log(`✅ API Success: ${response.status}`, data);
         }
         
         return data;
@@ -418,4 +472,9 @@ if (typeof module !== 'undefined' && module.exports) {
     window.AdminAPI = AdminAPI;
     window.SensorAPI = SensorAPI;
     window.buildApiUrl = buildApiUrl;
+    
+    // Debug logging for configuration
+    if (API_CONFIG.DEBUG) {
+        console.log(`🔧 SafeBite API Config: Using ${API_CONFIG.BASE_URL} (localhost mode)`);
+    }
 }

@@ -771,7 +771,12 @@
               <i class="bi bi-lock-fill"></i>
               Re-enter Password
             </label>
-            <input type="password" id="editReenterPassword" placeholder="Re-enter new password" />
+            <div>
+              <input type="password" id="editReenterPassword" placeholder="Re-enter new password" />
+              <button type="button" class="password-toggle" onclick="togglePasswordVisibility('editReenterPassword')">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2067,8 +2072,13 @@
   // Password visibility toggle
   function togglePasswordVisibility(inputId) {
     const input = document.getElementById(inputId);
-    const button = input.nextElementSibling;
+    if (!input) return;
+    
+    const button = input.parentElement.querySelector('.password-toggle');
+    if (!button) return;
+    
     const icon = button.querySelector('i');
+    if (!icon) return;
     
     if (input.type === 'password') {
       input.type = 'text';

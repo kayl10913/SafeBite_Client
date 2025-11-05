@@ -203,6 +203,19 @@
 	gap: 10px;
 }
 
+/* Compact styling for three-column layouts */
+.update-modal-form-row-three .update-modal-label {
+	font-size: 10px;
+}
+
+.update-modal-form-row-three .update-modal-input,
+.update-modal-form-row-three .update-modal-select {
+	padding: 5px 6px;
+	font-size: 11px;
+	height: 32px;
+	box-sizing: border-box;
+}
+
 .update-modal-form-group {
 	margin-bottom: 8px;
 }
@@ -217,8 +230,7 @@
 
 .update-modal-input {
 	width: 100%;
-	max-width: 120px;
-	padding: 6px 8px;
+	padding: 8px 10px;
 	background: #1e293b;
 	border: 1px solid #334155;
 	color: #f1f5f9;
@@ -226,6 +238,8 @@
 	font-size: 13px;
 	transition: all 0.2s;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	height: 38px;
+	box-sizing: border-box;
 }
 
 .update-modal-input:focus {
@@ -273,8 +287,8 @@
 
 .update-modal-select {
 	width: 100%;
-	max-width: 120px;
-	padding: 6px 8px;
+	padding: 8px 10px;
+	padding-right: 30px;
 	background: #1e293b;
 	border: 1px solid #334155;
 	color: #f1f5f9;
@@ -283,6 +297,15 @@
 	transition: all 0.2s;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	cursor: pointer;
+	height: 38px;
+	box-sizing: border-box;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+	background-size: 16px;
 }
 
 .update-modal-select:focus {
@@ -290,6 +313,10 @@
 	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 	outline: none;
 	background: #0f172a;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+	background-size: 16px;
 }
 
 .update-modal-option {

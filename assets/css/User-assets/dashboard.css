@@ -2249,6 +2249,9 @@ main {
   text-align: center;
   max-width: 450px;
   width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .food-selected-card h2 {
@@ -2258,12 +2261,21 @@ main {
   margin: 0 0 25px 0;
 }
 
+.food-selected-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .food-selected-info p {
   font-size: 1.2em;
   color: var(--text-light);
   margin: 0 0 15px 0;
   line-height: 1.5;
   font-weight: 500;
+  text-align: center;
 }
 
 .food-selected-ok-btn {
@@ -2276,7 +2288,8 @@ main {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 25px;
+  margin: 25px auto 0 auto;
+  display: block;
   box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
 }
 
@@ -6319,6 +6332,8 @@ main {
 /* Show OK button ONLY when analysis is complete */
 .auto-training-status.completed ~ .food-selected-ok-btn {
   display: block !important;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Additional fallback for OK button visibility */
@@ -6332,6 +6347,8 @@ main {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* Only show OK button when ALL steps are completed */
@@ -6340,6 +6357,8 @@ main {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* Hide OK button if any step is still active */
