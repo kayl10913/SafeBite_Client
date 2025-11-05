@@ -2168,12 +2168,9 @@ main {
   display: flex;
   gap: 20px;
   justify-content: flex-end;
-<<<<<<< Updated upstream
   align-items: center;
   border-top: 1px solid #2b3a66;
-=======
   border-top: 1px solid var(--border-color);
->>>>>>> Stashed changes
 }
 
 .food-selection-cancel-btn {
@@ -2745,7 +2742,7 @@ main {
   box-shadow: 0 8px 24px var(--shadow-color);
   border-color: var(--light-blue);
 }
-}
+
 
 .connect-device-header {
   display: flex;
@@ -2875,7 +2872,7 @@ main {
   box-shadow: 0 8px 24px var(--shadow-color);
   border-color: var(--light-blue);
 }
-}
+
 
 .device-status-header {
   display: flex;
@@ -4685,7 +4682,6 @@ main {
   background: var(--background-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-<<<<<<< Updated upstream
   padding: 20px 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -4701,7 +4697,6 @@ main {
   gap: 20px;
   width: calc(100% - 60px);
   max-width: calc(100% - 60px);
-=======
   padding: 24px;
   position: relative;
   box-shadow: 0 4px 16px var(--shadow-color);
@@ -4730,7 +4725,6 @@ main {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px var(--shadow-color);
   border-color: var(--light-blue);
->>>>>>> Stashed changes
 }
 
 .scan-food-info {
@@ -4743,15 +4737,12 @@ main {
 
 .scan-food-name {
   font-weight: 600;
-<<<<<<< Updated upstream
   color: #ffffff;
   font-size: 22px;
   margin-bottom: 0;
-=======
   color: var(--text-white);
   font-size: 18px;
   margin-bottom: 8px;
->>>>>>> Stashed changes
   letter-spacing: -0.3px;
 }
 
@@ -4859,13 +4850,8 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-<<<<<<< Updated upstream
-  padding: 15px 10px;
-  background: #2a3658;
-=======
   padding: 12px 8px;
   background: var(--secondary-blue);
->>>>>>> Stashed changes
   border: 1px solid #3a4a6b;
   border-radius: 10px;
   transition: all 0.3s ease;
@@ -4878,13 +4864,8 @@ main {
 }
 
 .sensor-label {
-<<<<<<< Updated upstream
-  font-size: 11px;
-  color: #9fb8ff;
-=======
   font-size: 10px;
   color: var(--text-muted);
->>>>>>> Stashed changes
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -4892,13 +4873,8 @@ main {
 }
 
 .sensor-value {
-<<<<<<< Updated upstream
-  font-size: 16px;
-  color: #ffffff;
-=======
   font-size: 14px;
   color: var(--text-white);
->>>>>>> Stashed changes
   font-weight: 600;
   font-family: 'Courier New', monospace;
 }
@@ -4960,22 +4936,7 @@ main {
   transform: translateY(0);
 }
 
-<<<<<<< Updated upstream
 /* Removed duplicate unified card styles - using base .dashboard-card */
-=======
-/* Unified Card Styles - Apply to All Dashboard Cards */
-.dashboard-card {
-  background: var(--background-card) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 12px !important;
-  padding: 24px !important;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px var(--shadow-color) !important;
-  color: var(--text-light) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
->>>>>>> Stashed changes
 
 .dashboard-card::before {
   content: '';
@@ -4989,22 +4950,7 @@ main {
   animation: shimmer-border 3s ease-in-out infinite;
 }
 
-<<<<<<< Updated upstream
 /* Removed duplicate alerts-card rules - now using base .dashboard-card */
-=======
-/* Alerts Card */
-.alerts-card {
-  background: var(--background-card) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 12px !important;
-  padding: 24px !important;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px var(--shadow-color) !important;
-  color: var(--text-light) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
->>>>>>> Stashed changes
 
 /* Removed violet strip that was pushing content down */
 
@@ -5021,21 +4967,7 @@ main {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-<<<<<<< Updated upstream
 /* Removed violet strip from activity-card */
-=======
-.activity-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--light-blue), var(--accent-blue));
-  background-size: 200% 100%;
-  animation: shimmer-border 3s ease-in-out infinite;
-}
->>>>>>> Stashed changes
 
 /* Card Hover Effects */
 .dashboard-card:hover,
@@ -5061,21 +4993,7 @@ main {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-<<<<<<< Updated upstream
 /* Removed violet strip from sensor-card */
-=======
-.sensor-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--light-blue), var(--accent-blue));
-  background-size: 200% 100%;
-  animation: shimmer-border 3s ease-in-out infinite;
-}
->>>>>>> Stashed changes
 
 /* Food Selection Card */
 .food-selection-card {
@@ -5090,21 +5008,7 @@ main {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-<<<<<<< Updated upstream
 /* Removed violet strip from food-selection-card */
-=======
-.food-selection-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--light-blue), var(--accent-blue));
-  background-size: 200% 100%;
-  animation: shimmer-border 3s ease-in-out infinite;
-}
->>>>>>> Stashed changes
 
 /* Removed override styles - using base .dashboard-card */
 
@@ -5173,29 +5077,17 @@ main {
 }
 
 .alerts-container::-webkit-scrollbar-track {
-<<<<<<< Updated upstream
-  background: rgba(255, 255, 255, 0.1);
-=======
   background: var(--background-card);
->>>>>>> Stashed changes
   border-radius: 3px;
 }
 
 .alerts-container::-webkit-scrollbar-thumb {
-<<<<<<< Updated upstream
-  background: rgba(74, 158, 255, 0.6);
-=======
   background: var(--accent-blue);
->>>>>>> Stashed changes
   border-radius: 3px;
 }
 
 .alerts-container::-webkit-scrollbar-thumb:hover {
-<<<<<<< Updated upstream
-  background: rgba(74, 158, 255, 0.8);
-=======
   background: var(--light-blue);
->>>>>>> Stashed changes
 }
 
 /* Ensure both content cards start at the same level */
@@ -5244,15 +5136,11 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-<<<<<<< Updated upstream
-  color: #9fb8ff;
-=======
   flex: 1;
   background: var(--background-dark);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-muted);
->>>>>>> Stashed changes
   font-size: 14px;
   font-weight: 500;
   text-align: center;
