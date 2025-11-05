@@ -439,16 +439,12 @@ class SensorAnalyticsConnector {
             const statusText = hasReading ? 'Active' : 'Inactive';
             let statusModifier = statusText.toLowerCase(); // active | inactive
             
-            // Format alerts badge
-            const alertsClass = item.alertsToday > 0 ? '' : 'none';
-
         row.innerHTML = `
             <td><strong>${item.foodTester}</strong><br><span class="created-date">Registered: ${this.formatDate(item.registeredDate)}</span></td>
             <td><span class="cat-badge">${item.type}</span></td>
             <td><span class="status-badge status-${statusModifier}">${statusText}</span></td>
                 <td>${this.formatDate(lastPing)}<br><span class="${pingClass}">${timeAgo}</span></td>
                 <td>${item.lastReading || 'No data'}</td>
-                <td><span class="alert-badge ${alertsClass}">${item.alertsToday} alerts</span></td>
             `;
             
             tableBody.appendChild(row);

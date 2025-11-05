@@ -1001,7 +1001,7 @@ class DeviceManagementManager {
             const confirmed = await this.confirm(
                 `🔒 Deactivate Device Set?`,
                 `This will temporarily disable all sensors for ${userName}.`,
-                `📡 Temperature • Humidity • Gas sensors will be disabled\n⚠️ The user will not receive alerts until reactivated\n🔄 This action can be reversed at any time`
+                `📡 Temperature • Humidity • Gas sensors will be disabled\n⚠️ Alert notifications will be disabled\n🔄 This action can be reversed at any time`
             );
             
             if (!confirmed) return;
@@ -1012,7 +1012,7 @@ class DeviceManagementManager {
             if (!result.success) throw new Error(result.message || 'Deactivation failed');
             
             // Enhanced success message
-            const successMessage = `✅ Device set deactivated successfully!\n\n📡 ${result.affectedRows || 3} sensors disabled for ${userName}\n🔒 User will not receive alerts until reactivated`;
+            const successMessage = `✅ Device set deactivated successfully!\n\n📡 ${result.affectedRows || 3} sensors disabled for ${userName}\n🔒 Alert notifications disabled`;
             this.showToast(successMessage);
             await this.refreshData(false);
         } catch (err) {

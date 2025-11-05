@@ -1328,11 +1328,25 @@ document.addEventListener('DOMContentLoaded', function() {
             <span>${message}</span>
         `;
         
+        // Initially hide the toast (off-screen) to prepare for animation
+        toast.style.transform = 'translateX(100%)';
+        toast.style.opacity = '0';
+        
         toaster.appendChild(toast);
+        
+        // Force browser reflow, then trigger slide-in animation
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+                toast.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            });
+        });
         
         // Remove toast after 5 seconds
         setTimeout(() => {
             toast.style.animation = 'slideOutRight 0.3s ease-in';
+            toast.style.transition = '';
             setTimeout(() => {
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);

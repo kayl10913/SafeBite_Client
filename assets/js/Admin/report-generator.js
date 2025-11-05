@@ -77,7 +77,7 @@ function renderTable(headers, rows) {
 
 // Function to get dates from range (matching admin-log.js style)
 function getDatesFromRange(range) {
-    const endDate = new Date(); // Current date
+    let endDate = new Date(); // Current date
     let startDate = new Date(endDate);
     
     switch(range) {
@@ -120,9 +120,8 @@ function getDatesFromRange(range) {
                 endDate = new Date(year, 11, 31);
             } else {
                 const currentYearForYearly = endDate.getFullYear();
-                startDate = new Date(currentYearForYearly - 1, 0, 1);
-                const lastDayOfPrevYear = new Date(currentYearForYearly, 0, 0);
-                endDate.setTime(lastDayOfPrevYear.getTime());
+                startDate = new Date(currentYearForYearly, 0, 1);
+                endDate = new Date(currentYearForYearly, 11, 31);
             }
             break;
     }

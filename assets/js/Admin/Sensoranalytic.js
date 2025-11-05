@@ -317,7 +317,7 @@ class SensorAnalyticsAPI {
             return;
         }
 
-        const headers = ['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading', 'Alerts Today'];
+        const headers = ['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading'];
         const csvContent = [
             headers.join(','),
             ...data.map(item => [
@@ -325,8 +325,7 @@ class SensorAnalyticsAPI {
                 `"${item.type || ''}"`,
                 `"${item.status || ''}"`,
                 `"${item.lastPing || ''}"`,
-                `"${item.lastReading || ''}"`,
-                item.alertsToday || 0
+                `"${item.lastReading || ''}"`
             ].join(','))
         ].join('\n');
 
@@ -408,14 +407,13 @@ class SensorAnalyticsAPI {
 			doc.text(`Total Records: ${data.length}`, 50, 135);
 
             // Prepare table data
-            const head = [['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading', 'Alerts']];
+            const head = [['Food Tester', 'Type', 'Status', 'Last Ping', 'Last Reading']];
             const body = data.map(item => [
                 String(item.foodTester || ''),
                 String(item.type || ''),
                 String(item.status || ''),
                 item.lastPing ? new Date(item.lastPing).toLocaleDateString() : '—',
-                String(item.lastReading || '—'),
-                String(item.alertsToday || 0)
+                String(item.lastReading || '—')
             ]);
 
 			const pageWidth = doc.internal.pageSize.width;
@@ -423,12 +421,11 @@ class SensorAnalyticsAPI {
 			const marginRight = 40;
 			const availableWidth = pageWidth - marginLeft - marginRight;
 			const colWidths = {
-				0: Math.floor(availableWidth * 0.22), // Food Tester
-				1: Math.floor(availableWidth * 0.12), // Type
-				2: Math.floor(availableWidth * 0.12), // Status
-				3: Math.floor(availableWidth * 0.18), // Last Ping
-				4: Math.floor(availableWidth * 0.26), // Last Reading
-				5: Math.floor(availableWidth * 0.10)  // Alerts
+				0: Math.floor(availableWidth * 0.25), // Food Tester
+				1: Math.floor(availableWidth * 0.15), // Type
+				2: Math.floor(availableWidth * 0.15), // Status
+				3: Math.floor(availableWidth * 0.20), // Last Ping
+				4: Math.floor(availableWidth * 0.25)  // Last Reading
 			};
 
             // Render table with autotable
@@ -445,8 +442,7 @@ class SensorAnalyticsAPI {
                     1: { cellWidth: colWidths[1], halign: 'center' },
                     2: { cellWidth: colWidths[2], halign: 'center' },
                     3: { cellWidth: colWidths[3], halign: 'center' },
-                    4: { cellWidth: colWidths[4] },
-                    5: { cellWidth: colWidths[5], halign: 'center' }
+                    4: { cellWidth: colWidths[4] }
                 },
                 didDrawPage: function (dataHook) {
                     doc.setFontSize(9); doc.setTextColor(120);
