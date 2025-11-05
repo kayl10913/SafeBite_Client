@@ -3031,6 +3031,101 @@ main {
   color: #b0b0b0;
 }
 
+/* Responsive fixes for Sensor Status list on small screens */
+@media (max-width: 600px) {
+  .device-sensor-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .device-sensor-info {
+    width: 100%;
+  }
+
+  .device-sensor-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .device-sensor-battery,
+  .device-sensor-status {
+    font-size: 0.85em;
+  }
+
+  .device-status-btn {
+    width: 100%;
+    text-align: center;
+    padding: 10px 14px;
+  }
+}
+
+/* Mobile layout adjustments for real-time gauges and cards */
+@media (max-width: 600px) {
+  .sensors-gauges {
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .sensor-card {
+    padding: 16px;
+    min-height: 220px;
+  }
+
+  .sensor-card-title {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+  }
+
+  .sensor-gauge {
+    min-height: 140px;
+  }
+
+  .gauge {
+    width: 100px;
+    height: 100px;
+  }
+
+  .stat-cards-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stat-card {
+    min-height: auto;
+    padding: 18px 16px 14px 16px;
+  }
+}
+
+/* Extra-small devices: avoid stretching and horizontal overflow */
+@media (max-width: 480px) {
+  .sensor-cards-container {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .sensor-card {
+    width: 100%;
+    flex: none;
+    min-height: 200px;
+    padding: 14px;
+  }
+
+  .sensor-gauge {
+    min-height: 120px;
+  }
+
+  .gauge {
+    width: 88px;
+    height: 88px;
+  }
+}
+
 /* Adjust margin when sidebar is collapsed */
 .sidebar.collapsed ~ main .dashboard-container {
   margin-left: 84px;
@@ -5978,6 +6073,92 @@ main {
   }
 }
 
+/* --- Mobile fixes: alignment and sizing for scan/alerts cards (global override) --- */
+@media (max-width: 576px) {
+  /* Let cards size to content on small screens */
+  .dashboard-card {
+    padding: 16px;
+    height: auto;
+  }
+
+  /* Remove fixed heights on middle row cards */
+  .dashboard-row .latest-scan-card,
+  .dashboard-row .alerts-card {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  /* Make inner content full width and auto height */
+  .latest-scan-card .scan-result-card,
+  .alerts-result-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .scan-card-content,
+  .alerts-container {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* On mobile, scroll inside alerts list only */
+  .alerts-container {
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 6px;
+  }
+
+  /* Compact sensors layout */
+  .scan-sensors {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .scan-sensor-item {
+    padding: 8px 10px;
+  }
+}
+
+/* Mobile layout for sensor cards container only */
+@media (max-width: 576px) {
+  .sensor-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 10px;
+    align-items: stretch;
+    justify-items: stretch;
+    width: 100%;
+    padding: 8px 6px;
+    overflow: hidden;
+  }
+
+  /* Scope sizing to cards inside the container only */
+  .sensor-cards-container .sensor-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 10px 10px 12px !important;
+    min-height: 110px;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  /* Ensure inner gauge/content does not overflow */
+  .sensor-cards-container .gauge,
+  .sensor-cards-container .sensor-card-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -6105,6 +6286,30 @@ main {
   background: linear-gradient(135deg, #3a8eef 0%, #5a6eea 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+}
+
+/* Center the lightweight user confirm modal */
+#userConfirmModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none; /* JS toggles to block */
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#userConfirmModal .modal-content {
+  margin: 0;
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #0f172a;
 }
 
 /* Smart Training Status Loading Animation */

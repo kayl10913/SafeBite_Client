@@ -741,7 +741,8 @@ class SensorDashboard {
                 value: parseFloat(gaugeData.value || 0).toFixed(2),
                 unit: gaugeData.unit || realTimeSensorData[sensorType].unit,
                 max: parseFloat(gaugeData.max) || realTimeSensorData[sensorType].max,
-                status: gaugeData.status || 'offline'
+                status: gaugeData.status || 'offline',
+                timestamp: gaugeData.timestamp || null
               };
             }
           });
@@ -2681,7 +2682,10 @@ class SensorDashboard {
     }
     
     // Generate a realistic battery level based on device age and status
-    const isConnected = (device.is_active === 1) || device.status === 'connected';
+    const typeKey = (device.type || device.sensorType || '').toLowerCase();
+    const rt = realTimeSensorData[typeKey] || {};
+    const recentEnough = rt.timestamp ? (Date.now() - new Date(rt.timestamp).getTime()) <= 120000 : (rt.status === 'online');
+    const isConnected = rt.status === 'online' && recentEnough;
     if (!isConnected) return 0;
     
     // Simulate battery level based on device age
@@ -2722,7 +2726,8 @@ class SensorDashboard {
   toggleDeviceStatus(deviceId) {
     const device = registeredDevices.find(d => d.sensor_id === deviceId || d.id === deviceId);
     if (device) {
-      device.status = device.status === 'connected' ? 'disconnected' : 'connected';
+      // Toggle real-time connection state using online/offline values
+      device.status = device.status === 'online' ? 'offline' : 'online';
       device.lastSeen = new Date().toISOString();
       this.renderSensorStatusList();
     }
@@ -2744,7 +2749,11 @@ class SensorDashboard {
     }
 
     const devicesHTML = registeredDevices.map(device => {
-      const isConnected = (device.is_active === 1) || device.status === 'connected';
+      // Determine connection from latest real-time data for this sensor type
+      const typeKey = (device.type || device.sensorType || '').toLowerCase();
+      const rt = realTimeSensorData[typeKey] || {};
+      const recentEnough = rt.timestamp ? (Date.now() - new Date(rt.timestamp).getTime()) <= 120000 : (rt.status === 'online');
+      const isConnected = rt.status === 'online' && recentEnough;
       const batteryLevel = this.getBatteryLevel(device);
       const batteryIcon = this.getBatteryIcon(batteryLevel);
       
@@ -2760,10 +2769,11 @@ class SensorDashboard {
             </div>
           </div>
           <div class="device-sensor-meta">
+            ${isConnected ? `
             <div class="device-sensor-battery ${this.getBatteryStatusClass(batteryLevel)}">
               <i class="bi ${batteryIcon}"></i>
               <span>${batteryLevel}%</span>
-            </div>
+            </div>` : ''}
             <div class="device-sensor-status ${isConnected ? 'connected' : 'disconnected'}">
               <span>${isConnected ? 'Online' : 'Offline'}</span>
             </div>

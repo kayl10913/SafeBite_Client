@@ -25,8 +25,18 @@
   function renderGauge(el) {
     const value = el.getAttribute('data-value') || '';
     const unit = el.getAttribute('data-unit') || '';
-    const size = 120;
-    const stroke = 12;
+    // Responsive sizes: allow override via data-size; otherwise adapt to viewport
+    const override = parseInt(el.getAttribute('data-size'), 10);
+    let size;
+    if (!isNaN(override)) {
+      size = override;
+    } else {
+      const w = window.innerWidth || 1200;
+      if (w <= 480) size = 88;       // very small phones
+      else if (w <= 600) size = 100; // small phones
+      else size = 120;                // tablets/desktop
+    }
+    const stroke = Math.max(8, Math.round(size * 0.1));
     const radius = (size - stroke) / 2;
     const cx = size / 2;
     const cy = size / 2;
@@ -83,4 +93,10 @@
   } else {
     renderAllGauges();
   }
+
+  // Re-render on resize to keep gauges sized correctly on mobile
+  window.addEventListener('resize', () => {
+    if (window.__gaugeResizeRaf) cancelAnimationFrame(window.__gaugeResizeRaf);
+    window.__gaugeResizeRaf = requestAnimationFrame(renderAllGauges);
+  });
 })(); 
