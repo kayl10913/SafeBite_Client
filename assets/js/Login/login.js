@@ -742,7 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let isValid = true;
             
             if (!email) {
-                showError(emailInput, 'Email or username is required');
+                showError(emailInput, 'Email  is required');
                 isValid = false;
             } else if (!validateEmail(email)) {
                 showError(emailInput, 'Please enter a valid email address');
