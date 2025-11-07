@@ -211,12 +211,31 @@ async function makeApiRequest(endpoint, options = {}) {
                 console.error(`❌ API Error: ${response.status} ${response.statusText}`, data);
             }
             
-            // Use error handler for Hostinger + Render setup
-            if (window.SafeBiteErrorHandler) {
-                window.SafeBiteErrorHandler.handleApiError(response, data.error || data.message);
-                return null; // Don't throw, error handler will redirect
+            // Extract error message from response
+            const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
+            
+            // Check if this is a login endpoint - don't redirect to error page for login failures
+            const isLoginEndpoint = endpoint.includes('/login') || endpoint.includes('/auth/login') || endpoint.includes('/admin/login');
+            
+            // Use error handler for Hostinger + Render setup (but skip redirect for login endpoints)
+            if (window.SafeBiteErrorHandler && !isLoginEndpoint) {
+                window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
+                // Return error object instead of null so login functions can access error message
+                return {
+                    success: false,
+                    error: errorMessage,
+                    message: errorMessage,
+                    status: response.status
+                };
             }
-            throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+            
+            // For login endpoints, return error object without redirecting
+            return {
+                success: false,
+                error: errorMessage,
+                message: errorMessage,
+                status: response.status
+            };
         }
         
         // Debug logging for successful responses

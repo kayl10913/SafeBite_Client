@@ -223,18 +223,41 @@
       <div class="ml-kpi-card"><div class="ml-kpi-title">Total Predictions</div><div class="ml-kpi-value" id="mlKpiTotal">0</div><div class="ml-kpi-sub" id="mlKpiTotalSub">+0 today</div></div>
       <div class="ml-kpi-card"><div class="ml-kpi-title">Average Confidence</div><div class="ml-kpi-value" id="mlKpiConfidence">--%</div><div class="ml-kpi-sub" id="mlKpiConfidenceSub">+0% this week</div></div>
       <div class="ml-kpi-card"><div class="ml-kpi-title">Training Data</div><div class="ml-kpi-value" id="mlKpiSamples">0</div><div class="ml-kpi-sub" id="mlKpiSamplesSub">+0 added</div></div>
-      <div class="ml-kpi-card"><div class="ml-kpi-title">Model Accuracy</div><div class="ml-kpi-value" id="mlKpiAccuracy">--%</div><div class="ml-kpi-sub" id="mlKpiAccuracySub">+0% improved</div></div>
+      <div class="ml-kpi-card">
+        <div class="ml-kpi-title">Model Accuracy</div>
+        <div class="ml-kpi-value" id="mlKpiAccuracy">--%</div>
+        <div class="ml-kpi-sub" id="mlKpiAccuracySub">+0% improved</div>
+      </div>
     </div>
 
-    
-
+    <!-- Training Data Section -->
     <div class="ml-card" style="margin-top:16px;">
-      <div class="ml-card-header">
+      <div class="ml-card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div class="ml-card-title">Training Data (<span id="mlSamplesCount">0</span>)</div>
         <div class="ml-actions">
           <button class="ml-btn primary" id="mlAddTraining">+ Add Training Data</button>
         </div>
       </div>
+      
+      <!-- Search Section - User Friendly Location -->
+      <div style="background:#1a2332;border:1px solid #2a3a4a;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:350px;">
+            <label for="mlTrainingSearch" style="display:block;color:#bfc9da;font-size:13px;font-weight:500;margin-bottom:8px;">
+              🔍 Search Training Data
+            </label>
+            <div style="position:relative;width:100%;">
+              <input type="text" id="mlTrainingSearch" class="ml-search-input" placeholder="Search by food name, category, status, or source..." autocomplete="off" style="width:100%;padding:12px 16px;background:#181f36 !important;border:1px solid #2a3b6d !important;border-radius:6px;color:#e0e6f6 !important;font-size:14px;outline:none;transition:all 0.2s;box-sizing:border-box;-webkit-text-fill-color:#e0e6f6 !important;" onfocus="this.style.borderColor='#4a9eff'; this.style.boxShadow='0 0 0 3px rgba(74, 158, 255, 0.2)'" onblur="this.style.borderColor='#2a3b6d'; this.style.boxShadow='none'" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button type="button" id="mlClearSearch" class="filter-btn" style="background:#2a3b6d;color:#e0e6f6;padding:12px 20px;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s;height:42px;display:none;" onmouseover="this.style.background='#3a4b7d'" onmouseout="this.style.background='#2a3b6d'">
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <table class="ml-table">
         <thead>
           <tr>
@@ -414,10 +437,10 @@
         </div>
       </div>
       <div class="report-actions">
-        <button id="mlApplyFilters" class="report-btn report-btn-primary"><span>🔎</span>Filter</button>
-        <button id="mlUpdate" class="report-btn report-btn-primary"><span>🔄</span>Update</button>
-        <button id="mlExportCSV" class="report-btn report-btn-secondary"><span>📥</span>Download CSV</button>
-        <button id="mlExportPDF" class="filter-btn export"><span>📄</span>Download PDF</button>
+        <button id="mlApplyFilters" class="filter-btn filter-btn-primary"><span>🔎</span>Filter</button>
+        <button id="mlUpdate" class="filter-btn filter-btn-primary"><span>🔄</span>Update</button>
+        <button id="mlExportCSV" class="filter-btn export-btn"><span>📥</span>Download CSV</button>
+        <button id="mlExportPDF" class="filter-btn export-btn"><span>📄</span>Download PDF</button>
       </div>
     </div>
     <div class="report-preview">
@@ -563,9 +586,9 @@
           </div>
         </div>
         <div class="filter-actions">
-          <button class="filter-btn" type="button" id="applyFilters" title="Apply filters" aria-label="Apply filters">🔎 Filter</button>
-          <button class="filter-btn export" id="exportCSV">Export CSV</button>
-          <button class="filter-btn export" id="exportPDF">Download PDF</button>
+          <button class="filter-btn filter-btn-primary" type="button" id="applyFilters" title="Apply filters" aria-label="Apply filters"><span>🔎</span>Filter</button>
+          <button class="filter-btn export-btn" id="exportCSV"><span>📥</span>Download CSV</button>
+          <button class="filter-btn export-btn" id="exportPDF"><span>📄</span>Download PDF</button>
         </div>
       </div>
       <div class="detailed-report-table-card">
@@ -705,15 +728,15 @@
           </div>
           
           <div class="report-actions">
-            <button id="generateReport" class="report-btn report-btn-primary">
+            <button id="generateReport" class="filter-btn filter-btn-primary">
               <span>📊</span>
               Generate Report
             </button>
-            <button id="exportReportCSV" class="report-btn report-btn-secondary">
+            <button id="exportReportCSV" class="filter-btn export-btn">
               <span>📥</span>
               Download CSV
             </button>
-            <button id="exportReportPDF" class="report-btn report-btn-secondary">
+            <button id="exportReportPDF" class="filter-btn export-btn">
               <span>📄</span>
               Download PDF
             </button>
@@ -819,8 +842,8 @@
         </div>
         </form>
         <div class="filter-actions">
-          <button class="filter-btn" id="userFilterBtn">Filter</button>
-          <button class="filter-btn" id="addUserBtn">+ Add User</button>
+          <button class="filter-btn filter-btn-primary" id="userFilterBtn"><span>🔎</span>Filter</button>
+          <button class="filter-btn filter-btn-primary" id="addUserBtn"><span>➕</span>Add User</button>
         </div>
       </div>
       <div class="report-preview-area">
@@ -989,15 +1012,15 @@
         </div>
         
         <div class="report-actions">
-          <button id="filterActivityLogBtn" class="report-btn report-btn-primary">
-            <span>🔍</span>
+          <button id="filterActivityLogBtn" class="filter-btn filter-btn-primary">
+            <span>🔎</span>
             Filter
           </button>
-          <button id="exportActivityLogExcel" class="filter-btn export">
+          <button id="exportActivityLogExcel" class="filter-btn export-btn">
             <span>📥</span>
             Download Excel
           </button>
-          <button id="exportActivityLogPDF" class="filter-btn export">
+          <button id="exportActivityLogPDF" class="filter-btn export-btn">
             <span>📄</span>
             Download PDF
           </button>
@@ -1094,9 +1117,9 @@
           </div>
         </div>
         <div class="filter-actions">
-          <button class="filter-btn" id="adminLogFilterBtn">Filter</button>
-          <button class="filter-btn export" id="adminLogDownloadExcel">Download Excel</button>
-          <button class="filter-btn export" id="adminLogDownloadPDF">Download PDF</button>
+          <button class="filter-btn filter-btn-primary" id="adminLogFilterBtn"><span>🔎</span>Filter</button>
+          <button class="filter-btn export-btn" id="adminLogDownloadExcel"><span>📥</span>Download Excel</button>
+          <button class="filter-btn export-btn" id="adminLogDownloadPDF"><span>📄</span>Download PDF</button>
         </div>
       </div>
       <div class="report-preview-area">
@@ -1307,13 +1330,13 @@
 
         <!-- Action Buttons Row -->
         <div class="filter-actions" style="display:flex; gap:16px; align-items:flex-end; justify-content:flex-end; padding-top:8px; border-top:1px solid #2a3a4a;">
-          <button class="filter-btn" id="applyFeedbackFilters" type="button" style="background:linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:120px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #2d5fd8 0%, #1e40af 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%)'">
+          <button class="filter-btn filter-btn-primary" id="applyFeedbackFilters" type="button">
             <span>🔎</span> Filter
           </button>
-          <button class="filter-btn export" id="export-feedbacks-excel" type="button" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:140px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'">
-            <span>📊</span> Download Excel
+          <button class="filter-btn export-btn" id="export-feedbacks-excel" type="button">
+            <span>📥</span> Download Excel
           </button>
-          <button class="filter-btn export" id="export-feedbacks-pdf" type="button" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; min-width:140px; height:42px;" onmouseover="this.style.background='linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'">
+          <button class="filter-btn export-btn" id="export-feedbacks-pdf" type="button">
             <span>📄</span> Download PDF
           </button>
         </div>
@@ -1422,9 +1445,9 @@
           <div class="df-item df-actions">
             <label>&nbsp;</label>
             <div class="df-action-buttons">
-              <button type="button" class="filter-btn" id="inlineApplyFilters">Filter</button>
-              <button type="button" class="filter-btn export" id="downloadCsvBtn">Download CSV</button>
-              <button type="button" class="filter-btn export" id="downloadPdfBtn">Download PDF</button>
+              <button type="button" class="filter-btn filter-btn-primary" id="inlineApplyFilters"><span>🔎</span>Filter</button>
+              <button type="button" class="filter-btn export-btn" id="downloadCsvBtn"><span>📥</span>Download CSV</button>
+              <button type="button" class="filter-btn export-btn" id="downloadPdfBtn"><span>📄</span>Download PDF</button>
             </div>
           </div>
         </div>
@@ -1806,9 +1829,9 @@
     </div>
     <div class="modal-footer" style="border-top: 1px solid #1f2a46; padding: 20px 24px 24px 24px; display: flex; gap: 12px; justify-content: flex-end; background: #0f172a;">
       <button type="button" class="btn btn-secondary" onclick="closeResponseModal()" style="background: transparent; border: 1px solid #2a3b6d; color: #e0e6f6; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#1a2340'; this.style.borderColor='#3b7bfa'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.borderColor='#2a3b6d'; this.style.color='#e0e6f6'">Cancel</button>
-      <button type="button" class="btn btn-primary" onclick="saveResponse()" style="background: #3b7bfa; border: 1px solid #3b7bfa; color: #fff; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#2d5fd8'; this.style.borderColor='#2d5fd8'" onmouseout="this.style.background='#3b7bfa'; this.style.borderColor='#3b7bfa'">
-        <span>💾</span>
-        Save Response
+      <button type="button" class="btn btn-primary" onclick="sendResponse()" style="background: #3b7bfa; border: 1px solid #3b7bfa; color: #fff; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#2d5fd8'; this.style.borderColor='#2d5fd8'" onmouseout="this.style.background='#3b7bfa'; this.style.borderColor='#3b7bfa'">
+        <span>📤</span>
+        Send Response
       </button>
     </div>
   </div>
@@ -2760,6 +2783,149 @@ input[type="number"]:focus {
 .action-btn.deactivate:hover {
   background: #d97706 !important;
   border-color: #d97706 !important;
+}
+
+/* Standardized Filter/Export/Download Button Styles */
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  height: 42px;
+  justify-content: center;
+  text-align: center;
+}
+
+.filter-btn-primary {
+  background: linear-gradient(135deg, #3b7bfa 0%, #2d5fd8 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 123, 250, 0.2);
+}
+
+.filter-btn-primary:hover {
+  background: linear-gradient(135deg, #2d5fd8 0%, #1e40af 100%);
+  box-shadow: 0 4px 12px rgba(59, 123, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+.filter-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 123, 250, 0.2);
+}
+
+.export-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.export-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+/* PDF Export buttons - red variant */
+.filter-btn.export-btn[id*="PDF"],
+.filter-btn.export-btn[id*="pdf"],
+.filter-btn.export-btn[id*="Pdf"] {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.filter-btn.export-btn[id*="PDF"]:hover,
+.filter-btn.export-btn[id*="pdf"]:hover,
+.filter-btn.export-btn[id*="Pdf"]:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.filter-btn.export-btn[id*="PDF"]:active,
+.filter-btn.export-btn[id*="pdf"]:active,
+.filter-btn.export-btn[id*="Pdf"]:active {
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* Excel/CSV Export buttons - green variant (default export-btn) */
+.filter-btn.export-btn[id*="CSV"],
+.filter-btn.export-btn[id*="csv"],
+.filter-btn.export-btn[id*="Csv"],
+.filter-btn.export-btn[id*="Excel"],
+.filter-btn.export-btn[id*="excel"],
+.filter-btn.export-btn[id*="Excel"] {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.filter-btn.export-btn[id*="CSV"]:hover,
+.filter-btn.export-btn[id*="csv"]:hover,
+.filter-btn.export-btn[id*="Csv"]:hover,
+.filter-btn.export-btn[id*="Excel"]:hover,
+.filter-btn.export-btn[id*="excel"]:hover,
+.filter-btn.export-btn[id*="Excel"]:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Ensure buttons in action containers are properly aligned */
+.filter-actions .filter-btn,
+.report-actions .filter-btn,
+.df-action-buttons .filter-btn {
+  margin: 0;
+}
+
+/* Button icons spacing */
+.filter-btn span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+/* ML Training Search Input Styling */
+.ml-search-input {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border: 1px solid #2a3b6d !important;
+  -webkit-text-fill-color: #e0e6f6 !important;
+}
+
+.ml-search-input:focus {
+  background-color: #181f36 !important;
+  background: #181f36 !important;
+  color: #e0e6f6 !important;
+  border-color: #4a9eff !important;
+  outline: none !important;
+  -webkit-text-fill-color: #e0e6f6 !important;
+}
+
+.ml-search-input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.ml-search-input:-webkit-autofill,
+.ml-search-input:-webkit-autofill:hover,
+.ml-search-input:-webkit-autofill:focus,
+.ml-search-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #181f36 inset !important;
+  -webkit-text-fill-color: #e0e6f6 !important;
+  background-color: #181f36 !important;
+  color: #e0e6f6 !important;
+  background: #181f36 !important;
+  border: 1px solid #2a3b6d !important;
 }
 </style>
 

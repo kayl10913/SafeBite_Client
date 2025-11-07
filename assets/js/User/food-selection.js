@@ -768,6 +768,48 @@ class FoodSelection {
     }
   }
 
+  // Validate food name - basic validation only (numbers and symbols)
+  validateFoodName(foodName) {
+    if (!foodName || foodName.trim() === '') {
+      return { isValid: false, message: 'Food name is required. Please enter a food item name.' };
+    }
+
+    const trimmedName = foodName.trim();
+
+    // Basic validation: reject if it's only numbers
+    if (/^\d+$/.test(trimmedName)) {
+      return { 
+        isValid: false, 
+        message: 'Numbers alone are not valid food names. Please enter an actual food item (e.g., Banana, Chicken, Salmon).',
+        reason: 'Input contains only numbers'
+      };
+    }
+
+    // Reject if it's too short (less than 2 characters)
+    if (trimmedName.length < 2) {
+      return { 
+        isValid: false, 
+        message: 'Food name is too short. Please enter a valid food item name.',
+        reason: 'Input too short'
+      };
+    }
+
+    // Reject if it contains only special characters
+    if (/^[^a-zA-Z0-9]+$/.test(trimmedName)) {
+      return { 
+        isValid: false, 
+        message: 'Special characters alone are not valid food names. Please enter an actual food item.',
+        reason: 'Input contains only special characters'
+      };
+    }
+
+    // Basic validation passed
+    return { 
+      isValid: true, 
+      message: 'Food name format is valid'
+    };
+  }
+
   async confirmFoodSelection() {
     const customName = document.getElementById('customFoodName');
     const customCategory = document.getElementById('customFoodCategory');
@@ -788,13 +830,51 @@ class FoodSelection {
         console.warn('Scan already in progress. Ignoring duplicate confirmation.');
         return;
       }
-      // Validate food name against category
+
+      // Basic validation: check for numbers and symbols only
+      console.log('🔍 Validating food name:', customName.value.trim());
+      const foodNameValidation = this.validateFoodName(customName.value.trim());
+      
+      if (!foodNameValidation.isValid) {
+        console.warn('❌ Food name validation failed:', foodNameValidation.message);
+        // Show toast notification instead of alert
+        const errorMsg = `"${customName.value.trim()}" is not a valid food item. ${foodNameValidation.message}`;
+        
+        // Use toast if available, otherwise fallback to alert
+        if (typeof showErrorToast === 'function') {
+          showErrorToast(errorMsg);
+        } else if (typeof showToast === 'function') {
+          showToast('error', errorMsg);
+        } else if (typeof window.showToast === 'function') {
+          window.showToast('error', errorMsg);
+        } else {
+          // Fallback to alert if no toast function available
+          alert(`❌ Invalid Food Name\n\n${errorMsg}`);
+        }
+        customName.focus();
+        customName.style.borderColor = '#dc3545';
+        customName.style.borderWidth = '2px';
+        customName.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        setTimeout(() => {
+          customName.style.borderColor = '';
+          customName.style.borderWidth = '';
+          customName.style.boxShadow = '';
+        }, 5000);
+        return; // Stop here - don't show modal or proceed
+      }
+
+      console.log('✅ Food name validation passed');
+
+      // Then validate food name against category
       const validationResult = this.validateFoodCategory(customName.value.trim(), finalCategory);
       
       if (!validationResult.isValid) {
+        console.warn('❌ Category validation failed:', validationResult.message);
         this.showFoodValidationError(validationResult.message, customName.value.trim(), finalCategory);
-        return;
+        return; // Stop here - don't show modal or proceed
       }
+
+      console.log('✅ All validations passed - proceeding to show modal');
 
       const selectedFood = {
         id: 'custom',
@@ -808,6 +888,7 @@ class FoodSelection {
       this._lastScanHistoryId = this.addToFoodHistory(selectedFood.name, selectedFood.category, 'scanned');
       
       this.closeFoodSelectionModal();
+      // Only show modal if validation passed
       this.showFoodSelectedConfirmation(selectedFood);
 
       // Create scan session for Arduino data reception
@@ -1348,7 +1429,7 @@ class FoodSelection {
         humidity,
         gas_level,
         food_name: this.selectedFood?.name || null,
-        food_type_id: null
+        food_category: this.selectedFood?.category || null
       };
 
       const r = await fetch('/api/ml/predict', {

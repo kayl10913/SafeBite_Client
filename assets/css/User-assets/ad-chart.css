@@ -6,7 +6,7 @@
   padding: 24px 24px 0 24px;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
   position: relative;
-  min-height: 240px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -14,7 +14,7 @@
 
 #activityChart {
   width: 100% !important;
-  height: 200px !important;
+  height: 350px !important;
   display: block;
 }
 

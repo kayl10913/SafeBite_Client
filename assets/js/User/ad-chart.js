@@ -154,9 +154,9 @@ function initializeActivityChart() {
   console.log('Chart data:', chartData);
   
   const ctx = canvas.getContext('2d');
-  // Set canvas size
+  // Set canvas size - increased height for better visibility
   canvas.width = canvas.offsetWidth;
-  canvas.height = 200;
+  canvas.height = 350;
 
   // Get data based on current filter
   let data, labels;
@@ -169,16 +169,17 @@ function initializeActivityChart() {
     labels = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   }
 
-  // Chart area
-  const padding = 40;
+  // Chart area - increased padding for better spacing
+  const padding = 50;
   const w = canvas.width;
   const h = canvas.height;
   const chartW = w - padding * 2;
-  const chartH = h - padding * 1.5;
+  const chartH = h - padding * 2; // More vertical space for chart area
 
-  // Find min/max - Scale for device count (0-5 devices max)
+  // Find min/max - Scale for device count with better range
   const maxDataVal = Math.max(...data);
-  const maxVal = Math.max(5, Math.ceil(maxDataVal * 1.2)); // At least 5, or 20% above max data
+  // Use a more appropriate max value based on data, but ensure minimum range for visibility
+  const maxVal = Math.max(10, Math.ceil(maxDataVal * 1.5)); // At least 10, or 50% above max data
   const minVal = 0;
   const range = maxVal - minVal;
 
@@ -206,8 +207,8 @@ function initializeActivityChart() {
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
     }
   });
-  ctx.lineTo(padding + chartW, h - padding/2);
-  ctx.lineTo(padding, h - padding/2);
+  ctx.lineTo(padding + chartW, h - padding);
+  ctx.lineTo(padding, h - padding);
   ctx.closePath();
   ctx.fillStyle = grad;
   ctx.fill();
@@ -261,14 +262,15 @@ function initializeActivityChart() {
     }
   });
 
-  // Draw Y axis labels - Dynamic scaling
+  // Draw Y axis labels - Dynamic scaling with more intervals for better visibility
   ctx.font = '12px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillStyle = '#bfc9da';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
-  for (let i = 0; i <= 5; i++) {
-    const val = minVal + (range * (5 - i) / 5);
-    const y = padding + chartH * i / 5;
+  const yAxisSteps = 10; // More steps for better granularity
+  for (let i = 0; i <= yAxisSteps; i++) {
+    const val = minVal + (range * (yAxisSteps - i) / yAxisSteps);
+    const y = padding + chartH * i / yAxisSteps;
     ctx.fillText(Math.round(val), padding - 8, y);
     // Draw subtle grid line matching page design
     ctx.beginPath();
@@ -286,7 +288,7 @@ function initializeActivityChart() {
   ctx.textBaseline = 'top';
   labels.forEach((label, i) => {
     const x = padding + (i * chartW / (data.length - 1));
-    ctx.fillText(label, x, h - padding/2 + 8);
+    ctx.fillText(label, x, h - padding + 10);
   });
 }
 

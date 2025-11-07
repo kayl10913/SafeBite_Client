@@ -2115,25 +2115,69 @@ class SensorDashboard {
     if (recommendationElement) {
       // Handle recommendations - could be string, array, or object
       let recommendationText = '';
-      if (prediction.recommendation) {
+      
+      console.log('🔍 Processing recommendations for display:', {
+        recommendation: prediction.recommendation,
+        recommendations: prediction.recommendations,
+        type: typeof prediction.recommendations
+      });
+      
+      // Priority 1: Direct recommendation string
+      if (prediction.recommendation && typeof prediction.recommendation === 'string') {
         recommendationText = prediction.recommendation;
-      } else if (prediction.recommendations) {
+      }
+      // Priority 2: Recommendations object with main property
+      else if (prediction.recommendations) {
         if (typeof prediction.recommendations === 'string') {
+          // Try to parse if it's a JSON string
           try {
-            const recArray = JSON.parse(prediction.recommendations);
-            if (Array.isArray(recArray) && recArray.length > 0) {
-              recommendationText = recArray.join('; ');
+            const parsed = JSON.parse(prediction.recommendations);
+            if (parsed.main) {
+              recommendationText = parsed.main;
+            } else if (Array.isArray(parsed) && parsed.length > 0) {
+              recommendationText = parsed[0];
+            } else if (typeof parsed === 'string') {
+              recommendationText = parsed;
             }
           } catch (e) {
+            // If parsing fails, use as-is
             recommendationText = prediction.recommendations;
           }
-        } else if (Array.isArray(prediction.recommendations)) {
-          recommendationText = prediction.recommendations.join('; ');
-        } else if (prediction.recommendations.main) {
-          recommendationText = prediction.recommendations.main;
+        } else if (typeof prediction.recommendations === 'object') {
+          // Handle object format
+          if (prediction.recommendations.main) {
+            recommendationText = prediction.recommendations.main;
+          } else if (prediction.recommendations.recommendation) {
+            recommendationText = prediction.recommendations.recommendation;
+          } else if (Array.isArray(prediction.recommendations) && prediction.recommendations.length > 0) {
+            // If it's an array, use the first item
+            recommendationText = prediction.recommendations[0];
+          } else if (prediction.recommendations.details && Array.isArray(prediction.recommendations.details)) {
+            // If it has a details array, use the first detail
+            recommendationText = prediction.recommendations.details[0] || '';
+          }
+        } else if (Array.isArray(prediction.recommendations) && prediction.recommendations.length > 0) {
+          // Handle array format - use first recommendation
+          recommendationText = prediction.recommendations[0];
         }
       }
-      recommendationElement.textContent = recommendationText || 'No recommendations available';
+      
+      // If still no recommendation, try to get from AI support data
+      if (!recommendationText && prediction.ai_support) {
+        if (prediction.ai_support.recommendations && Array.isArray(prediction.ai_support.recommendations)) {
+          recommendationText = prediction.ai_support.recommendations[0] || '';
+        } else if (prediction.ai_support.summary) {
+          recommendationText = prediction.ai_support.summary;
+        }
+      }
+      
+      // Final fallback
+      if (!recommendationText || recommendationText.trim() === '') {
+        recommendationText = 'No recommendations available';
+      }
+      
+      console.log('✅ Final recommendation text:', recommendationText);
+      recommendationElement.textContent = recommendationText;
     }
 
     // Show the modal
@@ -2321,6 +2365,54 @@ class SensorDashboard {
       }
       
       // Format prediction result to match expected structure
+      // Extract recommendations from ML workflow result
+      let recommendationText = '';
+      let recommendationsObj = null;
+      
+      // Try to get recommendations from various possible formats
+      if (mlWorkflowResult.recommendations) {
+        if (typeof mlWorkflowResult.recommendations === 'string') {
+          try {
+            recommendationsObj = JSON.parse(mlWorkflowResult.recommendations);
+          } catch (e) {
+            recommendationText = mlWorkflowResult.recommendations;
+          }
+        } else if (typeof mlWorkflowResult.recommendations === 'object') {
+          recommendationsObj = mlWorkflowResult.recommendations;
+        }
+      }
+      
+      // Extract main recommendation text
+      if (recommendationsObj) {
+        if (recommendationsObj.main) {
+          recommendationText = recommendationsObj.main;
+        } else if (Array.isArray(recommendationsObj) && recommendationsObj.length > 0) {
+          recommendationText = recommendationsObj[0];
+        } else if (recommendationsObj.recommendation) {
+          recommendationText = recommendationsObj.recommendation;
+        }
+      }
+      
+      // Try AI support recommendations if available
+      if (!recommendationText && mlWorkflowResult.ai_support) {
+        if (mlWorkflowResult.ai_support.recommendations && Array.isArray(mlWorkflowResult.ai_support.recommendations)) {
+          recommendationText = mlWorkflowResult.ai_support.recommendations[0] || '';
+        } else if (mlWorkflowResult.ai_support.summary) {
+          recommendationText = mlWorkflowResult.ai_support.summary;
+        }
+      }
+      
+      // Fallback to recommendation field
+      if (!recommendationText && mlWorkflowResult.recommendation) {
+        recommendationText = mlWorkflowResult.recommendation;
+      }
+      
+      console.log('🔍 Extracted recommendations:', {
+        recommendationText,
+        recommendationsObj,
+        ai_support: mlWorkflowResult.ai_support
+      });
+      
       const prediction = {
         success: true,
         prediction: {
@@ -2331,8 +2423,10 @@ class SensorDashboard {
           spoilage_status: mlWorkflowResult.spoilage_status,
           spoilage_probability: mlWorkflowResult.spoilage_probability,
           confidence_score: mlWorkflowResult.confidence_score,
-          recommendation: mlWorkflowResult.recommendations?.main || mlWorkflowResult.recommendation || 'No recommendations available',
-          recommendations: mlWorkflowResult.recommendations || { main: mlWorkflowResult.recommendation || 'No recommendations available' }
+          recommendation: recommendationText || 'No recommendations available',
+          recommendations: recommendationsObj || { main: recommendationText || 'No recommendations available' },
+          ai_support: mlWorkflowResult.ai_support || null,
+          gas_emission_support: mlWorkflowResult.gas_emission_support || null
         }
       };
       
@@ -2569,6 +2663,42 @@ class SensorDashboard {
         if (typeof showWarningToast === 'function') showWarningToast('Please enter a food name');
         return;
       }
+
+      // Validate if it's a real food name using AI
+      try {
+        const validationResponse = await fetch('/api/ai/validate-food-name', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ food_name: name })
+        });
+
+        if (validationResponse.ok) {
+          const validationResult = await validationResponse.json();
+          if (validationResult.success && validationResult.is_food === false) {
+            const errorMsg = `"${name}" is not a valid food name. Please enter an actual food item (e.g., Banana, Chicken, Salmon).`;
+            if (typeof showWarningToast === 'function') {
+              showWarningToast(errorMsg);
+            } else {
+              alert(errorMsg);
+            }
+            if (nameEl) {
+              nameEl.focus();
+              nameEl.style.borderColor = '#dc3545';
+              setTimeout(() => {
+                nameEl.style.borderColor = '';
+              }, 3000);
+            }
+            return;
+          }
+        }
+      } catch (validationError) {
+        console.warn('Food name validation failed, proceeding anyway:', validationError);
+        // Continue with submission if validation fails
+      }
+
       const submitBtn = form.querySelector('.config-modal-submit');
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Adding...'; }
       try {
@@ -3145,6 +3275,445 @@ class SensorDashboard {
       return null;
     }).catch(err => console.warn('Fallback alert insert error:', err.message));
   }
+
+  // ===== Methods for SmartSense Scanner (matching Smart Training Center logic) =====
+  
+  // Get validated AI analysis with environmental factors
+  async getValidatedAIAnalysis(foodName, sensorData) {
+    try {
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        throw new Error('Authentication required');
+      }
+
+      // Validate sensor data
+      if (!sensorData) {
+        throw new Error('No sensor data available');
+      }
+
+      const temp = sensorData.temperature?.value;
+      const humidity = sensorData.humidity?.value;
+      const gas = sensorData.gas?.value;
+
+      if (temp === undefined || humidity === undefined || gas === undefined) {
+        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
+      }
+
+      console.log('🔍 Calling AI analysis endpoint with validation...');
+      const response = await fetch('/api/ai/ai-analyze', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          foodType: foodName,
+          temp: temp,
+          humidity: humidity,
+          gas: gas
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.analysis) {
+        console.log('🔍 Validated AI Analysis Response Received:');
+        console.log('  Full Result:', result);
+        console.log('  Analysis Object:', result.analysis);
+        console.log('  Risk Level:', result.analysis.riskLevel);
+        console.log('  Risk Score:', result.analysis.riskScore);
+        console.log('  Notes:', result.analysis.notes);
+        console.log('  Mapped Status:', this.mapRiskLevelToSpoilageStatus(result.analysis.riskLevel));
+        
+        return { success: true, analysis: result.analysis };
+      } else {
+        console.error('Failed to get validated AI analysis:', result.error);
+        return { success: false, error: result.error || 'Unknown error' };
+      }
+    } catch (error) {
+      console.error('Error getting validated AI analysis:', error);
+      return { success: false, error: 'Network error' };
+    }
+  }
+
+  // Map risk level from analysis to spoilage status
+  mapRiskLevelToSpoilageStatus(riskLevel) {
+    switch (riskLevel?.toLowerCase()) {
+      case 'high':
+        return 'unsafe';
+      case 'medium':
+        return 'caution';
+      case 'low':
+        return 'safe';
+      default:
+        return 'safe';
+    }
+  }
+
+  // Analyze gas emission thresholds
+  analyzeGasEmissionThresholds(gasLevel) {
+    if (gasLevel >= 400) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 98,
+        confidence: 95,
+        recommendation: 'CRITICAL: Severe Spoilage Detected (400+ ppm). Do not consume. Dispose immediately to avoid foodborne illness. Sanitize storage area thoroughly.',
+        threshold: '400+ ppm'
+      };
+    } else if (gasLevel >= 200) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 90,
+        confidence: 90,
+        recommendation: 'CRITICAL: Advanced Spoilage Detected (200-399 ppm). Do not consume. Dispose immediately. Check for strong odors, discoloration, or slimy texture.',
+        threshold: '200-399 ppm'
+      };
+    } else if (gasLevel >= 100) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 85,
+        confidence: 85,
+        recommendation: 'CRITICAL: Spoilage Detected (100-199 ppm). Do not consume. Dispose immediately. Inspect for signs of spoilage.',
+        threshold: '100-199 ppm'
+      };
+    } else if (gasLevel >= 70) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 80,
+        confidence: 80,
+        recommendation: 'CRITICAL: Spoilage Detected (70-99 ppm). Do not consume. Dispose immediately. Based on sensor observations, this level indicates spoilage.',
+        threshold: '70-99 ppm'
+      };
+    } else if (gasLevel >= 50) {
+      return {
+        riskLevel: 'medium',
+        status: 'caution',
+        probability: 60,
+        confidence: 75,
+        recommendation: 'CAUTION: Early Warning Signs (50-69 ppm). Monitor closely. Inspect food before consuming. Consider consuming soon or improving storage conditions.',
+        threshold: '50-69 ppm'
+      };
+    } else {
+      return {
+        riskLevel: 'low',
+        status: 'safe',
+        probability: 20,
+        confidence: 90,
+        recommendation: 'SAFE: Fresh/Safe (0-49 ppm). Food appears safe to consume. Continue monitoring and maintain proper storage conditions.',
+        threshold: '0-49 ppm'
+      };
+    }
+  }
+
+  // Analyze environmental conditions
+  analyzeEnvironmentalConditions(temperature, humidity) {
+    const baselineTemp = 22;
+    const baselineHumidity = 50;
+    
+    const tempDeviation = temperature - baselineTemp;
+    const humidityDeviation = humidity - baselineHumidity;
+    
+    let tempRisk = 'normal';
+    let humidityRisk = 'normal';
+    let overallRisk = 'normal';
+    
+    if (temperature > 35) {
+      tempRisk = 'high';
+    } else if (temperature > 30) {
+      tempRisk = 'medium';
+    } else if (temperature < 10) {
+      tempRisk = 'low';
+    }
+    
+    if (humidity > 85) {
+      humidityRisk = 'high';
+    } else if (humidity > 75) {
+      humidityRisk = 'medium';
+    } else if (humidity < 25) {
+      humidityRisk = 'low';
+    }
+    
+    if (tempRisk === 'high' || humidityRisk === 'high') {
+      overallRisk = 'high';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      overallRisk = 'medium';
+    }
+    
+    return {
+      baselineTemp,
+      baselineHumidity,
+      tempDeviation,
+      humidityDeviation,
+      tempRisk,
+      humidityRisk,
+      overallRisk,
+      recommendation: this.getEnvironmentalRecommendation(tempRisk, humidityRisk)
+    };
+  }
+
+  // Get environmental recommendation
+  getEnvironmentalRecommendation(tempRisk, humidityRisk) {
+    if (tempRisk === 'high' && humidityRisk === 'high') {
+      return 'CRITICAL: Both temperature and humidity are too high. This creates ideal conditions for bacterial growth. Move food to cooler, drier storage immediately.';
+    } else if (tempRisk === 'high') {
+      return 'WARNING: Temperature is too high. Move food to cooler storage (below 4°C for perishables) to prevent spoilage.';
+    } else if (humidityRisk === 'high') {
+      return 'WARNING: Humidity is too high. This promotes mold growth and bacterial activity. Improve ventilation or use dehumidifier.';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      return 'CAUTION: Storage conditions are suboptimal. Monitor closely and consider improving storage conditions.';
+    }
+    return 'Storage conditions are within acceptable ranges.';
+  }
+
+  // Assess food condition using environmental factors
+  assessFoodCondition(sensorData) {
+    const temperature = sensorData.temperature?.value;
+    const humidity = sensorData.humidity?.value;
+    const gasLevel = sensorData.gas?.value;
+
+    if (temperature === undefined || humidity === undefined || gasLevel === undefined) {
+      console.warn('Missing sensor data for condition assessment, defaulting to safe');
+      return { condition: 'safe', spoilageScore: 20 };
+    }
+
+    const gasAnalysis = this.analyzeGasEmissionThresholds(gasLevel);
+    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
+    
+    const isUnsafeByHumidity = humidity > 90;
+    const isUnsafeByGas = gasLevel > 70;
+    
+    if (isUnsafeByHumidity || isUnsafeByGas) {
+      let criticalFactor = [];
+      let recommendation = 'CRITICAL: ';
+      
+      if (isUnsafeByHumidity && isUnsafeByGas) {
+        criticalFactor.push('humidity', 'gas');
+        recommendation += `Both extremely high humidity (${humidity.toFixed(1)}%) and elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      } else if (isUnsafeByHumidity) {
+        criticalFactor.push('humidity');
+        recommendation += `Extremely high humidity (${humidity.toFixed(1)}%) detected. `;
+      } else {
+        criticalFactor.push('gas');
+        recommendation += `Elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      }
+      
+      recommendation += `Food is unsafe to consume. Inspect immediately - if strong smell or rot is observed, dispose immediately. `;
+      recommendation += `This promotes rapid bacterial growth and spoilage.`;
+      
+      return {
+        condition: 'unsafe',
+        spoilageScore: isUnsafeByHumidity && isUnsafeByGas ? 95 : 85,
+        temperature,
+        humidity,
+        gasLevel,
+        assessment: {
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: recommendation,
+          environmental: envAnalysis,
+          environmentalOverride: isUnsafeByHumidity,
+          gasOverride: isUnsafeByGas,
+          criticalFactor: criticalFactor.join('_and_')
+        }
+      };
+    }
+    
+    if (gasAnalysis.riskLevel === 'high' || (gasAnalysis.riskLevel === 'medium' && gasAnalysis.status === 'caution')) {
+      let finalSpoilageScore = gasAnalysis.probability;
+      let finalCondition = gasAnalysis.status;
+      
+      if (envAnalysis.overallRisk === 'high') {
+        finalSpoilageScore = Math.min(95, finalSpoilageScore + 15);
+        if (finalCondition === 'caution') finalCondition = 'unsafe';
+      } else if (envAnalysis.overallRisk === 'medium') {
+        finalSpoilageScore = Math.min(90, finalSpoilageScore + 10);
+      }
+      
+      return {
+        condition: finalCondition,
+        spoilageScore: finalSpoilageScore,
+        temperature,
+        humidity,
+        gasLevel,
+        assessment: {
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: `${gasAnalysis.recommendation} ${envAnalysis.overallRisk !== 'normal' ? envAnalysis.recommendation : ''}`,
+          environmental: envAnalysis
+        }
+      };
+    }
+
+    let spoilageScore = gasAnalysis.probability;
+    let condition = gasAnalysis.status;
+    
+    if (envAnalysis.overallRisk === 'high') {
+      spoilageScore = Math.min(75, spoilageScore + 35);
+      condition = 'caution';
+    } else if (envAnalysis.overallRisk === 'medium') {
+      spoilageScore = Math.min(60, spoilageScore + 25);
+      if (condition === 'safe') condition = 'caution';
+    }
+    
+    return {
+      condition,
+      spoilageScore,
+      temperature,
+      humidity,
+      gasLevel,
+      assessment: {
+        gasRisk: gasAnalysis.riskLevel,
+        gasThreshold: gasAnalysis.threshold,
+        recommendation: gasAnalysis.recommendation,
+        environmental: envAnalysis,
+        tempRisk: envAnalysis.tempRisk,
+        humidityRisk: envAnalysis.humidityRisk
+      }
+    };
+  }
+
+  // Perform complete ML workflow (like Smart Training Center)
+  async performMLWorkflow(foodId, foodName, foodCategory, sensorData, spoilageStatus, aiAnalysisResult) {
+    try {
+      if (this.scanCancelled) {
+        console.log('ML workflow cancelled - scanning was stopped by user');
+        return { success: false, error: 'Scanning cancelled by user' };
+      }
+
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        throw new Error('Authentication required');
+      }
+
+      if (!sensorData) {
+        throw new Error('No sensor data available for ML workflow');
+      }
+
+      const temp = sensorData.temperature?.value;
+      const humidity = sensorData.humidity?.value;
+      const gas = sensorData.gas?.value;
+
+      if (temp === undefined || humidity === undefined || gas === undefined) {
+        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
+      }
+
+      // Step 1: Store training data
+      console.log('Storing training data...');
+      const trainingResponse = await fetch('/api/ml-workflow/training-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_name: foodName,
+          food_category: foodCategory,
+          temperature: temp,
+          humidity: humidity,
+          gas_level: gas,
+          spoilage_status: spoilageStatus,
+          confidence_score: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          storage_conditions: {
+            temperature: temp,
+            humidity: humidity,
+            gas_level: gas,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      const trainingResult = await trainingResponse.json();
+      if (!trainingResult.success) {
+        throw new Error('Failed to store training data: ' + trainingResult.error);
+      }
+      
+      // Step 2: Generate ML prediction
+      console.log('Generating ML prediction...');
+      const predictionResponse = await fetch('/api/ml-workflow/predict', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_id: foodId,
+          food_name: foodName,
+          food_category: foodCategory,
+          temperature: temp,
+          humidity: humidity,
+          gas_level: gas,
+          expiration_date: null,
+          spoilage_probability: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          spoilage_status: aiAnalysisResult.success ? 
+            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
+          confidence_score: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          recommendations: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.recommendations || []) : [],
+          ai_original_status: aiAnalysisResult.success ? 
+            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
+          display_override_status: spoilageStatus
+        })
+      });
+
+      const predictionResult = await predictionResponse.json();
+      if (!predictionResult.success) {
+        throw new Error('Failed to generate ML prediction: ' + predictionResult.error);
+      }
+
+      // Step 3: Update food item with sensor data
+      console.log('Updating food item with sensor data...');
+      const updateResponse = await fetch('/api/ml-workflow/update-food-item', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_id: foodId,
+          scan_status: 'analyzed',
+          scan_timestamp: new Date().toISOString(),
+          sensor_data: {
+            temperature: temp,
+            humidity: humidity,
+            gas_level: gas,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      const updateResult = await updateResponse.json();
+      if (!updateResult.success) {
+        console.error('Failed to update food item with sensor data:', updateResult.error);
+      }
+
+      return {
+        success: true,
+        training_id: trainingResult.training_id,
+        prediction_id: predictionResult.prediction_id,
+        spoilage_status: predictionResult.spoilage_status,
+        spoilage_probability: predictionResult.spoilage_probability,
+        confidence_score: predictionResult.confidence_score,
+        recommendations: predictionResult.recommendations || { main: 'No recommendations available' },
+        recommendation: predictionResult.recommendations?.main || 'No recommendations available'
+      };
+    } catch (error) {
+      console.error('Error in ML workflow:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Initialize dashboard when DOM is loaded
@@ -3453,455 +4022,6 @@ class RealTimeScanner {
     // Scale effect during counting
     const scale = 1 + Math.sin(progress * Math.PI * 3) * 0.05;
     valueElement.style.transform = `scale(${scale})`;
-  }
-
-  // ===== Methods for SmartSense Scanner (matching Smart Training Center logic) =====
-  
-  // Get validated AI analysis with environmental factors
-  async getValidatedAIAnalysis(foodName, sensorData) {
-    try {
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        throw new Error('Authentication required');
-      }
-
-      // Validate sensor data
-      if (!sensorData) {
-        throw new Error('No sensor data available');
-      }
-
-      const temp = sensorData.temperature?.value;
-      const humidity = sensorData.humidity?.value;
-      const gas = sensorData.gas?.value;
-
-      if (temp === undefined || humidity === undefined || gas === undefined) {
-        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
-      }
-
-      console.log('🔍 Calling AI analysis endpoint with validation...');
-      const response = await fetch('/api/ai/ai-analyze', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          foodType: foodName,
-          temp: temp,
-          humidity: humidity,
-          gas: gas
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.analysis) {
-        console.log('🔍 Validated AI Analysis Response Received:');
-        console.log('  Full Result:', result);
-        console.log('  Analysis Object:', result.analysis);
-        console.log('  Risk Level:', result.analysis.riskLevel);
-        console.log('  Risk Score:', result.analysis.riskScore);
-        console.log('  Notes:', result.analysis.notes);
-        console.log('  Mapped Status:', this.mapRiskLevelToSpoilageStatus(result.analysis.riskLevel));
-        
-        return { success: true, analysis: result.analysis };
-      } else {
-        console.error('Failed to get validated AI analysis:', result.error);
-        return { success: false, error: result.error || 'Unknown error' };
-      }
-    } catch (error) {
-      console.error('Error getting validated AI analysis:', error);
-      return { success: false, error: 'Network error' };
-    }
-  }
-
-  // Map risk level from analysis to spoilage status
-  mapRiskLevelToSpoilageStatus(riskLevel) {
-    switch (riskLevel?.toLowerCase()) {
-      case 'high':
-        return 'unsafe';
-      case 'medium':
-        return 'caution';
-      case 'low':
-        return 'safe';
-      default:
-        return 'safe';
-    }
-  }
-
-  // Analyze gas emission thresholds
-  analyzeGasEmissionThresholds(gasLevel) {
-    if (gasLevel >= 400) {
-      return {
-        riskLevel: 'high',
-        status: 'unsafe',
-        probability: 98,
-        confidence: 95,
-        recommendation: 'CRITICAL: Severe Spoilage Detected (400+ ppm). Do not consume. Dispose immediately to avoid foodborne illness. Sanitize storage area thoroughly.',
-        threshold: '400+ ppm'
-      };
-    } else if (gasLevel >= 200) {
-      return {
-        riskLevel: 'high',
-        status: 'unsafe',
-        probability: 90,
-        confidence: 90,
-        recommendation: 'CRITICAL: Advanced Spoilage Detected (200-399 ppm). Do not consume. Dispose immediately. Check for strong odors, discoloration, or slimy texture.',
-        threshold: '200-399 ppm'
-      };
-    } else if (gasLevel >= 100) {
-      return {
-        riskLevel: 'high',
-        status: 'unsafe',
-        probability: 85,
-        confidence: 88,
-        recommendation: 'CRITICAL: Spoilage Detected (100-199 ppm). Food is unsafe to consume. Dispose immediately. Inspect for off-odors, discoloration, or texture changes.',
-        threshold: '100-199 ppm'
-      };
-    } else if (gasLevel >= 70) {
-      return {
-        riskLevel: 'high',
-        status: 'unsafe',
-        probability: 80,
-        confidence: 85,
-        recommendation: 'CRITICAL: Spoilage Detected (70-99 ppm). Food is unsafe to consume. Based on sensor observations, gas levels above 70 ppm indicate spoilage. Dispose immediately if strong smell or rot is observed.',
-        threshold: '70-99 ppm'
-      };
-    } else if (gasLevel >= 50) {
-      return {
-        riskLevel: 'medium',
-        status: 'caution',
-        probability: 60,
-        confidence: 85,
-        recommendation: 'WARNING: Elevated Gas Levels (50-69 ppm). Food may be starting to spoil. Inspect carefully for any signs of spoilage (smell, color, texture). Consume within 24 hours or discard if suspicious.',
-        threshold: '50-69 ppm'
-      };
-    } else if (gasLevel >= 0) {
-      return {
-        riskLevel: 'low',
-        status: 'safe',
-        probability: 20,
-        confidence: 90,
-        recommendation: 'Low Risk: Fresh/Safe (0-49 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
-        threshold: '0-49 ppm'
-      };
-    }
-    
-    return {
-      riskLevel: 'unknown',
-      status: 'unknown',
-      probability: 0,
-      confidence: 0,
-      recommendation: 'Invalid gas level reading. Please check sensor.',
-      threshold: 'invalid'
-    };
-  }
-
-  // Analyze environmental conditions
-  analyzeEnvironmentalConditions(temperature, humidity) {
-    const baselineTemp = 22;
-    const baselineHumidity = 50;
-    
-    const tempDeviation = temperature - baselineTemp;
-    const humidityDeviation = humidity - baselineHumidity;
-    
-    let tempRisk = 'normal';
-    let humidityRisk = 'normal';
-    let overallRisk = 'normal';
-    
-    if (temperature > 35) {
-      tempRisk = 'high';
-    } else if (temperature > 30) {
-      tempRisk = 'medium';
-    } else if (temperature < 10) {
-      tempRisk = 'low';
-    }
-    
-    if (humidity > 85) {
-      humidityRisk = 'high';
-    } else if (humidity > 75) {
-      humidityRisk = 'medium';
-    } else if (humidity < 25) {
-      humidityRisk = 'low';
-    }
-    
-    if (tempRisk === 'high' || humidityRisk === 'high') {
-      overallRisk = 'high';
-    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
-      overallRisk = 'medium';
-    }
-    
-    return {
-      baselineTemp,
-      baselineHumidity,
-      tempDeviation,
-      humidityDeviation,
-      tempRisk,
-      humidityRisk,
-      overallRisk,
-      recommendation: this.getEnvironmentalRecommendation(tempRisk, humidityRisk)
-    };
-  }
-
-  // Get environmental recommendation
-  getEnvironmentalRecommendation(tempRisk, humidityRisk) {
-    if (tempRisk === 'high' && humidityRisk === 'high') {
-      return 'High temperature and humidity detected. Consider refrigeration or air conditioning to slow spoilage.';
-    } else if (tempRisk === 'high') {
-      return 'High temperature detected. Store in cooler location or refrigerate if possible.';
-    } else if (humidityRisk === 'high') {
-      return 'High humidity detected. Use dehumidifier or store in drier location.';
-    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
-      return 'Environmental conditions are slightly elevated. Monitor food closely.';
-    } else {
-      return 'Environmental conditions are within normal range for your location.';
-    }
-  }
-
-  // Assess food condition using environmental factors
-  assessFoodCondition(sensorData) {
-    const temperature = sensorData.temperature?.value;
-    const humidity = sensorData.humidity?.value;
-    const gasLevel = sensorData.gas?.value;
-
-    if (temperature === undefined || humidity === undefined || gasLevel === undefined) {
-      console.warn('Missing sensor data for condition assessment, defaulting to safe');
-      return { condition: 'safe', spoilageScore: 20 };
-    }
-
-    const gasAnalysis = this.analyzeGasEmissionThresholds(gasLevel);
-    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
-    
-    const isUnsafeByHumidity = humidity > 90;
-    const isUnsafeByGas = gasLevel > 70;
-    
-    if (isUnsafeByHumidity || isUnsafeByGas) {
-      let criticalFactor = [];
-      let recommendation = 'CRITICAL: ';
-      
-      if (isUnsafeByHumidity && isUnsafeByGas) {
-        criticalFactor.push('humidity', 'gas');
-        recommendation += `Both extremely high humidity (${humidity.toFixed(1)}%) and elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
-      } else if (isUnsafeByHumidity) {
-        criticalFactor.push('humidity');
-        recommendation += `Extremely high humidity (${humidity.toFixed(1)}%) detected. `;
-      } else {
-        criticalFactor.push('gas');
-        recommendation += `Elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
-      }
-      
-      recommendation += `Food is unsafe to consume. Inspect immediately - if strong smell or rot is observed, dispose immediately. `;
-      recommendation += `This promotes rapid bacterial growth and spoilage.`;
-      
-      return {
-        condition: 'unsafe',
-        spoilageScore: isUnsafeByHumidity && isUnsafeByGas ? 95 : 85,
-        temperature,
-        humidity,
-        gasLevel,
-        assessment: {
-          gasRisk: gasAnalysis.riskLevel,
-          gasThreshold: gasAnalysis.threshold,
-          recommendation: recommendation,
-          environmental: envAnalysis,
-          environmentalOverride: isUnsafeByHumidity,
-          gasOverride: isUnsafeByGas,
-          criticalFactor: criticalFactor.join('_and_')
-        }
-      };
-    }
-    
-    if (gasAnalysis.riskLevel === 'high' || (gasAnalysis.riskLevel === 'medium' && gasAnalysis.status === 'caution')) {
-      let finalSpoilageScore = gasAnalysis.probability;
-      let finalCondition = gasAnalysis.status;
-      
-      if (envAnalysis.overallRisk === 'high') {
-        finalSpoilageScore = Math.min(95, finalSpoilageScore + 15);
-        if (finalCondition === 'caution') finalCondition = 'unsafe';
-      } else if (envAnalysis.overallRisk === 'medium') {
-        finalSpoilageScore = Math.min(90, finalSpoilageScore + 10);
-      }
-      
-      return {
-        condition: finalCondition,
-        spoilageScore: finalSpoilageScore,
-        temperature,
-        humidity,
-        gasLevel,
-        assessment: {
-          gasRisk: gasAnalysis.riskLevel,
-          gasThreshold: gasAnalysis.threshold,
-          recommendation: `${gasAnalysis.recommendation} ${envAnalysis.overallRisk !== 'normal' ? envAnalysis.recommendation : ''}`,
-          environmental: envAnalysis
-        }
-      };
-    }
-
-    let spoilageScore = gasAnalysis.probability;
-    let condition = gasAnalysis.status;
-    
-    if (envAnalysis.overallRisk === 'high') {
-      spoilageScore = Math.min(75, spoilageScore + 35);
-      condition = 'caution';
-    } else if (envAnalysis.overallRisk === 'medium') {
-      spoilageScore = Math.min(60, spoilageScore + 25);
-      if (condition === 'safe') condition = 'caution';
-    }
-    
-    return {
-      condition,
-      spoilageScore,
-      temperature,
-      humidity,
-      gasLevel,
-      assessment: {
-        gasRisk: gasAnalysis.riskLevel,
-        gasThreshold: gasAnalysis.threshold,
-        recommendation: gasAnalysis.recommendation,
-        environmental: envAnalysis,
-        tempRisk: envAnalysis.tempRisk,
-        humidityRisk: envAnalysis.humidityRisk
-      }
-    };
-  }
-
-  // Perform complete ML workflow (like Smart Training Center)
-  async performMLWorkflow(foodId, foodName, foodCategory, sensorData, spoilageStatus, aiAnalysisResult) {
-    try {
-      if (this.scanCancelled) {
-        console.log('ML workflow cancelled - scanning was stopped by user');
-        return { success: false, error: 'Scanning cancelled by user' };
-      }
-
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        throw new Error('Authentication required');
-      }
-
-      if (!sensorData) {
-        throw new Error('No sensor data available for ML workflow');
-      }
-
-      const temp = sensorData.temperature?.value;
-      const humidity = sensorData.humidity?.value;
-      const gas = sensorData.gas?.value;
-
-      if (temp === undefined || humidity === undefined || gas === undefined) {
-        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
-      }
-
-      // Step 1: Store training data
-      console.log('Storing training data...');
-      const trainingResponse = await fetch('/api/ml-workflow/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_name: foodName,
-          food_category: foodCategory,
-          temperature: temp,
-          humidity: humidity,
-          gas_level: gas,
-          spoilage_status: spoilageStatus,
-          confidence_score: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          storage_conditions: {
-            temperature: temp,
-            humidity: humidity,
-            gas_level: gas,
-            timestamp: new Date().toISOString()
-          }
-        })
-      });
-
-      const trainingResult = await trainingResponse.json();
-      if (!trainingResult.success) {
-        throw new Error('Failed to store training data: ' + trainingResult.error);
-      }
-      
-      // Step 2: Generate ML prediction
-      console.log('Generating ML prediction...');
-      const predictionResponse = await fetch('/api/ml-workflow/predict', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_id: foodId,
-          food_name: foodName,
-          food_category: foodCategory,
-          temperature: temp,
-          humidity: humidity,
-          gas_level: gas,
-          expiration_date: null,
-          spoilage_probability: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          spoilage_status: aiAnalysisResult.success ? 
-            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
-          confidence_score: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          recommendations: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.recommendations || []) : [],
-          ai_original_status: aiAnalysisResult.success ? 
-            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
-          display_override_status: spoilageStatus
-        })
-      });
-
-      const predictionResult = await predictionResponse.json();
-      if (!predictionResult.success) {
-        throw new Error('Failed to generate ML prediction: ' + predictionResult.error);
-      }
-
-      // Step 3: Update food item with sensor data
-      console.log('Updating food item with sensor data...');
-      const updateResponse = await fetch('/api/ml-workflow/update-food-item', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_id: foodId,
-          scan_status: 'analyzed',
-          scan_timestamp: new Date().toISOString(),
-          sensor_data: {
-            temperature: temp,
-            humidity: humidity,
-            gas_level: gas,
-            timestamp: new Date().toISOString()
-          }
-        })
-      });
-
-      const updateResult = await updateResponse.json();
-      if (!updateResult.success) {
-        console.error('Failed to update food item with sensor data:', updateResult.error);
-      }
-
-      return {
-        success: true,
-        training_id: trainingResult.training_id,
-        prediction_id: predictionResult.prediction_id,
-        spoilage_status: predictionResult.spoilage_status,
-        spoilage_probability: predictionResult.spoilage_probability,
-        confidence_score: predictionResult.confidence_score,
-        recommendations: predictionResult.recommendations || { main: 'No recommendations available' },
-        recommendation: predictionResult.recommendations?.main || 'No recommendations available'
-      };
-    } catch (error) {
-      console.error('Error in ML workflow:', error);
-      return { success: false, error: error.message };
-    }
   }
 }
 

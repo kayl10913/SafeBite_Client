@@ -873,6 +873,8 @@ document.addEventListener('DOMContentLoaded', function() {
 (function(){
     if (!window.mlPredictionsManager) {
         window.mlPredictionsManager = {
+            _accuracyCalculated: false, // Flag to prevent multiple calculations
+            _calculatingAccuracy: false, // Flag to prevent simultaneous calculations
             async loadOverview(){
                 try {
                     console.log('Loading ML overview...');
@@ -990,10 +992,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Store and render with pagination
                     const allRows = json.success ? (Array.isArray(json.data) ? json.data : []) : [];
                     this._samplesAll = allRows;
+                    this._samplesFiltered = null; // Reset filter when loading new data
                     this._samplesPage = this._samplesPage || 1;
                     this._samplesPageSize = this._samplesPageSize || 10;
                     if (countSpan) countSpan.textContent = allRows.length;
                     this._renderSamplesPage();
+                    // Setup search listeners after data is loaded
+                    this._setupMlSearchListeners();
+                    // Automatically calculate accuracy from training data (only once, no toasts)
+                    if (!this._accuracyCalculated) {
+                        this._accuracyCalculated = true;
+                        this._calculateModelAccuracy();
+                    }
                     console.log(`Loaded ${allRows.length} training samples`);
                 } catch (e) { 
                     console.error('ML samples load failed', e);
@@ -1012,10 +1022,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pag = document.getElementById('mlSamplesPagination');
                 const info = document.getElementById('mlSamplesPageInfo');
                 const ctrls = document.getElementById('mlSamplesPageControls');
+                const countSpan = document.getElementById('mlSamplesCount');
                 if (!tbody) return;
                 tbody.innerHTML = '';
-                const rows = Array.isArray(this._samplesAll) ? this._samplesAll : [];
+                // Use filtered data if search is active, otherwise use all data
+                const rows = this._samplesFiltered !== null ? this._samplesFiltered : (Array.isArray(this._samplesAll) ? this._samplesAll : []);
                 const total = rows.length;
+                // Update count display
+                if (countSpan) {
+                    const totalAll = Array.isArray(this._samplesAll) ? this._samplesAll.length : 0;
+                    countSpan.textContent = this._samplesFiltered !== null ? `${total} of ${totalAll}` : totalAll;
+                }
                 if (total === 0) {
                     const tr = document.createElement('tr');
                     const td = document.createElement('td');
@@ -1066,6 +1083,108 @@ document.addEventListener('DOMContentLoaded', function() {
                         else if (i===page-3 || i===page+3){ const s=document.createElement('span'); s.className='pagination-ellipsis'; s.textContent='...'; ctrls.appendChild(s);} 
                     }
                     if (page<totalPages) ctrls.appendChild(makeBtn('Next ›', page+1));
+                }
+            },
+            _filterSamples(searchTerm){
+                if (!searchTerm || searchTerm.trim() === '') {
+                    this._samplesFiltered = null;
+                    this._samplesPage = 1; // Reset to first page
+                    this._renderSamplesPage();
+                    return;
+                }
+                const term = searchTerm.toLowerCase().trim();
+                const allRows = Array.isArray(this._samplesAll) ? this._samplesAll : [];
+                this._samplesFiltered = allRows.filter(row => {
+                    const foodName = (row.food_name || '').toLowerCase();
+                    const foodCategory = (row.food_category || '').toLowerCase();
+                    const status = (row.actual_spoilage_status || '').toLowerCase();
+                    const source = (row.data_source || '').toLowerCase();
+                    return foodName.includes(term) || 
+                           foodCategory.includes(term) || 
+                           status.includes(term) || 
+                           source.includes(term);
+                });
+                this._samplesPage = 1; // Reset to first page when filtering
+                this._renderSamplesPage();
+            },
+            _setupMlSearchListeners(){
+                const searchInput = document.getElementById('mlTrainingSearch');
+                const clearBtn = document.getElementById('mlClearSearch');
+                if (searchInput) {
+                    // Real-time search as user types
+                    searchInput.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value;
+                        this._filterSamples(searchTerm);
+                        // Show/hide clear button
+                        if (clearBtn) {
+                            clearBtn.style.display = searchTerm.trim() ? 'block' : 'none';
+                        }
+                    });
+                    // Also handle Enter key
+                    searchInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this._filterSamples(e.target.value);
+                        }
+                    });
+                }
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        if (searchInput) {
+                            searchInput.value = '';
+                            this._filterSamples('');
+                        }
+                        if (clearBtn) clearBtn.style.display = 'none';
+                    });
+                }
+            },
+            async _calculateModelAccuracy(){
+                // Prevent multiple simultaneous calculations
+                if (this._calculatingAccuracy) {
+                    console.log('⏳ Accuracy calculation already in progress, skipping...');
+                    return;
+                }
+                
+                this._calculatingAccuracy = true;
+                
+                try {
+                    console.log('🔄 Automatically calculating model accuracy from training data...');
+                    const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token');
+                    const response = await fetch('/api/ml/analytics/calculate-accuracy', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Update the accuracy display silently (no toasts)
+                        const accuracyEl = document.getElementById('mlKpiAccuracy');
+                        const accuracySubEl = document.getElementById('mlKpiAccuracySub');
+                        
+                        if (accuracyEl) {
+                            accuracyEl.textContent = `${result.accuracy_percent}%`;
+                        }
+                        if (accuracySubEl) {
+                            accuracySubEl.textContent = `+${result.correct_predictions}/${result.total_samples} correct`;
+                        }
+                        
+                        console.log(`✅ Model accuracy calculated: ${result.accuracy_percent}% (${result.correct_predictions}/${result.total_samples} correct)`);
+                        
+                        // Update accuracy in overview without reloading (to avoid toast spam)
+                        // Just update the accuracy display directly
+                        // No need to reload overview - accuracy is already updated
+                    } else {
+                        throw new Error(result.error || 'Failed to calculate accuracy');
+                    }
+                } catch (error) {
+                    console.error('Error calculating model accuracy:', error);
+                    // Silently fail - don't show error to user on automatic calculation
+                } finally {
+                    this._calculatingAccuracy = false;
                 }
             },
             _authHeaders(){
@@ -1468,30 +1587,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    // Add auto-format listeners to environmental factors field
+                    // Remove auto-format listeners - user wants to enter text without auto-formatting
                     // Remove previous listeners if any
                     const newEnvInput = environmentalFactorsInput.cloneNode(true);
                     environmentalFactorsInput.parentNode.replaceChild(newEnvInput, environmentalFactorsInput);
                     
-                    // Format on blur (when user leaves the field)
-                    newEnvInput.addEventListener('blur', () => {
-                        this.autoFormatJSON(newEnvInput);
-                    });
-                    
-                    // Format on Ctrl+Enter or Cmd+Enter
-                    newEnvInput.addEventListener('keydown', (e) => {
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                            e.preventDefault();
-                            this.autoFormatJSON(newEnvInput);
-                        }
-                    });
-                    
-                    // Auto-format initial value if present and not empty
-                    if (newEnvInput.value.trim()) {
-                        setTimeout(() => {
-                            this.autoFormatJSON(newEnvInput);
-                        }, 100);
-                    }
+                    // Auto-format listeners removed - user can enter text freely without automatic JSON formatting
                 }
                 
                 // Set training ID on save button
@@ -1679,25 +1780,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('✅ Showing current data in temp modal');
                     }
                     
-                    // Format on blur (when user leaves the field)
-                    envFactorsTextarea.addEventListener('blur', function() {
-                        this.autoFormatJSON(envFactorsTextarea);
-                    }.bind(this));
-                    
-                    // Format on Ctrl+Enter or Cmd+Enter
-                    envFactorsTextarea.addEventListener('keydown', function(e) {
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                            e.preventDefault();
-                            this.autoFormatJSON(envFactorsTextarea);
-                        }
-                    }.bind(this));
-                    
-                    // Auto-format initial value if present and not empty
-                    if (envFactorsTextarea.value.trim()) {
-                        setTimeout(() => {
-                            this.autoFormatJSON(envFactorsTextarea);
-                        }, 100);
-                    }
+                    // Auto-format listeners removed - user can enter text freely without automatic JSON formatting
                 }
                 
             },

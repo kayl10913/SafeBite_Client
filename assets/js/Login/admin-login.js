@@ -288,8 +288,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await AdminAPI.login(email, password);
             
             console.log('Admin login response data:', data);
-            console.log('Response success:', data.success);
-            console.log('Response admin:', data.admin);
+            console.log('Response success:', data?.success);
+            console.log('Response admin:', data?.admin);
+            
+            // Handle null response (error handler intercepted)
+            if (data === null || data === undefined) {
+                showToast('Invalid email or password. Please check your credentials and try again.', 'error');
+                return;
+            }
             
             if (data.success) {
                 // Store admin data and JWT token (use consistent key names)
@@ -307,18 +313,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = '/pages/ad-dashboard.html';
                 }, 1000);
             } else {
-                showToast(data.error || 'Admin login failed. Please check credentials and try again.', 'error');
+                // Show backend error message if present (don't show 401 status)
+                let errorMessage = data.error || data.message || 'Invalid email or password. Please check your credentials and try again.';
+                
+                // Remove any 401 status references from error message
+                errorMessage = errorMessage.replace(/401|unauthorized/gi, '').trim();
+                if (!errorMessage || errorMessage.length === 0) {
+                    errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                }
+                
+                // For 401 errors, always show user-friendly message
+                if (data.status === 401 || errorMessage.toLowerCase().includes('invalid email') || errorMessage.toLowerCase().includes('invalid password')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                }
+                
+                showToast(errorMessage, 'error');
                 if (data.details) {
                     console.error("Backend error details:", data.details);
                 }
             }
         } catch (error) {
             console.error('Admin Login error:', error);
-            // Provide more specific error messages
+            // Provide more specific error messages (don't show 401 status)
             if (error.message && error.message.includes('Failed to fetch')) {
                 showToast('Cannot connect to server. Make sure the Node.js server is running on port 3000', 'error');
+            } else if (error.message && (error.message.includes('Invalid email') || error.message.includes('Invalid password') || error.message.includes('401') || error.message.includes('unauthorized'))) {
+                showToast('Invalid email or password. Please check your credentials and try again.', 'error');
             } else {
-                showToast(error.message || 'Network or server error during admin login. Please try again.', 'error');
+                // Remove any status code references from error message
+                let errorMsg = error.message || 'Network or server error during admin login. Please try again.';
+                errorMsg = errorMsg.replace(/401|unauthorized/gi, '').trim();
+                if (!errorMsg || errorMsg.length === 0) {
+                    errorMsg = 'Network or server error during admin login. Please try again.';
+                }
+                showToast(errorMsg, 'error');
             }
         }
     }

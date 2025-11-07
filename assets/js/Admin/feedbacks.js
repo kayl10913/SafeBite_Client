@@ -435,7 +435,7 @@ class FeedbacksManager {
         }
     }
 
-    async saveResponse() {
+    async sendResponse() {
         if (!this.currentFeedbackId) return;
 
         const status = document.getElementById('responseStatus').value;
@@ -459,13 +459,13 @@ class FeedbacksManager {
                 // Refresh data
                 await this.loadFeedbacks();
                 await this.loadStatistics();
-                this.showToast('Response saved successfully!', 'success');
+                this.showToast('Response sent successfully!', 'success');
             } else {
-                this.showToast('Failed to save response. Please try again.', 'error');
+                this.showToast('Failed to send response. Please try again.', 'error');
             }
         } catch (error) {
-            console.error('Error saving response:', error);
-            this.showToast('Error saving response. Please try again.', 'error');
+            console.error('Error sending response:', error);
+            this.showToast('Error sending response. Please try again.', 'error');
         }
     }
 
@@ -1057,14 +1057,14 @@ function closeResponseModal() {
     }
 }
 
-function saveResponse() {
-    console.log('🔍 saveResponse called');
+function sendResponse() {
+    console.log('🔍 sendResponse called');
     if (window.feedbacksManager) {
-        window.feedbacksManager.saveResponse();
+        window.feedbacksManager.sendResponse();
     } else {
         console.error('❌ FeedbacksManager not found on window object, creating new instance...');
         window.feedbacksManager = new FeedbacksManager();
-        window.feedbacksManager.saveResponse();
+        window.feedbacksManager.sendResponse();
     }
 }
 
