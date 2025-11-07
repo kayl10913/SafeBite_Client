@@ -112,8 +112,6 @@ class DeviceManagement {
 
     const devicesHTML = this.connectedDevices.map(device => {
       const isConnected = (device.is_active === 1) || device.status === 'connected';
-      const batteryLevel = this.getBatteryLevel(device);
-      const batteryIcon = this.getBatteryIcon(batteryLevel);
       
       return `
         <div class="device-sensor-item">
@@ -127,10 +125,6 @@ class DeviceManagement {
             </div>
           </div>
           <div class="device-sensor-meta">
-            <div class="device-sensor-battery ${this.getBatteryStatusClass(batteryLevel)}">
-              <i class="bi ${batteryIcon}"></i>
-              <span>${batteryLevel}%</span>
-            </div>
             <div class="device-sensor-status ${isConnected ? 'connected' : 'disconnected'}">
               <span>${isConnected ? 'Online' : 'Offline'}</span>
             </div>

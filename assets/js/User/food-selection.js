@@ -1738,20 +1738,65 @@ class FoodSelection {
     historyList.innerHTML = historyHTML;
     
     // Add scrolling if more than 6 items
-    if (this.foodHistory.length > 6) {
+    if (this.foodHistory.length > 6 || scannerResults.length > 0) {
       historyList.style.maxHeight = '300px';
       historyList.style.overflowY = 'auto';
       historyList.style.paddingRight = '10px';
       
+      // Remove existing scroll indicator if any
+      const existingIndicator = historyList.querySelector('.scroll-indicator');
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+      
       // Add scroll indicator
       const scrollIndicator = document.createElement('div');
       scrollIndicator.className = 'scroll-indicator';
+      scrollIndicator.style.cssText = 'text-align: center; padding: 12px; color: #4a9eff; cursor: pointer; transition: opacity 0.3s ease;';
       scrollIndicator.innerHTML = `
-        <div class="scroll-indicator-content">
+        <div class="scroll-indicator-content" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
           <i class="bi bi-arrow-up"></i>
           <span>Scroll up to see more history</span>
         </div>
       `;
+      
+      // Make scroll indicator clickable to scroll to top
+      scrollIndicator.addEventListener('click', () => {
+        historyList.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      
+      // Add scroll event listener to show/hide indicator
+      const updateScrollIndicator = () => {
+        const scrollTop = historyList.scrollTop;
+        const scrollHeight = historyList.scrollHeight;
+        const clientHeight = historyList.clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px threshold
+        
+        if (isAtBottom && scrollHeight > clientHeight) {
+          scrollIndicator.style.display = 'block';
+          scrollIndicator.style.opacity = '1';
+        } else {
+          scrollIndicator.style.opacity = '0';
+          setTimeout(() => {
+            if (scrollTop + clientHeight < scrollHeight - 10) {
+              scrollIndicator.style.display = 'none';
+            }
+          }, 300);
+        }
+      };
+      
+      // Remove old event listener if exists
+      if (historyList._scrollHandler) {
+        historyList.removeEventListener('scroll', historyList._scrollHandler);
+      }
+      
+      // Add new scroll event listener
+      historyList._scrollHandler = updateScrollIndicator;
+      historyList.addEventListener('scroll', updateScrollIndicator);
+      
+      // Initial check
+      setTimeout(updateScrollIndicator, 100);
+      
       historyList.appendChild(scrollIndicator);
       
       // Add show all button
@@ -1760,6 +1805,12 @@ class FoodSelection {
       historyList.style.maxHeight = 'none';
       historyList.style.overflowY = 'visible';
       historyList.style.paddingRight = '0';
+      
+      // Remove scroll indicator if exists
+      const existingIndicator = historyList.querySelector('.scroll-indicator');
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
     }
     
     // Update counter to include scanner results

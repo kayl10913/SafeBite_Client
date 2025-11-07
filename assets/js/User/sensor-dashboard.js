@@ -43,6 +43,8 @@ class SensorDashboard {
     this.currentScanSession = null; // Track current scan session
     this.isScanningInProgress = false; // Prevent multiple simultaneous scans
     this.instanceId = instanceId; // Store instance ID for debugging
+    this.scanCancelled = false; // Flag to cancel ongoing scan
+    this.scanAbortController = null; // Abort controller for scan cancellation
     this.init();
     if (REALTIME_ENABLED) this.startRealTimeUpdates();
     // Ensure modal compatibility with SPA navigation
@@ -1441,7 +1443,7 @@ class SensorDashboard {
     }
   }
 
-  // Setup modal event listeners (called from setupEventListeners)
+  // Setup modal event listeners (called from setupEventListeners) (EVENTS: SMARTSENSE SCANNER)
   setupModalEventListeners() {
     // Open ML Scanner Modal event listener
     const openMLScannerBtn = document.getElementById('openMLScannerBtn');
@@ -1481,7 +1483,7 @@ class SensorDashboard {
     }
   }
 
-  // Open ML Scanner Modal
+  // Open ML Scanner Modal (ENTRY POINT: SMARTSENSE SCANNER)
   async openMLScannerModal() {
     const modal = document.getElementById('mlFoodScannerModal');
     if (!modal) return;
@@ -1497,14 +1499,73 @@ class SensorDashboard {
     }
     
     const closeModal = async () => { 
-      modal.style.display = 'none';
+      // Cancel any ongoing scan
+      if (this.isScanningInProgress) {
+        console.log('🔍 Cancelling ongoing scan...');
+        this.scanCancelled = true;
+        
+        // Abort any ongoing operations
+        if (this.scanAbortController) {
+          this.scanAbortController.abort();
+        }
+        
+        // Reset scanning flags
+        this.isScanningInProgress = false;
+        window.smartSenseScanningInProgress = false;
+        window.smartSenseScannerActive = false;
+        
+        // Reset button state
+        const scanBtn = document.getElementById('readyScanBtn');
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+        }
+        
+        // Remove cancel button
+        this.removeCancelButton();
+        
+        // Hide waiting indicator
+        this.hideSensorWaitIndicator();
+        
+        // Complete/cancel scan session
+        try {
+          if (this.currentScanSession) {
+            await this.completeScanSession();
+            console.log('✅ Scan session cancelled and completed');
+          }
+        } catch (error) {
+          console.error('❌ Error cancelling scan session:', error);
+          await this.forceBlockArduinoData();
+        }
+      } else {
+        // If no scan in progress, just complete the session normally
+        try {
+          if (this.currentScanSession) {
+            await this.completeScanSession();
+          }
+        } catch (error) {
+          console.error('❌ Error completing scan session on modal close:', error);
+        }
+      }
+      
       // Reset form
       const foodSelect = document.getElementById('mlFoodSelect');
       if (foodSelect) foodSelect.value = '';
+      
+      // Remove cancel button if exists
+      this.removeCancelButton();
+      
       // Hide waiting indicator
       this.hideSensorWaitIndicator();
-      // Don't complete scan session when modal closes - let the scan process handle it
-      console.log('🔍 Modal closed - scan session will be completed when scan finishes');
+      
+      // Close modal
+      modal.style.display = 'none';
+      
+      // Reset cancellation flag
+      this.scanCancelled = false;
+      this.scanAbortController = null;
+      
+      console.log('🔍 Modal closed');
     };
     
     modal.style.display = 'flex';
@@ -1578,12 +1639,21 @@ class SensorDashboard {
     // Show waiting indicator
     this.showSensorWaitIndicator();
     
+    // Add cancel button to the waiting indicator (like Smart Training Center)
+    this.addCancelButtonToWaitIndicator();
+    
     // Get baseline timestamp for comparison
     const baselineTimestamp = this.getLatestTimestamp(baselineData);
     console.log('Baseline timestamp:', baselineTimestamp);
 
-    // Poll until data changes or timeout
+    // Poll until data changes or timeout or cancelled
     while (Date.now() - start < maxWaitMs) {
+      // Check if scan was cancelled
+      if (this.scanCancelled) {
+        console.log('🔍 Scan cancelled during wait for sensor data');
+        this.hideSensorWaitIndicator();
+        throw new Error('Scan cancelled by user');
+      }
       try {
         const currentData = await this.getCurrentSensorData();
         
@@ -1738,6 +1808,137 @@ class SensorDashboard {
   }
 
   // Hide sensor waiting indicator
+  // Add cancel button to the waiting indicator (like Smart Training Center)
+  addCancelButtonToWaitIndicator() {
+    const waitEl = document.getElementById('sensorDataWaitIndicator');
+    if (waitEl && !document.getElementById('cancelSmartSenseScanBtn')) {
+      const cancelBtn = document.createElement('button');
+      cancelBtn.id = 'cancelSmartSenseScanBtn';
+      cancelBtn.className = 'btn btn-outline-danger btn-sm mt-3';
+      cancelBtn.style.cssText = 'background: #dc3545; color: #fff; border: 1px solid #c82333; padding: 8px 14px; border-radius: 999px; font-weight: 700; margin-left: auto; cursor: pointer;';
+      cancelBtn.innerHTML = '<i class="bi bi-x-circle"></i> Cancel Scanning';
+      cancelBtn.onclick = () => this.cancelSmartSenseScan();
+      
+      // Add to waiting content area
+      const waitingContent = waitEl.querySelector('.waiting-content');
+      if (waitingContent) {
+        // Create a container for the cancel button
+        const cancelContainer = document.createElement('div');
+        cancelContainer.style.cssText = 'display: flex; justify-content: center; margin-top: 12px; width: 100%;';
+        cancelContainer.appendChild(cancelBtn);
+        waitEl.appendChild(cancelContainer);
+      } else {
+        waitEl.appendChild(cancelBtn);
+      }
+    }
+  }
+
+  // Remove cancel button
+  removeCancelButton() {
+    const cancelBtn = document.getElementById('cancelSmartSenseScanBtn');
+    if (cancelBtn) {
+      // Also remove container if it exists
+      const cancelContainer = cancelBtn.parentElement;
+      if (cancelContainer && cancelContainer.style.display === 'flex' && cancelContainer.tagName === 'DIV') {
+        cancelContainer.remove();
+      } else {
+        cancelBtn.remove();
+      }
+    }
+  }
+
+  // Cancel SmartSense scan (like Smart Training Center)
+  async cancelSmartSenseScan() {
+    console.log('🔍 User cancelled SmartSense scanning');
+    this.scanCancelled = true;
+    
+    // Abort any ongoing operations
+    if (this.scanAbortController) {
+      this.scanAbortController.abort();
+    }
+    
+    // Remove cancel button
+    this.removeCancelButton();
+    
+    // Reset scanning flags
+    this.isScanningInProgress = false;
+    window.smartSenseScanningInProgress = false;
+    window.smartSenseScannerActive = false;
+    
+    // Reset button state
+    const scanBtn = document.getElementById('readyScanBtn');
+    if (scanBtn) {
+      scanBtn.disabled = false;
+      scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+    }
+    
+    // Cancel/close scan session
+    try {
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                          localStorage.getItem('sessionToken') || 
+                          localStorage.getItem('session_token');
+      
+      if (this.currentScanSession && this.currentScanSession.session_id) {
+        console.log('🔍 Cancelling scan session:', this.currentScanSession.session_id);
+        
+        const response = await fetch('/api/sensor/scan-session', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
+          },
+          body: JSON.stringify({ 
+            user_id: 11, 
+            session_id: this.currentScanSession.session_id 
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          console.log('✅ Scan session cancelled successfully');
+        } else {
+          console.warn('⚠️ Scan session cancellation response:', result);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error cancelling scan session:', error);
+    } finally {
+      // Always clear the session reference
+      this.currentScanSession = null;
+      console.log('🔍 Scan session cleared');
+    }
+    
+    // Show cancelled message (like Smart Training Center)
+    this.showSmartSenseCancelledMessage();
+  }
+
+  // Show cancelled message (like Smart Training Center)
+  showSmartSenseCancelledMessage() {
+    const waitIndicator = document.getElementById('sensorDataWaitIndicator');
+    if (waitIndicator) {
+      waitIndicator.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #e0e6f6;">
+          <div style="margin-bottom: 12px;">
+            <i class="bi bi-x-circle" style="font-size: 2em; color: #dc3545;"></i>
+          </div>
+          <h4 style="color: #fff; margin-bottom: 8px;">❌ Scanning Cancelled</h4>
+          <p style="color: #bfc9da; margin-bottom: 16px;">You cancelled the scanning process</p>
+          <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #bfc9da;">
+              <i class="bi bi-x-circle" style="color: #dc3545;"></i>
+              <span>Scanning stopped by user</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; color: #bfc9da;">
+              <i class="bi bi-info-circle" style="color: #4a9eff;"></i>
+              <span>No data was processed or saved</span>
+            </div>
+          </div>
+        </div>
+      `;
+      waitIndicator.style.display = 'block';
+    }
+  }
+
   hideSensorWaitIndicator() {
     const indicator = document.getElementById('sensorDataWaitIndicator');
     if (indicator) {
@@ -1964,7 +2165,7 @@ class SensorDashboard {
     document.addEventListener('keydown', escHandler);
   }
 
-  // Handle Ready Scan button
+  // Handle Ready Scan button (CORE FUNCTION: SMARTSENSE SCANNER)
   async handleReadyScan() {
     const scanId = Math.random().toString(36).slice(2, 8);
     console.log(`🔍 [${scanId}] handleReadyScan called by instance [${this.instanceId}]`);
@@ -1975,6 +2176,10 @@ class SensorDashboard {
       console.log(`⚠️ [${scanId}] Scan already in progress, ignoring duplicate call`);
       return;
     }
+    
+    // Reset cancellation flag
+    this.scanCancelled = false;
+    this.scanAbortController = new AbortController();
     
     // Set flag immediately to prevent race conditions
     this.isScanningInProgress = true;
@@ -2031,34 +2236,107 @@ class SensorDashboard {
       const foodName = selectedOption.textContent.split(' (')[0];
       const foodCategory = selectedOption.textContent.match(/\(([^)]+)\)/)?.[1] || 'Unknown';
 
+      // Add cancel button when scanning starts
+      this.addCancelButtonToWaitIndicator();
+      
       // Wait for new sensor data
       const newSensorData = await this.waitForNewSensorData(baselineData);
+      
+      // Remove cancel button after waiting completes
+      this.removeCancelButton();
+      
+      // Check if scan was cancelled during wait
+      if (this.scanCancelled) {
+        console.log('🔍 Scan cancelled during sensor data wait');
+        return;
+      }
       
       if (!newSensorData) {
         if (typeof showWarningToast === 'function') showWarningToast('No new sensor data detected');
         return;
       }
 
-      // Update button to show ML processing
+      // Update button to show AI analysis
       if (scanBtn) {
-        scanBtn.innerHTML = '<i class="bi bi-cpu"></i> Analyzing with ML...';
+        scanBtn.innerHTML = '<i class="bi bi-robot"></i> Analyzing with AI...';
       }
 
-      // Perform ML prediction using new sensor data (SmartSense Scanner creates training data)
-      console.log('🔍 Calling performMLPrediction with:', { foodId, foodName, foodCategory, isTrainingData: true });
-      console.log('🔍 New sensor data structure:', newSensorData);
-      
-      // Ensure sensor data is in the correct format for ML prediction
+      // Ensure sensor data is in the correct format
       const formattedSensorData = {
-        temperature: newSensorData.temperature?.value || newSensorData.temperature,
-        humidity: newSensorData.humidity?.value || newSensorData.humidity,
-        gas: newSensorData.gas?.value || newSensorData.gas
+        temperature: { value: newSensorData.temperature?.value || newSensorData.temperature },
+        humidity: { value: newSensorData.humidity?.value || newSensorData.humidity },
+        gas: { value: newSensorData.gas?.value || newSensorData.gas }
       };
       
-      console.log('🔍 Formatted sensor data for ML:', formattedSensorData);
+      console.log('🔍 Formatted sensor data for AI analysis:', formattedSensorData);
       
-      const prediction = await this.performMLPrediction(foodId, foodName, foodCategory, formattedSensorData, null, true);
-      console.log('🔍 ML prediction result:', prediction);
+      // Step 1: Get AI analysis with environmental factors (like Smart Training Center)
+      console.log('🔍 Step 1: Getting AI analysis with environmental factors...');
+      const aiAnalysisResult = await this.getValidatedAIAnalysis(foodName, formattedSensorData);
+      
+      if (!aiAnalysisResult.success) {
+        console.warn('⚠️ AI analysis failed, using fallback:', aiAnalysisResult.error);
+        // Continue with fallback analysis
+      }
+      
+      // Step 2: Assess food condition using environmental factors
+      console.log('🔍 Step 2: Assessing food condition with environmental factors...');
+      const assessed = this.assessFoodCondition(formattedSensorData) || {};
+      
+      // Map AI risk level to spoilage status
+      const aiCondition = aiAnalysisResult.success ? 
+        this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe';
+      const tableCondition = assessed.condition || aiCondition;
+      
+      // Use AI condition as primary source (like Smart Training Center)
+      const finalCondition = aiAnalysisResult.success ? aiCondition : tableCondition;
+      
+      console.log('🔍 Environmental analysis results:', {
+        aiAnalysis: aiAnalysisResult.success ? aiAnalysisResult.analysis : 'Failed',
+        aiCondition,
+        tableCondition,
+        finalCondition
+      });
+      
+      // Update button to show ML processing
+      if (scanBtn) {
+        scanBtn.innerHTML = '<i class="bi bi-cpu"></i> Processing with ML...';
+      }
+      
+      // Step 3: Perform ML workflow (like Smart Training Center) - uses environmental factors and ML data
+      console.log('🔍 Step 3: Performing ML workflow with environmental factors...');
+      const mlWorkflowResult = await this.performMLWorkflow(
+        foodId,
+        foodName,
+        foodCategory,
+        formattedSensorData,
+        finalCondition,
+        aiAnalysisResult
+      );
+      
+      console.log('🔍 ML workflow result:', mlWorkflowResult);
+      
+      if (!mlWorkflowResult.success) {
+        throw new Error(mlWorkflowResult.error || 'ML workflow failed');
+      }
+      
+      // Format prediction result to match expected structure
+      const prediction = {
+        success: true,
+        prediction: {
+          prediction_id: mlWorkflowResult.prediction_id,
+          food_id: foodId,
+          food_name: foodName,
+          food_category: foodCategory,
+          spoilage_status: mlWorkflowResult.spoilage_status,
+          spoilage_probability: mlWorkflowResult.spoilage_probability,
+          confidence_score: mlWorkflowResult.confidence_score,
+          recommendation: mlWorkflowResult.recommendations?.main || mlWorkflowResult.recommendation || 'No recommendations available',
+          recommendations: mlWorkflowResult.recommendations || { main: mlWorkflowResult.recommendation || 'No recommendations available' }
+        }
+      };
+      
+      console.log('🔍 Formatted prediction result:', prediction);
       
       if (prediction.success) {
         // Show ML prediction results in custom modal
@@ -2095,6 +2373,14 @@ class SensorDashboard {
         }
       }
     } catch (error) {
+      // Check if error is due to cancellation
+      if (this.scanCancelled || error.message === 'Scan cancelled by user') {
+        console.log('🔍 Scan was cancelled by user');
+        // Don't show error toast for user cancellation
+        // Reset flags are handled in closeModal
+        return;
+      }
+      
       console.error('ML prediction error:', error);
       if (typeof showErrorToast === 'function') showErrorToast('Prediction error');
       // Complete scan session even on error
@@ -2108,21 +2394,30 @@ class SensorDashboard {
         await this.forceBlockArduinoData();
       }
     } finally {
-      // Reset scanning flag
-      this.isScanningInProgress = false;
-      
-      // Clear global scan flag
-      window.smartSenseScanningInProgress = false;
-      console.log('🔍 Global scan flag cleared');
-      
-      // Clear global flag to allow Smart Training system to run again
-      window.smartSenseScannerActive = false;
-      console.log('🔍 SmartSense Scanner finished - allowing Smart Training system');
-      
-      if (scanBtn) {
-        scanBtn.disabled = false;
-        scanBtn.innerHTML = '<i class="bi bi-scan"></i> Ready Scan';
+      // Only reset if not cancelled (cancellation is handled in closeModal)
+      if (!this.scanCancelled) {
+        // Reset scanning flag
+        this.isScanningInProgress = false;
+        
+        // Clear global scan flag
+        window.smartSenseScanningInProgress = false;
+        console.log('🔍 Global scan flag cleared');
+        
+        // Clear global flag to allow Smart Training system to run again
+        window.smartSenseScannerActive = false;
+        console.log('🔍 SmartSense Scanner finished - allowing Smart Training system');
+        
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+        }
       }
+      
+      // Remove cancel button if still exists
+      this.removeCancelButton();
+      
+      // Reset abort controller
+      this.scanAbortController = null;
     }
   }
 
@@ -2754,8 +3049,6 @@ class SensorDashboard {
       const rt = realTimeSensorData[typeKey] || {};
       const recentEnough = rt.timestamp ? (Date.now() - new Date(rt.timestamp).getTime()) <= 120000 : (rt.status === 'online');
       const isConnected = rt.status === 'online' && recentEnough;
-      const batteryLevel = this.getBatteryLevel(device);
-      const batteryIcon = this.getBatteryIcon(batteryLevel);
       
       return `
         <div class="device-sensor-item">
@@ -2769,11 +3062,6 @@ class SensorDashboard {
             </div>
           </div>
           <div class="device-sensor-meta">
-            ${isConnected ? `
-            <div class="device-sensor-battery ${this.getBatteryStatusClass(batteryLevel)}">
-              <i class="bi ${batteryIcon}"></i>
-              <span>${batteryLevel}%</span>
-            </div>` : ''}
             <div class="device-sensor-status ${isConnected ? 'connected' : 'disconnected'}">
               <span>${isConnected ? 'Online' : 'Offline'}</span>
             </div>
@@ -3165,6 +3453,455 @@ class RealTimeScanner {
     // Scale effect during counting
     const scale = 1 + Math.sin(progress * Math.PI * 3) * 0.05;
     valueElement.style.transform = `scale(${scale})`;
+  }
+
+  // ===== Methods for SmartSense Scanner (matching Smart Training Center logic) =====
+  
+  // Get validated AI analysis with environmental factors
+  async getValidatedAIAnalysis(foodName, sensorData) {
+    try {
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        throw new Error('Authentication required');
+      }
+
+      // Validate sensor data
+      if (!sensorData) {
+        throw new Error('No sensor data available');
+      }
+
+      const temp = sensorData.temperature?.value;
+      const humidity = sensorData.humidity?.value;
+      const gas = sensorData.gas?.value;
+
+      if (temp === undefined || humidity === undefined || gas === undefined) {
+        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
+      }
+
+      console.log('🔍 Calling AI analysis endpoint with validation...');
+      const response = await fetch('/api/ai/ai-analyze', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          foodType: foodName,
+          temp: temp,
+          humidity: humidity,
+          gas: gas
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.analysis) {
+        console.log('🔍 Validated AI Analysis Response Received:');
+        console.log('  Full Result:', result);
+        console.log('  Analysis Object:', result.analysis);
+        console.log('  Risk Level:', result.analysis.riskLevel);
+        console.log('  Risk Score:', result.analysis.riskScore);
+        console.log('  Notes:', result.analysis.notes);
+        console.log('  Mapped Status:', this.mapRiskLevelToSpoilageStatus(result.analysis.riskLevel));
+        
+        return { success: true, analysis: result.analysis };
+      } else {
+        console.error('Failed to get validated AI analysis:', result.error);
+        return { success: false, error: result.error || 'Unknown error' };
+      }
+    } catch (error) {
+      console.error('Error getting validated AI analysis:', error);
+      return { success: false, error: 'Network error' };
+    }
+  }
+
+  // Map risk level from analysis to spoilage status
+  mapRiskLevelToSpoilageStatus(riskLevel) {
+    switch (riskLevel?.toLowerCase()) {
+      case 'high':
+        return 'unsafe';
+      case 'medium':
+        return 'caution';
+      case 'low':
+        return 'safe';
+      default:
+        return 'safe';
+    }
+  }
+
+  // Analyze gas emission thresholds
+  analyzeGasEmissionThresholds(gasLevel) {
+    if (gasLevel >= 400) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 98,
+        confidence: 95,
+        recommendation: 'CRITICAL: Severe Spoilage Detected (400+ ppm). Do not consume. Dispose immediately to avoid foodborne illness. Sanitize storage area thoroughly.',
+        threshold: '400+ ppm'
+      };
+    } else if (gasLevel >= 200) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 90,
+        confidence: 90,
+        recommendation: 'CRITICAL: Advanced Spoilage Detected (200-399 ppm). Do not consume. Dispose immediately. Check for strong odors, discoloration, or slimy texture.',
+        threshold: '200-399 ppm'
+      };
+    } else if (gasLevel >= 100) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 85,
+        confidence: 88,
+        recommendation: 'CRITICAL: Spoilage Detected (100-199 ppm). Food is unsafe to consume. Dispose immediately. Inspect for off-odors, discoloration, or texture changes.',
+        threshold: '100-199 ppm'
+      };
+    } else if (gasLevel >= 70) {
+      return {
+        riskLevel: 'high',
+        status: 'unsafe',
+        probability: 80,
+        confidence: 85,
+        recommendation: 'CRITICAL: Spoilage Detected (70-99 ppm). Food is unsafe to consume. Based on sensor observations, gas levels above 70 ppm indicate spoilage. Dispose immediately if strong smell or rot is observed.',
+        threshold: '70-99 ppm'
+      };
+    } else if (gasLevel >= 50) {
+      return {
+        riskLevel: 'medium',
+        status: 'caution',
+        probability: 60,
+        confidence: 85,
+        recommendation: 'WARNING: Elevated Gas Levels (50-69 ppm). Food may be starting to spoil. Inspect carefully for any signs of spoilage (smell, color, texture). Consume within 24 hours or discard if suspicious.',
+        threshold: '50-69 ppm'
+      };
+    } else if (gasLevel >= 0) {
+      return {
+        riskLevel: 'low',
+        status: 'safe',
+        probability: 20,
+        confidence: 90,
+        recommendation: 'Low Risk: Fresh/Safe (0-49 ppm). Food is safe to consume and store. Keep in a cool, dry place or refrigerate if needed.',
+        threshold: '0-49 ppm'
+      };
+    }
+    
+    return {
+      riskLevel: 'unknown',
+      status: 'unknown',
+      probability: 0,
+      confidence: 0,
+      recommendation: 'Invalid gas level reading. Please check sensor.',
+      threshold: 'invalid'
+    };
+  }
+
+  // Analyze environmental conditions
+  analyzeEnvironmentalConditions(temperature, humidity) {
+    const baselineTemp = 22;
+    const baselineHumidity = 50;
+    
+    const tempDeviation = temperature - baselineTemp;
+    const humidityDeviation = humidity - baselineHumidity;
+    
+    let tempRisk = 'normal';
+    let humidityRisk = 'normal';
+    let overallRisk = 'normal';
+    
+    if (temperature > 35) {
+      tempRisk = 'high';
+    } else if (temperature > 30) {
+      tempRisk = 'medium';
+    } else if (temperature < 10) {
+      tempRisk = 'low';
+    }
+    
+    if (humidity > 85) {
+      humidityRisk = 'high';
+    } else if (humidity > 75) {
+      humidityRisk = 'medium';
+    } else if (humidity < 25) {
+      humidityRisk = 'low';
+    }
+    
+    if (tempRisk === 'high' || humidityRisk === 'high') {
+      overallRisk = 'high';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      overallRisk = 'medium';
+    }
+    
+    return {
+      baselineTemp,
+      baselineHumidity,
+      tempDeviation,
+      humidityDeviation,
+      tempRisk,
+      humidityRisk,
+      overallRisk,
+      recommendation: this.getEnvironmentalRecommendation(tempRisk, humidityRisk)
+    };
+  }
+
+  // Get environmental recommendation
+  getEnvironmentalRecommendation(tempRisk, humidityRisk) {
+    if (tempRisk === 'high' && humidityRisk === 'high') {
+      return 'High temperature and humidity detected. Consider refrigeration or air conditioning to slow spoilage.';
+    } else if (tempRisk === 'high') {
+      return 'High temperature detected. Store in cooler location or refrigerate if possible.';
+    } else if (humidityRisk === 'high') {
+      return 'High humidity detected. Use dehumidifier or store in drier location.';
+    } else if (tempRisk === 'medium' || humidityRisk === 'medium') {
+      return 'Environmental conditions are slightly elevated. Monitor food closely.';
+    } else {
+      return 'Environmental conditions are within normal range for your location.';
+    }
+  }
+
+  // Assess food condition using environmental factors
+  assessFoodCondition(sensorData) {
+    const temperature = sensorData.temperature?.value;
+    const humidity = sensorData.humidity?.value;
+    const gasLevel = sensorData.gas?.value;
+
+    if (temperature === undefined || humidity === undefined || gasLevel === undefined) {
+      console.warn('Missing sensor data for condition assessment, defaulting to safe');
+      return { condition: 'safe', spoilageScore: 20 };
+    }
+
+    const gasAnalysis = this.analyzeGasEmissionThresholds(gasLevel);
+    const envAnalysis = this.analyzeEnvironmentalConditions(temperature, humidity);
+    
+    const isUnsafeByHumidity = humidity > 90;
+    const isUnsafeByGas = gasLevel > 70;
+    
+    if (isUnsafeByHumidity || isUnsafeByGas) {
+      let criticalFactor = [];
+      let recommendation = 'CRITICAL: ';
+      
+      if (isUnsafeByHumidity && isUnsafeByGas) {
+        criticalFactor.push('humidity', 'gas');
+        recommendation += `Both extremely high humidity (${humidity.toFixed(1)}%) and elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      } else if (isUnsafeByHumidity) {
+        criticalFactor.push('humidity');
+        recommendation += `Extremely high humidity (${humidity.toFixed(1)}%) detected. `;
+      } else {
+        criticalFactor.push('gas');
+        recommendation += `Elevated gas levels (${gasLevel.toFixed(1)} ppm) detected. `;
+      }
+      
+      recommendation += `Food is unsafe to consume. Inspect immediately - if strong smell or rot is observed, dispose immediately. `;
+      recommendation += `This promotes rapid bacterial growth and spoilage.`;
+      
+      return {
+        condition: 'unsafe',
+        spoilageScore: isUnsafeByHumidity && isUnsafeByGas ? 95 : 85,
+        temperature,
+        humidity,
+        gasLevel,
+        assessment: {
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: recommendation,
+          environmental: envAnalysis,
+          environmentalOverride: isUnsafeByHumidity,
+          gasOverride: isUnsafeByGas,
+          criticalFactor: criticalFactor.join('_and_')
+        }
+      };
+    }
+    
+    if (gasAnalysis.riskLevel === 'high' || (gasAnalysis.riskLevel === 'medium' && gasAnalysis.status === 'caution')) {
+      let finalSpoilageScore = gasAnalysis.probability;
+      let finalCondition = gasAnalysis.status;
+      
+      if (envAnalysis.overallRisk === 'high') {
+        finalSpoilageScore = Math.min(95, finalSpoilageScore + 15);
+        if (finalCondition === 'caution') finalCondition = 'unsafe';
+      } else if (envAnalysis.overallRisk === 'medium') {
+        finalSpoilageScore = Math.min(90, finalSpoilageScore + 10);
+      }
+      
+      return {
+        condition: finalCondition,
+        spoilageScore: finalSpoilageScore,
+        temperature,
+        humidity,
+        gasLevel,
+        assessment: {
+          gasRisk: gasAnalysis.riskLevel,
+          gasThreshold: gasAnalysis.threshold,
+          recommendation: `${gasAnalysis.recommendation} ${envAnalysis.overallRisk !== 'normal' ? envAnalysis.recommendation : ''}`,
+          environmental: envAnalysis
+        }
+      };
+    }
+
+    let spoilageScore = gasAnalysis.probability;
+    let condition = gasAnalysis.status;
+    
+    if (envAnalysis.overallRisk === 'high') {
+      spoilageScore = Math.min(75, spoilageScore + 35);
+      condition = 'caution';
+    } else if (envAnalysis.overallRisk === 'medium') {
+      spoilageScore = Math.min(60, spoilageScore + 25);
+      if (condition === 'safe') condition = 'caution';
+    }
+    
+    return {
+      condition,
+      spoilageScore,
+      temperature,
+      humidity,
+      gasLevel,
+      assessment: {
+        gasRisk: gasAnalysis.riskLevel,
+        gasThreshold: gasAnalysis.threshold,
+        recommendation: gasAnalysis.recommendation,
+        environmental: envAnalysis,
+        tempRisk: envAnalysis.tempRisk,
+        humidityRisk: envAnalysis.humidityRisk
+      }
+    };
+  }
+
+  // Perform complete ML workflow (like Smart Training Center)
+  async performMLWorkflow(foodId, foodName, foodCategory, sensorData, spoilageStatus, aiAnalysisResult) {
+    try {
+      if (this.scanCancelled) {
+        console.log('ML workflow cancelled - scanning was stopped by user');
+        return { success: false, error: 'Scanning cancelled by user' };
+      }
+
+      const sessionToken = localStorage.getItem('jwt_token') || 
+                           localStorage.getItem('sessionToken') || 
+                           localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
+        throw new Error('Authentication required');
+      }
+
+      if (!sensorData) {
+        throw new Error('No sensor data available for ML workflow');
+      }
+
+      const temp = sensorData.temperature?.value;
+      const humidity = sensorData.humidity?.value;
+      const gas = sensorData.gas?.value;
+
+      if (temp === undefined || humidity === undefined || gas === undefined) {
+        throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
+      }
+
+      // Step 1: Store training data
+      console.log('Storing training data...');
+      const trainingResponse = await fetch('/api/ml-workflow/training-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_name: foodName,
+          food_category: foodCategory,
+          temperature: temp,
+          humidity: humidity,
+          gas_level: gas,
+          spoilage_status: spoilageStatus,
+          confidence_score: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          storage_conditions: {
+            temperature: temp,
+            humidity: humidity,
+            gas_level: gas,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      const trainingResult = await trainingResponse.json();
+      if (!trainingResult.success) {
+        throw new Error('Failed to store training data: ' + trainingResult.error);
+      }
+      
+      // Step 2: Generate ML prediction
+      console.log('Generating ML prediction...');
+      const predictionResponse = await fetch('/api/ml-workflow/predict', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_id: foodId,
+          food_name: foodName,
+          food_category: foodCategory,
+          temperature: temp,
+          humidity: humidity,
+          gas_level: gas,
+          expiration_date: null,
+          spoilage_probability: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          spoilage_status: aiAnalysisResult.success ? 
+            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
+          confidence_score: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.riskScore || 75) : 75,
+          recommendations: aiAnalysisResult.success ? 
+            (aiAnalysisResult.analysis.recommendations || []) : [],
+          ai_original_status: aiAnalysisResult.success ? 
+            this.mapRiskLevelToSpoilageStatus(aiAnalysisResult.analysis.riskLevel) : 'safe',
+          display_override_status: spoilageStatus
+        })
+      });
+
+      const predictionResult = await predictionResponse.json();
+      if (!predictionResult.success) {
+        throw new Error('Failed to generate ML prediction: ' + predictionResult.error);
+      }
+
+      // Step 3: Update food item with sensor data
+      console.log('Updating food item with sensor data...');
+      const updateResponse = await fetch('/api/ml-workflow/update-food-item', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          food_id: foodId,
+          scan_status: 'analyzed',
+          scan_timestamp: new Date().toISOString(),
+          sensor_data: {
+            temperature: temp,
+            humidity: humidity,
+            gas_level: gas,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      const updateResult = await updateResponse.json();
+      if (!updateResult.success) {
+        console.error('Failed to update food item with sensor data:', updateResult.error);
+      }
+
+      return {
+        success: true,
+        training_id: trainingResult.training_id,
+        prediction_id: predictionResult.prediction_id,
+        spoilage_status: predictionResult.spoilage_status,
+        spoilage_probability: predictionResult.spoilage_probability,
+        confidence_score: predictionResult.confidence_score,
+        recommendations: predictionResult.recommendations || { main: 'No recommendations available' },
+        recommendation: predictionResult.recommendations?.main || 'No recommendations available'
+      };
+    } catch (error) {
+      console.error('Error in ML workflow:', error);
+      return { success: false, error: error.message };
+    }
   }
 }
 
