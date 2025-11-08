@@ -52,9 +52,6 @@ class SensorDashboard {
   }
 
   async init() {
-    // Show loading animation while fetching devices
-    this.showDevicesLoadingState();
-    
     // Load cached devices first to avoid blank state on SPA swaps
     this.loadCachedDevices();
     await this.fetchSensorDevices();
@@ -353,34 +350,6 @@ class SensorDashboard {
     console.log('⏰ Session timeout set for 5 minutes');
   }
 
-  // Show loading state while fetching devices
-  showDevicesLoadingState() {
-    const container = document.querySelector('.sensor-cards-container');
-    if (!container) return;
-    
-    container.innerHTML = `
-      <div class="col-12">
-        <div class="devices-loading-state" style="text-align: center; padding: 60px 20px; color: #e0e6f6;">
-          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 20px;">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <h4 style="color: #fff; margin-bottom: 12px; font-weight: 600;">Loading Devices...</h4>
-          <p style="color: #bfc9da; margin: 0;">Fetching sensor devices from database</p>
-        </div>
-      </div>
-    `;
-  }
-
-  // Hide loading state
-  hideDevicesLoadingState() {
-    const container = document.querySelector('.sensor-cards-container');
-    if (!container) return;
-    const loadingState = container.querySelector('.devices-loading-state');
-    if (loadingState) {
-      loadingState.remove();
-    }
-  }
-
   // Fetch sensor devices from database
   async fetchSensorDevices() {
     try {
@@ -392,7 +361,6 @@ class SensorDashboard {
                            localStorage.getItem('session_token');
       if (!sessionToken) {
         console.warn('No session token found; skipping device refresh to keep current UI');
-        this.hideDevicesLoadingState();
         return;
       }
       
@@ -406,7 +374,6 @@ class SensorDashboard {
       if (!response.ok) {
         if (response.status === 401) {
           console.warn('401 on devices; keeping current registeredDevices');
-          this.hideDevicesLoadingState();
           return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -433,9 +400,6 @@ class SensorDashboard {
     } catch (error) {
       console.error('Error fetching sensor devices:', error);
       // Keep current devices on error to preserve UI
-    } finally {
-      // Always hide loading state after fetch completes
-      this.hideDevicesLoadingState();
     }
   }
 
