@@ -1475,7 +1475,8 @@ class SensorDashboard {
     const refreshFoodListBtn = document.getElementById('refreshFoodListBtn');
     if (refreshFoodListBtn) {
       // Remove existing listener to prevent duplicates
-      refreshFoodListBtn.removeEventListener('click', this.refreshFoodList);
+      const oldHandler = refreshFoodListBtn.onclick;
+      if (oldHandler) refreshFoodListBtn.onclick = null;
       refreshFoodListBtn.addEventListener('click', async () => {
         console.log('Refreshing food list from API...');
         await this.populateMLFoodDropdown();
@@ -1599,6 +1600,33 @@ class SensorDashboard {
           console.log('Refreshing food items on focus...');
           this.populateMLFoodDropdown();
         }
+      });
+    }
+    
+    // Re-setup Ready Scan button event listener when modal opens
+    const readyScanBtn = document.getElementById('readyScanBtn');
+    if (readyScanBtn) {
+      console.log('🔍 Re-setting up Ready Scan event listener when modal opens');
+      // Remove existing listener to prevent duplicates
+      readyScanBtn.removeEventListener('click', this.handleReadyScan);
+      readyScanBtn.addEventListener('click', async () => {
+        console.log('🔍 Ready Scan button clicked - calling handleReadyScan');
+        await this.handleReadyScan();
+      });
+      console.log('🔍 Ready Scan event listener re-attached in modal');
+    } else {
+      console.log('⚠️ Ready Scan button not found when modal opened');
+    }
+    
+    // Re-setup refresh food list button event listener
+    const refreshFoodListBtn = document.getElementById('refreshFoodListBtn');
+    if (refreshFoodListBtn) {
+      // Remove existing listener to prevent duplicates
+      const oldHandler = refreshFoodListBtn.onclick;
+      if (oldHandler) refreshFoodListBtn.onclick = null;
+      refreshFoodListBtn.addEventListener('click', async () => {
+        console.log('Refreshing food list from API...');
+        await this.populateMLFoodDropdown();
       });
     }
     
@@ -2215,6 +2243,9 @@ class SensorDashboard {
     console.log(`🔍 [${scanId}] handleReadyScan called by instance [${this.instanceId}]`);
     console.log(`🔍 [${scanId}] Current isScanningInProgress:`, this.isScanningInProgress);
     
+    // Get button reference early to update state immediately
+    const scanBtn = document.getElementById('readyScanBtn');
+    
     // Prevent multiple simultaneous scans - use a more robust check
     if (this.isScanningInProgress) {
       console.log(`⚠️ [${scanId}] Scan already in progress, ignoring duplicate call`);
@@ -2233,6 +2264,11 @@ class SensorDashboard {
     if (window.smartSenseScanningInProgress) {
       console.log(`⚠️ [${scanId}] Global scan flag already set, ignoring duplicate call`);
       this.isScanningInProgress = false;
+      // Reset button state if scan was blocked
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+      }
       return;
     }
     window.smartSenseScanningInProgress = true;
@@ -2243,11 +2279,27 @@ class SensorDashboard {
     console.log('🔍 SmartSense Scanner active - blocking Smart Training system');
     console.log('🔍 Global flag set to:', window.smartSenseScannerActive);
     
+    // Update button state immediately to show scanning has started
+    if (scanBtn) {
+      scanBtn.disabled = true;
+      scanBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Starting scan...';
+      console.log('🔍 Button state updated to "Starting scan..."');
+    } else {
+      console.error('⚠️ readyScanBtn not found in DOM');
+    }
+    
     const foodSelect = document.getElementById('mlFoodSelect');
     
     if (!foodSelect) {
       if (typeof showErrorToast === 'function') showErrorToast('Food selection controls not found');
       this.isScanningInProgress = false;
+      window.smartSenseScanningInProgress = false;
+      window.smartSenseScannerActive = false;
+      // Reset button state
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+      }
       return;
     }
 
@@ -2256,15 +2308,23 @@ class SensorDashboard {
     if (!foodId) {
       if (typeof showWarningToast === 'function') showWarningToast('Please select a food to scan');
       this.isScanningInProgress = false;
+      window.smartSenseScanningInProgress = false;
+      window.smartSenseScannerActive = false;
+      // Reset button state
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+      }
       return;
     }
     
     console.log('🔍 Starting scan for food ID:', foodId);
 
-    const scanBtn = document.getElementById('readyScanBtn');
+    // Update button to show waiting for sensor data
     if (scanBtn) {
       scanBtn.disabled = true;
       scanBtn.innerHTML = '<div class="circle-loading"></div> Waiting for new sensor data...';
+      console.log('🔍 Button state updated to "Waiting for new sensor data..."');
     }
 
     try {
@@ -2272,6 +2332,15 @@ class SensorDashboard {
       const baselineData = await this.getCurrentSensorData();
       if (!baselineData) {
         if (typeof showErrorToast === 'function') showErrorToast('No sensor data available');
+        // Reset button state
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+        }
+        // Reset flags
+        this.isScanningInProgress = false;
+        window.smartSenseScanningInProgress = false;
+        window.smartSenseScannerActive = false;
         return;
       }
 
@@ -2292,11 +2361,25 @@ class SensorDashboard {
       // Check if scan was cancelled during wait
       if (this.scanCancelled) {
         console.log('🔍 Scan cancelled during sensor data wait');
+        // Reset button state
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+        }
         return;
       }
       
       if (!newSensorData) {
         if (typeof showWarningToast === 'function') showWarningToast('No new sensor data detected');
+        // Reset button state
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+        }
+        // Reset flags
+        this.isScanningInProgress = false;
+        window.smartSenseScanningInProgress = false;
+        window.smartSenseScannerActive = false;
         return;
       }
 
