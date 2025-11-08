@@ -648,8 +648,34 @@ function getWeekEndFromWeekNumber(year, week) {
 let lastDetailedReportData = null;
 let lastDetailedReportPagination = null;
 
+// Show loading state for detailed report table
+function showDetailedReportLoadingState() {
+  const tableBody = document.querySelector('.detailed-report-table tbody');
+  if (!tableBody) {
+    console.error('Table body not found!');
+    return;
+  }
+
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" style="padding: 0;">
+        <div class="no-data-state">
+          <div class="no-data-icon">⏳</div>
+          <div class="no-data-title">Loading Spoilage Data...</div>
+          <div class="no-data-description">Please wait while we fetch your food spoilage analytics</div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 async function loadDetailedReportData(page = 1, limit = 25, options = { preserveOnEmpty: true, autoRelaxDate: true, _relaxed: false }) {
   try {
+    // Show loading state before fetching data
+    if (!options?.preserveOnEmpty || !lastDetailedReportData) {
+      showDetailedReportLoadingState();
+    }
+
     // Get session token for authentication
     const sessionToken = localStorage.getItem('jwt_token') || 
                          localStorage.getItem('sessionToken') || 
@@ -1047,7 +1073,9 @@ function updateDetailedReportPagination(pagination) {
 
 // Go to specific page in detailed report
 function goToDetailedReportPage(page) {
-  loadDetailedReportData(page, getCurrentRecordsPerPage());
+  // Show loading state when navigating to a different page
+  showDetailedReportLoadingState();
+  loadDetailedReportData(page, getCurrentRecordsPerPage(), { preserveOnEmpty: false });
 }
 
 

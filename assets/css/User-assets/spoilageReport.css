@@ -21,6 +21,13 @@ body {
   margin: 20px 0;
 }
 
+/* Loading state inside table cells */
+.detailed-report-table tbody .no-data-state {
+  margin: 0;
+  border-radius: 0;
+  min-height: 300px;
+}
+
 .no-data-icon {
   font-size: 48px;
   margin-bottom: 16px;
