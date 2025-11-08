@@ -364,6 +364,12 @@ class SensorDashboard {
         return;
       }
       
+      // Log API connection info
+      const baseUrl = (typeof window !== 'undefined' && window.API_CONFIG) 
+        ? window.API_CONFIG.BASE_URL 
+        : 'https://safebite-server-zh2r.onrender.com';
+      console.log(`🔗 Fetching devices from: ${baseUrl}/api/sensor/devices`);
+      
       const response = await fetch('/api/sensor/devices', {
         headers: {
           'Authorization': `Bearer ${sessionToken}`,
@@ -451,22 +457,35 @@ class SensorDashboard {
   // Test API connection with your actual database data
   async testAPIConnection() {
     try {
-      console.log('Testing API connection with your database readings...');
+      // Get the base URL being used
+      const baseUrl = (typeof window !== 'undefined' && window.API_CONFIG) 
+        ? window.API_CONFIG.BASE_URL 
+        : 'https://safebite-server-zh2r.onrender.com';
+      
+      console.log('🔗 Testing API connection to Render backend...');
+      console.log(`🌐 Base URL: ${baseUrl}`);
+      console.log(`📍 Current hostname: ${window.location.hostname}`);
+      console.log(`🔧 Using ${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'LOCALHOST' : 'RENDER'} backend`);
       
       // Test the latest sensor endpoint first
       const token = localStorage.getItem('jwt_token') || 
                    localStorage.getItem('sessionToken') || 
                    localStorage.getItem('session_token');
       
-      const latestResponse = await fetch('/api/sensor/latest', {
+      const apiUrl = '/api/sensor/latest';
+      const fullUrl = `${baseUrl}${apiUrl}`;
+      console.log(`📡 Testing endpoint: ${fullUrl}`);
+      
+      const latestResponse = await fetch(apiUrl, {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         }
       });
       
-      console.log('Latest sensor API Status:', latestResponse.status);
+      console.log(`✅ API Response Status: ${latestResponse.status} ${latestResponse.statusText}`);
+      console.log(`🔗 Full URL used: ${latestResponse.url || fullUrl}`);
       
       if (latestResponse.ok) {
         const latestResult = await latestResponse.json();
