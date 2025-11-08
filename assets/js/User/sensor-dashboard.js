@@ -2252,15 +2252,11 @@ class SensorDashboard {
       return;
     }
     
-    // Reset cancellation flag
+    // Reset cancellation flag and all state for a fresh scan
     this.scanCancelled = false;
     this.scanAbortController = new AbortController();
     
-    // Set flag immediately to prevent race conditions
-    this.isScanningInProgress = true;
-    console.log(`🔍 [${scanId}] Set isScanningInProgress to true`);
-    
-    // Double-check to prevent race conditions
+    // Double-check to prevent race conditions (check BEFORE clearing)
     if (window.smartSenseScanningInProgress) {
       console.log(`⚠️ [${scanId}] Global scan flag already set, ignoring duplicate call`);
       this.isScanningInProgress = false;
@@ -2271,6 +2267,12 @@ class SensorDashboard {
       }
       return;
     }
+    
+    // Set flag immediately to prevent race conditions
+    this.isScanningInProgress = true;
+    console.log(`🔍 [${scanId}] Set isScanningInProgress to true`);
+    
+    // Set global flags
     window.smartSenseScanningInProgress = true;
     console.log(`🔍 [${scanId}] Set global scan flag to true`);
     
@@ -2366,6 +2368,11 @@ class SensorDashboard {
           scanBtn.disabled = false;
           scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
         }
+        // Reset all flags when cancelled
+        this.isScanningInProgress = false;
+        window.smartSenseScanningInProgress = false;
+        window.smartSenseScannerActive = false;
+        this.scanCancelled = false; // Reset cancellation flag for next scan
         return;
       }
       
@@ -2571,23 +2578,25 @@ class SensorDashboard {
         await this.forceBlockArduinoData();
       }
     } finally {
-      // Only reset if not cancelled (cancellation is handled in closeModal)
-      if (!this.scanCancelled) {
-        // Reset scanning flag
-        this.isScanningInProgress = false;
-        
-        // Clear global scan flag
-        window.smartSenseScanningInProgress = false;
-        console.log('🔍 Global scan flag cleared');
-        
-        // Clear global flag to allow Smart Training system to run again
-        window.smartSenseScannerActive = false;
-        console.log('🔍 SmartSense Scanner finished - allowing Smart Training system');
-        
-        if (scanBtn) {
-          scanBtn.disabled = false;
-          scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
-        }
+      // Always reset flags regardless of cancellation status
+      // This ensures the system is ready for the next scan
+      this.isScanningInProgress = false;
+      
+      // Clear global scan flag
+      window.smartSenseScanningInProgress = false;
+      console.log('🔍 Global scan flag cleared');
+      
+      // Clear global flag to allow Smart Training system to run again
+      window.smartSenseScannerActive = false;
+      console.log('🔍 SmartSense Scanner finished - allowing Smart Training system');
+      
+      // Reset cancellation flag for next scan attempt
+      this.scanCancelled = false;
+      
+      // Reset button state
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
       }
       
       // Remove cancel button if still exists
