@@ -52,6 +52,9 @@ class SensorDashboard {
   }
 
   async init() {
+    // Show loading animation while fetching devices
+    this.showDevicesLoadingState();
+    
     // Load cached devices first to avoid blank state on SPA swaps
     this.loadCachedDevices();
     await this.fetchSensorDevices();
@@ -350,6 +353,34 @@ class SensorDashboard {
     console.log('⏰ Session timeout set for 5 minutes');
   }
 
+  // Show loading state while fetching devices
+  showDevicesLoadingState() {
+    const container = document.querySelector('.sensor-cards-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="devices-loading-state" style="text-align: center; padding: 60px 20px; color: #e0e6f6;">
+          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 20px;">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <h4 style="color: #fff; margin-bottom: 12px; font-weight: 600;">Loading Devices...</h4>
+          <p style="color: #bfc9da; margin: 0;">Fetching sensor devices from database</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Hide loading state
+  hideDevicesLoadingState() {
+    const container = document.querySelector('.sensor-cards-container');
+    if (!container) return;
+    const loadingState = container.querySelector('.devices-loading-state');
+    if (loadingState) {
+      loadingState.remove();
+    }
+  }
+
   // Fetch sensor devices from database
   async fetchSensorDevices() {
     try {
@@ -361,6 +392,7 @@ class SensorDashboard {
                            localStorage.getItem('session_token');
       if (!sessionToken) {
         console.warn('No session token found; skipping device refresh to keep current UI');
+        this.hideDevicesLoadingState();
         return;
       }
       
@@ -374,6 +406,7 @@ class SensorDashboard {
       if (!response.ok) {
         if (response.status === 401) {
           console.warn('401 on devices; keeping current registeredDevices');
+          this.hideDevicesLoadingState();
           return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -400,6 +433,9 @@ class SensorDashboard {
     } catch (error) {
       console.error('Error fetching sensor devices:', error);
       // Keep current devices on error to preserve UI
+    } finally {
+      // Always hide loading state after fetch completes
+      this.hideDevicesLoadingState();
     }
   }
 
@@ -1556,8 +1592,26 @@ class SensorDashboard {
       // Remove cancel button if exists
       this.removeCancelButton();
       
-      // Hide waiting indicator
+      // Reset wait indicator to default state (clear any cancellation message)
       this.hideSensorWaitIndicator();
+      const waitIndicator = document.getElementById('sensorDataWaitIndicator');
+      if (waitIndicator) {
+        // Reset to default waiting state (not cancelled state)
+        waitIndicator.innerHTML = `
+          <div class="waiting-content">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="waiting-text">Waiting for new sensor data...</span>
+          </div>
+          <div class="waiting-progress">
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-label="Loading progress"></div>
+            </div>
+          </div>
+        `;
+        waitIndicator.style.display = 'none';
+      }
       
       // Close modal
       modal.style.display = 'none';
@@ -1566,7 +1620,7 @@ class SensorDashboard {
       this.scanCancelled = false;
       this.scanAbortController = null;
       
-      console.log('🔍 Modal closed');
+      console.log('🔍 Modal closed - all state reset');
     };
     
     modal.style.display = 'flex';
@@ -1989,6 +2043,45 @@ class SensorDashboard {
       `;
       waitIndicator.style.display = 'block';
     }
+  }
+
+  // Reset cancelled state - clears cancellation message and resets to default
+  resetCancelledState() {
+    console.log('🔄 Resetting cancelled state...');
+    
+    // Hide wait indicator
+    this.hideSensorWaitIndicator();
+    
+    // Reset wait indicator to default state
+    const waitIndicator = document.getElementById('sensorDataWaitIndicator');
+    if (waitIndicator) {
+      waitIndicator.innerHTML = `
+        <div class="waiting-content">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span class="waiting-text">Waiting for new sensor data...</span>
+        </div>
+        <div class="waiting-progress">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-label="Loading progress"></div>
+          </div>
+        </div>
+      `;
+      waitIndicator.style.display = 'none';
+    }
+    
+    // Reset button state
+    const scanBtn = document.getElementById('readyScanBtn');
+    if (scanBtn) {
+      scanBtn.disabled = false;
+      scanBtn.innerHTML = '<i class="bi bi-scan"></i> Start Scanning';
+    }
+    
+    // Reset cancellation flag
+    this.scanCancelled = false;
+    
+    console.log('✅ Cancelled state reset - ready for new scan');
   }
 
   hideSensorWaitIndicator() {
