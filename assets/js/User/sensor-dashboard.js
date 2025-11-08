@@ -1571,6 +1571,27 @@ class SensorDashboard {
     
     modal.style.display = 'flex';
     
+    // Clear any previous cancellation message or wait indicator when modal opens
+    this.hideSensorWaitIndicator();
+    const waitIndicator = document.getElementById('sensorDataWaitIndicator');
+    if (waitIndicator) {
+      // Reset to default waiting state (not cancelled state)
+      waitIndicator.innerHTML = `
+        <div class="waiting-content">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span class="waiting-text">Waiting for new sensor data...</span>
+        </div>
+        <div class="waiting-progress">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-label="Loading progress"></div>
+          </div>
+        </div>
+      `;
+      waitIndicator.style.display = 'none';
+    }
+    
     // Populate the food dropdown when modal opens with fresh API data
     await this.populateMLFoodDropdown();
     
@@ -2256,6 +2277,27 @@ class SensorDashboard {
     this.scanCancelled = false;
     this.scanAbortController = new AbortController();
     
+    // Clear any cancellation message from previous scan attempt
+    this.hideSensorWaitIndicator();
+    const waitIndicator = document.getElementById('sensorDataWaitIndicator');
+    if (waitIndicator) {
+      // Reset to default waiting state (not cancelled state)
+      waitIndicator.innerHTML = `
+        <div class="waiting-content">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span class="waiting-text">Waiting for new sensor data...</span>
+        </div>
+        <div class="waiting-progress">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-label="Loading progress"></div>
+          </div>
+        </div>
+      `;
+      waitIndicator.style.display = 'none';
+    }
+    
     // Double-check to prevent race conditions (check BEFORE clearing)
     if (window.smartSenseScanningInProgress) {
       console.log(`⚠️ [${scanId}] Global scan flag already set, ignoring duplicate call`);
@@ -2284,8 +2326,8 @@ class SensorDashboard {
     // Update button state immediately to show scanning has started
     if (scanBtn) {
       scanBtn.disabled = true;
-      scanBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Starting scan...';
-      console.log('🔍 Button state updated to "Starting scan..."');
+      scanBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Scanning...';
+      console.log('🔍 Button state updated to "Scanning..."');
     } else {
       console.error('⚠️ readyScanBtn not found in DOM');
     }
