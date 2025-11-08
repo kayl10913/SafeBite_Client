@@ -1653,6 +1653,9 @@ class SensorDashboard {
     
     // Add global refresh function
     window.refreshMLScannerFoods = () => this.populateMLFoodDropdown();
+    
+    // Load ML history when modal opens to show recent scans
+    await this.updateMLHistory();
   }
 
   // Global method to ensure modal works across SPA navigation
@@ -2568,6 +2571,17 @@ class SensorDashboard {
         // Show ML prediction results in custom modal
         this.showMLPredictionResults(foodName, prediction.prediction);
         foodSelect.value = '';
+        
+        // Update ML history to show the new scan
+        await this.updateMLHistory();
+        
+        // Refresh latest scan result display on dashboard
+        if (window.latestScanManager && typeof window.latestScanManager.refreshLatestScan === 'function') {
+          console.log('🔄 Refreshing latest scan result display...');
+          setTimeout(() => {
+            window.latestScanManager.refreshLatestScan();
+          }, 500); // Small delay to ensure API has processed the new scan
+        }
         
         // Complete scan session when scanning is finished - this will block Arduino data
         try {
