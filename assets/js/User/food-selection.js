@@ -127,7 +127,7 @@ class FoodSelection {
         status: 'caution',
         probability: 60,
         confidence: 85,
-        recommendation: 'WARNING: Elevated Gas Levels (50-69 ppm). Food may be starting to spoil. Inspect carefully for any signs of spoilage (smell, color, texture). Consume within 24 hours or discard if suspicious.',
+        recommendation: 'WARNING: Elevated Gas Levels (50-69 ppm). Food may be starting to spoil. Inspect carefully for any signs of spoilage (smell, color, texture). Consume within 3 hours or discard if suspicious.',
         threshold: '50-69 ppm'
       };
     } else if (gasLevel >= 0) {
