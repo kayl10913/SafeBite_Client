@@ -2113,10 +2113,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             textarea.value = result.json;
                             textarea.style.borderColor = '#4CAF50';
                             
-                            // Show success message
-                            if (!result.wasAlreadyJson && window.showToastNotification) {
-                                window.showToastNotification('✨ AI formatted your text into JSON!', 'success');
-                            }
+                            // Toast notification removed as requested
                             
                             setTimeout(() => {
                                 textarea.style.borderColor = '';

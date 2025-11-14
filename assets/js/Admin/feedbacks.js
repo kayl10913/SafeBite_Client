@@ -731,6 +731,15 @@ class FeedbacksManager {
         };
     }
 
+    // Helper function to convert null/undefined/empty to 0 for numeric fields
+    getNumericValue(value, fallback = 0) {
+        if (value === null || value === undefined || value === '') {
+            return fallback;
+        }
+        const num = Number(value);
+        return isNaN(num) ? fallback : num;
+    }
+
     async exportToExcel() {
         try {
             console.log('📊 Exporting to Excel...');
@@ -746,13 +755,13 @@ class FeedbacksManager {
 
             // Prepare data for Excel export
             const excelData = filteredData.map(feedback => ({
-                'Feedback ID': feedback['FEEDBACK ID'] || feedback.feedback_id || '',
+                'Feedback ID': this.getNumericValue(feedback['FEEDBACK ID'] ?? feedback.feedback_id),
                 'Customer Name': feedback['CUSTOMER NAME'] || feedback.customer_name || '',
                 'Customer Email': feedback['CUSTOMER EMAIL'] || feedback.customer_email || '',
                 'Feedback Text': feedback['FEEDBACK TEXT'] || feedback.feedback_text || '',
                 'Feedback Type': feedback['FEEDBACK TYPE'] || feedback.feedback_type || '',
                 'Priority': feedback['PRIORITY'] || feedback.priority || '',
-                'Star Rating': feedback['STAR RATE'] || feedback.star_rating || '',
+                'Star Rating': this.getNumericValue(feedback['STAR RATE'] ?? feedback.star_rating),
                 'Sentiment': feedback['SENTIMENT'] || feedback.sentiment || '',
                 'Status': feedback['STATUS'] || feedback.status || '',
                 'Response Text': feedback['RESPONSE TEXT'] || feedback.response_text || ''
@@ -802,6 +811,15 @@ class FeedbacksManager {
                 return;
             }
 
+            // Helper function to convert null/undefined/empty to 0 for numeric fields
+            const getNumericValue = (value, fallback = 0) => {
+                if (value === null || value === undefined || value === '') {
+                    return fallback;
+                }
+                const num = Number(value);
+                return isNaN(num) ? fallback : num;
+            };
+
             // Create HTML content for PDF
             const htmlContent = `
                 <!DOCTYPE html>
@@ -848,19 +866,23 @@ class FeedbacksManager {
                             </tr>
                         </thead>
                         <tbody>
-                            ${filteredData.map(feedback => `
+                            ${filteredData.map(feedback => {
+                                const feedbackId = getNumericValue(feedback['FEEDBACK ID'] ?? feedback.feedback_id);
+                                const starRating = getNumericValue(feedback['STAR RATE'] ?? feedback.star_rating);
+                                return `
                                 <tr>
-                                    <td>${feedback['FEEDBACK ID'] || feedback.feedback_id || ''}</td>
+                                    <td>${feedbackId}</td>
                                     <td>${feedback['CUSTOMER NAME'] || feedback.customer_name || ''}</td>
                                     <td>${feedback['CUSTOMER EMAIL'] || feedback.customer_email || ''}</td>
                                     <td>${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').substring(0, 100)}${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').length > 100 ? '...' : ''}</td>
                                     <td>${feedback['FEEDBACK TYPE'] || feedback.feedback_type || ''}</td>
                                     <td class="priority-${(feedback['PRIORITY'] || feedback.priority || '').toLowerCase()}">${feedback['PRIORITY'] || feedback.priority || ''}</td>
-                                    <td>${feedback['STAR RATE'] || feedback.star_rating || ''} ⭐</td>
+                                    <td>${starRating} ⭐</td>
                                     <td>${feedback['SENTIMENT'] || feedback.sentiment || ''}</td>
                                     <td class="status-${(feedback['STATUS'] || feedback.status || '').toLowerCase().replace(' ', '-')}">${feedback['STATUS'] || feedback.status || ''}</td>
                                 </tr>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </body>

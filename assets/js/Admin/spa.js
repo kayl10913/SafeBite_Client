@@ -62,10 +62,7 @@ async function autoFormatJSONField(textarea) {
         textarea.value = result.json;
         textarea.style.borderColor = '#4CAF50';
         
-        // Show success message
-        if (!result.wasAlreadyJson) {
-          showToastNotification('✨ AI formatted your text into JSON!', 'success');
-        }
+        // Toast notification removed as requested
         
         setTimeout(() => {
           textarea.style.borderColor = '';

@@ -52,6 +52,9 @@ class SensorDashboard {
   }
 
   async init() {
+    // Show loading animation while fetching devices
+    this.showDevicesLoadingState();
+    
     // Load cached devices first to avoid blank state on SPA swaps
     this.loadCachedDevices();
     await this.fetchSensorDevices();
@@ -350,6 +353,34 @@ class SensorDashboard {
     console.log('⏰ Session timeout set for 5 minutes');
   }
 
+  // Show loading state while fetching devices
+  showDevicesLoadingState() {
+    const container = document.querySelector('.sensor-cards-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="devices-loading-state" style="text-align: center; padding: 60px 20px; color: #e0e6f6;">
+          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 20px;">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <h4 style="color: #fff; margin-bottom: 12px; font-weight: 600;">Loading Devices...</h4>
+          <p style="color: #bfc9da; margin: 0;">Fetching sensor devices from database</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Hide loading state
+  hideDevicesLoadingState() {
+    const container = document.querySelector('.sensor-cards-container');
+    if (!container) return;
+    const loadingState = container.querySelector('.devices-loading-state');
+    if (loadingState) {
+      loadingState.remove();
+    }
+  }
+
   // Fetch sensor devices from database
   async fetchSensorDevices() {
     try {
@@ -361,14 +392,9 @@ class SensorDashboard {
                            localStorage.getItem('session_token');
       if (!sessionToken) {
         console.warn('No session token found; skipping device refresh to keep current UI');
+        this.hideDevicesLoadingState();
         return;
       }
-      
-      // Log API connection info
-      const baseUrl = (typeof window !== 'undefined' && window.API_CONFIG) 
-        ? window.API_CONFIG.BASE_URL 
-        : 'https://safebite-server-zh2r.onrender.com';
-      console.log(`🔗 Fetching devices from: ${baseUrl}/api/sensor/devices`);
       
       const response = await fetch('/api/sensor/devices', {
         headers: {
@@ -380,6 +406,7 @@ class SensorDashboard {
       if (!response.ok) {
         if (response.status === 401) {
           console.warn('401 on devices; keeping current registeredDevices');
+          this.hideDevicesLoadingState();
           return;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -406,6 +433,9 @@ class SensorDashboard {
     } catch (error) {
       console.error('Error fetching sensor devices:', error);
       // Keep current devices on error to preserve UI
+    } finally {
+      // Always hide loading state after fetch completes
+      this.hideDevicesLoadingState();
     }
   }
 
@@ -457,35 +487,22 @@ class SensorDashboard {
   // Test API connection with your actual database data
   async testAPIConnection() {
     try {
-      // Get the base URL being used
-      const baseUrl = (typeof window !== 'undefined' && window.API_CONFIG) 
-        ? window.API_CONFIG.BASE_URL 
-        : 'https://safebite-server-zh2r.onrender.com';
-      
-      console.log('🔗 Testing API connection to Render backend...');
-      console.log(`🌐 Base URL: ${baseUrl}`);
-      console.log(`📍 Current hostname: ${window.location.hostname}`);
-      console.log(`🔧 Using ${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'LOCALHOST' : 'RENDER'} backend`);
+      console.log('Testing API connection with your database readings...');
       
       // Test the latest sensor endpoint first
       const token = localStorage.getItem('jwt_token') || 
                    localStorage.getItem('sessionToken') || 
                    localStorage.getItem('session_token');
       
-      const apiUrl = '/api/sensor/latest';
-      const fullUrl = `${baseUrl}${apiUrl}`;
-      console.log(`📡 Testing endpoint: ${fullUrl}`);
-      
-      const latestResponse = await fetch(apiUrl, {
+      const latestResponse = await fetch('/api/sensor/latest', {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          'Authorization': `Bearer ${token}`
         }
       });
       
-      console.log(`✅ API Response Status: ${latestResponse.status} ${latestResponse.statusText}`);
-      console.log(`🔗 Full URL used: ${latestResponse.url || fullUrl}`);
+      console.log('Latest sensor API Status:', latestResponse.status);
       
       if (latestResponse.ok) {
         const latestResult = await latestResponse.json();
