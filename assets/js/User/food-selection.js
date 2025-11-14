@@ -1565,13 +1565,17 @@ class FoodSelection {
     // Map spoilage status directly to expiry days with consistent logic
     const now = new Date();
     let days = 1; // default
+    let useHours = false;
+    let hoursToAdd = 0;
     
     switch (spoilageStatus.toLowerCase()) {
       case 'safe':
         days = 3; // Safe food lasts 3 days
         break;
       case 'caution':
-        days = 2; // Caution food should be consumed within 2 days
+        // Caution food expires in 3 hours
+        useHours = true;
+        hoursToAdd = 3;
         break;
       case 'unsafe':
         days = 0; // Unsafe/spoiled food expires TODAY (already spoiled)
@@ -1584,8 +1588,17 @@ class FoodSelection {
     console.log('  If spoilage_status is "unsafe" but days > 0, there\'s an inconsistency');
     console.log('  Current spoilage_status:', spoilageStatus);
     console.log('  Calculated days:', days);
+    console.log('  Use hours:', useHours);
+    console.log('  Hours to add:', hoursToAdd);
     
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    let d;
+    if (useHours) {
+      // Add hours for caution status (3 hours)
+      d = new Date(now);
+      d.setHours(d.getHours() + hoursToAdd);
+    } else {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    }
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
@@ -1600,17 +1613,29 @@ class FoodSelection {
     // Heuristic mapping from spoilage status to days remaining
     const now = new Date();
     let days = 0;
+    let useHours = false;
+    let hoursToAdd = 0;
     switch ((prediction.spoilage_status || '').toUpperCase()) {
       case 'LOW_SPOILAGE_RISK':
         days = 3; break;
       case 'MODERATE_SPOILAGE_RISK':
-        days = 1; break;
+        // 3 hours for moderate risk (caution)
+        useHours = true;
+        hoursToAdd = 3;
+        break;
       case 'HIGH_SPOILAGE_RISK':
         days = 0; break;
       default:
         days = 1; break;
     }
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    let d;
+    if (useHours) {
+      // Add hours for moderate risk (3 hours)
+      d = new Date(now);
+      d.setHours(d.getHours() + hoursToAdd);
+    } else {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    }
     // Return YYYY-MM-DD
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
