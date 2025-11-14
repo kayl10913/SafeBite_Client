@@ -2139,11 +2139,11 @@
       // Set icon based on type
       const icons = {
         info: '<i class="bi bi-info-circle"></i>',
-        success: '<i class="bi bi-check"></i>',
+        success: '<i class="bi bi-check-circle"></i>',
         warning: '<i class="bi bi-exclamation-triangle"></i>',
         error: '<i class="bi bi-x-circle"></i>'
       };
-      this.iconElement.textContent = icons[type] || icons.info;
+      this.iconElement.innerHTML = icons[type] || icons.info;
 
       // Show/hide cancel button
       this.cancelBtn.style.display = showCancel ? 'flex' : 'none';
