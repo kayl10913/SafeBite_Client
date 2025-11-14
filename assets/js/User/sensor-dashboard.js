@@ -92,23 +92,6 @@ class SensorDashboard {
     this.ensureModalCompatibility();
   }
 
-  /**
-   * Get the current logged-in user ID from localStorage
-   */
-  getCurrentUserId() {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      try {
-        const user = JSON.parse(currentUser);
-        return user.user_id || null;
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        return null;
-      }
-    }
-    return null;
-  }
-
   async init() {
     // Show loading animation while fetching devices
     this.showDevicesLoadingState();
@@ -152,8 +135,9 @@ class SensorDashboard {
       
       if (!sessionToken) {
         console.error('❌ No session token found for scan session creation');
-        // Try without authentication for testing
-        console.log('🔄 Trying without authentication...');
+        if (!currentUserId) {
+          throw new Error('User ID is required. Please log in to create a scan session.');
+        }
         
         const response = await fetch('/api/sensor/scan-session', {
           method: 'POST',
@@ -161,7 +145,7 @@ class SensorDashboard {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: currentUserId,
             session_data: {
               frontend_initiated: true,
               timestamp: new Date().toISOString()
@@ -185,6 +169,10 @@ class SensorDashboard {
       }
 
       console.log('🔑 Using session token for authentication');
+      
+      // Get current user ID (token will be used by backend, but include for clarity)
+      const currentUserId = getCurrentUserId();
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'POST',
         headers: {
@@ -192,7 +180,7 @@ class SensorDashboard {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: currentUserId, // Will be extracted from token by backend, but include for fallback
           session_data: {
             frontend_initiated: true,
             timestamp: new Date().toISOString()
@@ -230,7 +218,13 @@ class SensorDashboard {
       
       // Try to check if there are any active sessions
       try {
-        const response = await fetch('/api/sensor/scan-session-status?user_id=11', {
+        const currentUserId = getCurrentUserId();
+        if (!currentUserId) {
+          console.error('❌ No user ID available to check scan session status');
+          return;
+        }
+        
+        const response = await fetch(`/api/sensor/scan-session-status?user_id=${currentUserId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -265,6 +259,9 @@ class SensorDashboard {
       
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
+        if (!currentUserId) {
+          throw new Error('User ID is required. Please log in to complete the scan session.');
+        }
         
         const response = await fetch('/api/sensor/scan-session', {
           method: 'PUT',
@@ -272,7 +269,7 @@ class SensorDashboard {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: currentUserId,
             session_id: this.currentScanSession.session_id
           })
         });
@@ -297,6 +294,10 @@ class SensorDashboard {
       }
 
       console.log('🔑 Using session token for authentication');
+      
+      // Get current user ID
+      const currentUserId = getCurrentUserId();
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'PUT',
         headers: {
@@ -304,7 +305,7 @@ class SensorDashboard {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: currentUserId,
           session_id: this.currentScanSession.session_id
         })
       });
@@ -356,7 +357,7 @@ class SensorDashboard {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          user_id: 11 // Arduino user ID
+          user_id: currentUserId
         })
       });
 
@@ -377,7 +378,13 @@ class SensorDashboard {
     try {
       console.log('🔍 Verifying Arduino data blocking...');
       
-      const response = await fetch('/api/sensor/scan-session-status?user_id=11', {
+      const currentUserId = getCurrentUserId();
+      if (!currentUserId) {
+        console.error('❌ No user ID available to verify Arduino blocking');
+        return;
+      }
+      
+      const response = await fetch(`/api/sensor/scan-session-status?user_id=${currentUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -2072,7 +2079,7 @@ class SensorDashboard {
             ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
           },
           body: JSON.stringify({ 
-            user_id: 11, 
+            user_id: currentUserId, 
             session_id: this.currentScanSession.session_id 
           })
         });
