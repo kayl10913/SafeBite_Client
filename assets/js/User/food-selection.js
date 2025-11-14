@@ -1,5 +1,46 @@
 // food-selection.js - Food selection functionality for IoT scanning
 
+// Helper function to get user ID from JWT token
+function getUserIdFromToken() {
+  try {
+    const token = localStorage.getItem('jwt_token') || 
+                  localStorage.getItem('sessionToken') || 
+                  localStorage.getItem('session_token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const payloadJson = atob(parts[1].replace(/-/g,'+').replace(/_/g,'/'));
+    const payload = JSON.parse(payloadJson);
+    // Common claim keys
+    return payload.user_id || payload.id || payload.uid || null;
+  } catch (e) {
+    console.warn('Unable to decode JWT payload:', e);
+    return null;
+  }
+}
+
+// Helper function to get current user ID (from token or localStorage)
+function getCurrentUserId() {
+  // Try JWT token first
+  const userIdFromToken = getUserIdFromToken();
+  if (userIdFromToken) {
+    return userIdFromToken;
+  }
+  
+  // Fallback to localStorage
+  const currentUser = localStorage.getItem('currentUser');
+  if (currentUser) {
+    try {
+      const user = JSON.parse(currentUser);
+      return user.user_id;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+  }
+  
+  return null;
+}
+
 class FoodSelection {
   constructor() {
     console.log('FoodSelection class initialized');
@@ -570,8 +611,14 @@ class FoodSelection {
       
       const sessionToken = this.getAuthToken();
       
+      // Get current user ID
+      const currentUserId = getCurrentUserId();
+      
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
+        if (!currentUserId) {
+          throw new Error('User ID is required. Please log in to complete the scan session.');
+        }
         
         const response = await fetch('/api/sensor/scan-session', {
           method: 'PUT',
@@ -579,7 +626,7 @@ class FoodSelection {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: currentUserId,
             session_id: this.currentScanSession.session_id
           })
         });
@@ -596,6 +643,10 @@ class FoodSelection {
       }
 
       console.log('🔑 Using session token for authentication');
+      
+      // Get current user ID
+      const currentUserId = getCurrentUserId();
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'PUT',
         headers: {
@@ -603,7 +654,7 @@ class FoodSelection {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: currentUserId,
           session_id: this.currentScanSession.session_id
         })
       });
@@ -633,8 +684,14 @@ class FoodSelection {
       
       const sessionToken = this.getAuthToken();
       
+      // Get current user ID
+      const currentUserId = getCurrentUserId();
+      
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
+        if (!currentUserId) {
+          throw new Error('User ID is required. Please log in to create a scan session.');
+        }
         
         const response = await fetch('/api/sensor/scan-session', {
           method: 'POST',
@@ -642,7 +699,7 @@ class FoodSelection {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: currentUserId,
             session_data: {
               frontend_initiated: true,
               timestamp: new Date().toISOString(),
@@ -663,6 +720,10 @@ class FoodSelection {
       }
 
       console.log('🔑 Using session token for authentication');
+      
+      // Get current user ID
+      const currentUserId = getCurrentUserId();
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'POST',
         headers: {
@@ -670,7 +731,7 @@ class FoodSelection {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: currentUserId,
           session_data: {
             frontend_initiated: true,
             timestamp: new Date().toISOString(),
@@ -4313,7 +4374,10 @@ class FoodSelection {
           'Content-Type': 'application/json',
           ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
         },
-        body: JSON.stringify({ user_id: 11, session_id: this.currentScanSession?.session_id })
+        body: JSON.stringify({ 
+          user_id: getCurrentUserId(), 
+          session_id: this.currentScanSession?.session_id 
+        })
       }).finally(() => { this.currentScanSession = null; });
     } catch (error) {
       console.error('Failed to cancel scan session after cancellation:', error);
