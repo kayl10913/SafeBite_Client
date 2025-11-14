@@ -800,7 +800,14 @@ class FoodSelection {
       const alertLevel = spoilageStatus === 'unsafe' ? 'High' : 'Medium';
       const recommendedAction = spoilageStatus === 'unsafe'
         ? 'Discard immediately and sanitize storage area.'
-        : 'Consume soon or improve storage conditions.';
+        : 'Consume soon or improve storage conditions. Monitor closely for signs of spoilage.';
+
+      // Prepare sensor readings for email
+      const sensorReadings = sensorData ? {
+        temperature: sensorData.temperature?.value || sensorData.temperature || undefined,
+        humidity: sensorData.humidity?.value || sensorData.humidity || undefined,
+        gas_level: sensorData.gas?.value || sensorData.gas_level || sensorData.gas || undefined
+      } : null;
 
       const body = {
         food_id: mlPredictionData?.food_id || null,
@@ -815,13 +822,20 @@ class FoodSelection {
         alert_data: JSON.stringify({
           source: 'ml_prediction',
           condition: spoilageStatus,
-          sensor_readings: sensorData,
+          sensor_readings: sensorReadings,
           spoilage_score: spoilageProbability,
           confidence_score: confidenceScore,
           ml_model: mlPredictionData?.model || 'default',
           timestamp: new Date().toISOString()
         })
       };
+      
+      console.log(`📧 [Smart Training] Creating alert with email notification for ${spoilageStatus} status:`, {
+        foodName,
+        alertLevel,
+        spoilageStatus,
+        probability: Math.round(spoilageProbability)
+      });
 
       const headers = {
         'Content-Type': 'application/json',
