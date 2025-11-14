@@ -20,6 +20,23 @@ class FoodSelection {
            localStorage.getItem('session_token');
   }
 
+  /**
+   * Get the current logged-in user ID from localStorage
+   */
+  getCurrentUserId() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        const user = JSON.parse(currentUser);
+        return user.user_id || null;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Gas emission threshold analysis function
   analyzeGasEmissionThresholds(gasLevel) {
     if (gasLevel >= 400) {
@@ -573,13 +590,18 @@ class FoodSelection {
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
         
+        const userId = this.getCurrentUserId();
+        if (!userId) {
+          throw new Error('No user ID available. Please log in.');
+        }
+        
         const response = await fetch('/api/sensor/scan-session', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: userId,
             session_id: this.currentScanSession.session_id
           })
         });
@@ -596,6 +618,11 @@ class FoodSelection {
       }
 
       console.log('🔑 Using session token for authentication');
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('No user ID available. Please log in.');
+      }
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'PUT',
         headers: {
@@ -603,7 +630,7 @@ class FoodSelection {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: userId,
           session_id: this.currentScanSession.session_id
         })
       });
@@ -636,13 +663,18 @@ class FoodSelection {
       if (!sessionToken) {
         console.log('🔄 No session token, trying without authentication...');
         
+        const userId = this.getCurrentUserId();
+        if (!userId) {
+          throw new Error('No user ID available. Please log in.');
+        }
+        
         const response = await fetch('/api/sensor/scan-session', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: 11, // Arduino user ID
+            user_id: userId,
             session_data: {
               frontend_initiated: true,
               timestamp: new Date().toISOString(),
@@ -663,6 +695,11 @@ class FoodSelection {
       }
 
       console.log('🔑 Using session token for authentication');
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('No user ID available. Please log in.');
+      }
+      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'POST',
         headers: {
@@ -670,7 +707,7 @@ class FoodSelection {
           'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
-          user_id: 11, // Arduino user ID
+          user_id: userId,
           session_data: {
             frontend_initiated: true,
             timestamp: new Date().toISOString(),
@@ -1089,7 +1126,7 @@ class FoodSelection {
     }
   }
 
-  // --- ML + Polling Flow ---
+  // --- ML + Polling Flow --- (sensor polling logic)
   async startSensorPollingAndPredict() {
     try {
       console.log('🔍 Smart Training system startSensorPollingAndPredict called');
@@ -1340,7 +1377,7 @@ class FoodSelection {
       this._pollingActive = false;
     }
   }
-
+//---fetch latest sensor data---
   async fetchLatestSensorData() {
     try {
       const token = this.getAuthToken();
@@ -1412,7 +1449,7 @@ class FoodSelection {
       return null;
     }
   }
-
+//---call ML predict---
   async callMlPredict(latest) {
     try {
       const token = this.getAuthToken();
@@ -1445,7 +1482,7 @@ class FoodSelection {
       return null;
     }
   }
-
+//---call AI analyze---
   async callAiAnalyze(latest) {
     try {
       const token = this.getAuthToken();
@@ -1470,7 +1507,7 @@ class FoodSelection {
       return null;
     }
   }
-
+//---derive expiry from AI analysis---
   deriveExpiryFromAi(analysis) {
     // If model provides estimatedShelfLifeHours, convert to date
     const hours = Number(analysis.estimatedShelfLifeHours);
@@ -1523,7 +1560,7 @@ class FoodSelection {
     
     return `${yyyy}-${mm}-${dd}`;
   }
-
+//---derive expiry from ML prediction---
   deriveExpiryDate(prediction) {
     // Heuristic mapping from spoilage status to days remaining
     const now = new Date();
@@ -1545,7 +1582,7 @@ class FoodSelection {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   }
-
+//---update food expiry---
   async updateFoodExpiry(foodId, expirationDate) {
     try {
       const token = this.getAuthToken();
@@ -1562,7 +1599,7 @@ class FoodSelection {
       return false;
     }
   }
-
+//---update food with expiry---
   async updateFoodWithExpiry(name, category, expirationDate) {
     try {
       // Check if scanning was cancelled
@@ -1614,7 +1651,7 @@ class FoodSelection {
       return false;
     }
   }
-
+//---resolve preferred sensor id---
   async resolvePreferredSensorId(token) {
     try {
       const res = await fetch('/api/sensor/devices', {
@@ -1631,7 +1668,7 @@ class FoodSelection {
       return null;
     }
   }
-
+//---resolve all sensor ids---
   async resolveAllSensorIds(token) {
     try {
       const res = await fetch('/api/sensor/devices', {
@@ -1650,8 +1687,7 @@ class FoodSelection {
       return [];
     }
   }
-
-  // Note: Skipped storeAiAnalysis because ai_analysis table does not exist
+//---clear food history---
   clearFoodHistory() {
     if (!Array.isArray(this.foodHistory) || this.foodHistory.length === 0) {
       // Nothing to clear; just ensure UI shows empty state
@@ -1750,7 +1786,7 @@ class FoodSelection {
     // Check every 2 seconds for the first minute, then every 10 seconds
     let checkCount = 0;
     const maxFastChecks = 30; // 30 checks * 2 seconds = 1 minute
-    
+//---start periodic history check---
     const periodicCheck = () => {
       this.checkAndUpdateScannedItems();
       checkCount++;
@@ -1767,7 +1803,7 @@ class FoodSelection {
     // Start the periodic check
     setTimeout(periodicCheck, 2000);
   }
-
+//---render food history---
   renderFoodHistory() {
     const historyList = document.getElementById('foodHistoryList');
     if (!historyList) return;
@@ -1897,7 +1933,7 @@ class FoodSelection {
     // Update counter to include scanner results
     this.updateHistoryCounter(allResults.length);
   }
-
+//---filter food history---
   filterFoodHistory(filter) {
     const historyList = document.getElementById('foodHistoryList');
     if (!historyList) return;
@@ -1986,7 +2022,7 @@ class FoodSelection {
     };
     return iconMap[status] || 'question-circle-fill';
   }
-
+//---get status text---
   getStatusText(status, analysisResult = null) {
     // If we have analysis results, show the actual analysis status
     if (analysisResult) {
@@ -2024,7 +2060,7 @@ class FoodSelection {
     };
     return statusMap[status] || status;
   }
-
+//---update history counter---
   updateHistoryCounter(count) {
     const counter = document.getElementById('historyCount');
     if (counter) {
@@ -4313,7 +4349,7 @@ class FoodSelection {
           'Content-Type': 'application/json',
           ...(sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {})
         },
-        body: JSON.stringify({ user_id: 11, session_id: this.currentScanSession?.session_id })
+        body: JSON.stringify({ user_id: this.getCurrentUserId(), session_id: this.currentScanSession?.session_id })
       }).finally(() => { this.currentScanSession = null; });
     } catch (error) {
       console.error('Failed to cancel scan session after cancellation:', error);
