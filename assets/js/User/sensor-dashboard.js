@@ -170,9 +170,6 @@ class SensorDashboard {
 
       console.log('🔑 Using session token for authentication');
       
-      // Get current user ID (token will be used by backend, but include for clarity)
-      const currentUserId = getCurrentUserId();
-      
       const response = await fetch('/api/sensor/scan-session', {
         method: 'POST',
         headers: {
@@ -294,9 +291,6 @@ class SensorDashboard {
       }
 
       console.log('🔑 Using session token for authentication');
-      
-      // Get current user ID
-      const currentUserId = getCurrentUserId();
       
       const response = await fetch('/api/sensor/scan-session', {
         method: 'PUT',
