@@ -1,25 +1,4 @@
-// ad-gauge.js
-// Usage: Place <div class="gauge" data-label="Label" data-value="42" data-unit="unit"></div> in your HTML.
-// To update: window.setGaugeValue(element, value)
-//
-// Example for demo/testing:
-//
-// // Set initial gauge value for demo
-// const gauge = document.querySelector('.gauge[data-label="Moisture Rate"]');
-// window.setGaugeValue(gauge, 50); // sets value to 50%
-//
-// // Temporary demo data for all gauges
-// setTimeout(() => {
-//   document.querySelectorAll('.gauge').forEach((el, i) => {
-//     window.setGaugeValue(el, [50, 70, 30][i] || 40);
-//   });
-//   // Change again after 2 seconds
-//   setTimeout(() => {
-//     document.querySelectorAll('.gauge').forEach((el, i) => {
-//       window.setGaugeValue(el, [20, 90, 60][i] || 60);
-//     });
-//   }, 2000);
-// }, 2000);
+
 
 (function() {
   function renderGauge(el) {

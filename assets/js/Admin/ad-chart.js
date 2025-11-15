@@ -3,6 +3,7 @@
 // Global variables to store fetched data
 let activeUsersData = 0;
 let spoilageAlertsData = 0;
+let activeDevicesData = 0; // Separate variable for active devices count
 let alertsByUser = [];
 let loggedInUserData = null;
 
@@ -178,7 +179,9 @@ function fetchDashboardStats() {
     .then(data => {
       if (data.success && data.dashboard_stats) {
         activeUsersData = data.dashboard_stats.active_users;
-        spoilageAlertsData = data.dashboard_stats.spoilage_alerts;
+        // spoilage_alerts in backend response actually contains active devices count
+        activeDevicesData = data.dashboard_stats.spoilage_alerts || 0;
+        spoilageAlertsData = data.dashboard_stats.spoilage_alerts || 0; // Keep for spoilage alerts element
         // Update device reports data as well
         updateDeviceReportsData(data.dashboard_stats.device_reports);
         
@@ -436,13 +439,13 @@ const dashboardData = {
   statCards: {
     '2025-06-01': {
       activeUsers: {
-        value: 141,
+        value: 0,
         label: "Active Users",
         icon: "users",
         chartData: [65, 78, 90, 85, 95, 88, 92, 87, 94, 89, 96, 91]
       },
       deviceReports: {
-        value: 89,
+        value: 0,
         label: "Device Reports",
         icon: "devices",
         chartData: [45, 52, 48, 61, 55, 58, 62, 67, 71, 68, 75, 72]
@@ -456,13 +459,13 @@ const dashboardData = {
     },
     '2025-06-02': {
       activeUsers: {
-        value: 156,
+        value: 0,
         label: "Active Users",
         icon: "users",
         chartData: [72, 85, 98, 92, 105, 95, 108, 102, 110, 104, 115, 109]
       },
       deviceReports: {
-        value: 103,
+        value: 0,
         label: "Device Reports",
         icon: "devices",
         chartData: [52, 65, 58, 72, 68, 75, 78, 82, 88, 85, 92, 89]
@@ -476,13 +479,13 @@ const dashboardData = {
     },
     '2025-06-03': {
       activeUsers: {
-        value: 128,
+        value: 0,
         label: "Active Users",
         icon: "users",
         chartData: [58, 71, 83, 77, 87, 80, 85, 79, 88, 82, 90, 84]
       },
       deviceReports: {
-        value: 76,
+        value: 0,
         label: "Device Reports",
         icon: "devices",
         chartData: [38, 45, 42, 55, 48, 52, 58, 62, 68, 65, 72, 69]
@@ -622,6 +625,12 @@ function updateDashboardDisplay() {
   const spoilageAlertsElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
   if (spoilageAlertsElement) {
     spoilageAlertsElement.textContent = spoilageAlertsData;
+  }
+  
+  // Update Active Devices Count with real data from API (use separate activeDevicesData variable)
+  const activeDevicesElement = document.getElementById('activeDevicesCount');
+  if (activeDevicesElement) {
+    activeDevicesElement.textContent = activeDevicesData || 0;
   }
   
   // Display logged-in user information if available

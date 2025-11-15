@@ -46,12 +46,19 @@ function formatRelativeTime(timestamp) {
   } else if (diffInDays < 7) {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   } else {
-    // For older dates, show the actual date
-    return logTime.toLocaleDateString('en-US', { 
+    // For older dates, show the actual date and time in "10:51:25 AM" format
+    const dateStr = logTime.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric',
       year: logTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
+    const timeStr = logTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    return `${dateStr} ${timeStr}`;
   }
 }
 
@@ -128,7 +135,7 @@ function getDatesFromRange(range) {
     return { startDate, endDate };
 }
 
-// Function to render report table (matching admin-log.js style)
+// Function to render report table ( admin-log.js style)
 function renderReportTable() {
   const tbody = document.getElementById('report-preview-content');
   if (!tbody) {
@@ -189,7 +196,7 @@ function renderReportTable() {
   tbody.innerHTML = renderTable(headers, rows);
 }
 
-// Function to render pagination (matching admin-log.js exactly)
+// Function to render pagination ( admin-log.js exactly)
 function renderReportPagination(totalRecords) {
   const paginationDiv = document.getElementById('reportPagination');
   if (!paginationDiv) return;
@@ -235,20 +242,20 @@ function renderReportPagination(totalRecords) {
   paginationDiv.innerHTML = paginationHTML;
 }
 
-// Function to change report page (matching admin-log.js style)
+// Function to change report page ( admin-log.js style)
 function changeReportPage(page) {
   currentReportPage = page;
   generateReport(currentReportType, currentDateRange, true);
 }
 
-// Function to change records per page (matching admin-log.js style)
+// Function to change records per page ( admin-log.js style)
 function changeReportRecordsPerPage(recordsPerPage) {
   reportRecordsPerPage = parseInt(recordsPerPage);
   currentReportPage = 1;
   generateReport(currentReportType, currentDateRange);
 }
 
-// Function to generate report (matching admin-log.js structure)
+// Function to generate report ( admin-log.js structure)
 async function generateReport(reportType, dateRange, isPagination = false) {
   const reportContent = document.getElementById('report-preview-content');
   const reportTypeSelect = document.getElementById('reportType');
@@ -514,55 +521,121 @@ async function generateReport(reportType, dateRange, isPagination = false) {
   console.log(`Generated report for: ${reportType} (${dateRange})`);
 }
 
-// Export functions (matching admin-log.js style)
+// Export functions ( admin-log.js style)
 function exportReportCSV() {
-  if (reportData.length === 0) {
-        alert('Please generate a report first.');
-        return;
+  try {
+    // Helper function to show toast notifications
+    const showToast = (message, type = 'info') => {
+      if (typeof window.showToastNotification === 'function') {
+        window.showToastNotification(message, type);
+      } else {
+        // Fallback to alert if toast function is not available
+        alert(message);
       }
+    };
 
-  let csv = '';
-  // Add headers based on report type
-  switch(currentReportType) {
-    case 'new_users':
-      csv = 'User ID,Full Name,Username,Email,Contact,Status,Registration Date\n';
-      csv += reportData.map(user => [
-        user.user_id,
-        user.full_name,
-        user.username,
-        user.email,
-        user.contact || 'N/A',
-        user.status,
-        new Date(user.created_at).toLocaleDateString()
-      ].map(v => '"' + v.replace(/"/g, '""') + '"').join(',')).join('\n');
-      break;
-    case 'top_spoiling_food':
-      csv = 'Food Item,Spoilage Reports,Risk Level\n';
-      csv += reportData.map(item => [
-        item['Food Item'],
-        item['Spoilage Reports'],
-        item['Risk Level']
-      ].map(v => '"' + v.replace(/"/g, '""') + '"').join(',')).join('\n');
-      break;
-    case 'most_used_sensor':
-      csv = 'Sensor Type,Used,Spoiled\n';
-      csv += reportData.map(sensor => [
-        sensor['Sensor Type'],
-        sensor['Used'],
-        sensor['Spoiled']
-      ].map(v => '"' + v.replace(/"/g, '""') + '"').join(',')).join('\n');
-      break;
+    if (!reportData || reportData.length === 0) {
+      showToast('Please generate a report first.', 'warning');
+      return;
+    }
+
+    if (!currentReportType) {
+      showToast('No report type selected. Please generate a report first.', 'warning');
+      return;
+    }
+
+    // Helper function to escape CSV values
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    // Helper function to format date safely
+    const formatDateSafe = (dateValue) => {
+      if (!dateValue) return '';
+      try {
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch (e) {
+        return '';
+      }
+    };
+
+    let csv = '';
+    // Add headers based on report type
+    switch(currentReportType) {
+      case 'new_users':
+        csv = 'User ID,Full Name,Username,Email,Contact,Status,Registration Date\n';
+        csv += reportData.map(user => [
+          user.user_id || '',
+          user.full_name || '',
+          user.username || '',
+          user.email || '',
+          user.contact || 'N/A',
+          user.status || '',
+          formatDateSafe(user.created_at)
+        ].map(escapeCSV).join(',')).join('\n');
+        break;
+      case 'top_spoiling_food':
+        csv = 'Food Item,Spoilage Reports,Risk Level\n';
+        csv += reportData.map(item => [
+          item['Food Item'] || item.foodItem || '',
+          item['Spoilage Reports'] || item.spoilageReports || '',
+          item['Risk Level'] || item.riskLevel || ''
+        ].map(escapeCSV).join(',')).join('\n');
+        break;
+      case 'most_used_sensor':
+        csv = 'Sensor Type,Used,Spoiled\n';
+        csv += reportData.map(sensor => [
+          sensor['Sensor Type'] || sensor.sensorType || '',
+          sensor['Used'] || sensor.used || '',
+          sensor['Spoiled'] || sensor.spoiled || ''
+        ].map(escapeCSV).join(',')).join('\n');
+        break;
+      default:
+        showToast(`CSV export not supported for report type: ${currentReportType}`, 'warning');
+        return;
+    }
+    
+    if (!csv || csv.trim().length === 0) {
+      showToast('No data to export.', 'warning');
+      return;
+    }
+
+    // Add BOM for UTF-8 to ensure Excel opens it correctly
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentReportType}-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Show success toast
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('CSV file downloaded successfully!', 'success');
+    }
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('An error occurred while exporting CSV. Please try again.', 'error');
+    } else {
+      alert('An error occurred while exporting CSV. Please try again.');
+    }
   }
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${currentReportType}-report.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 function exportReportPDF() {
@@ -630,7 +703,7 @@ function exportReportPDF() {
   doc.save(`${currentReportType}-report.pdf`);
 }
 
-// Initialize report generator (matching admin-log.js style)
+// Initialize report generator ( admin-log.js style)
 function initReportGenerator() {
   console.log('Report Generator Initialized');
   
@@ -729,7 +802,7 @@ function getWeekEndDate(year, week) {
     return weekEnd;
 }
 
-// Export functions for global access (matching admin-log.js style)
+// Export functions for global access ( admin-log.js style)
 window.initReportGenerator = initReportGenerator; 
 window.changeReportPage = changeReportPage;
 window.changeReportRecordsPerPage = changeReportRecordsPerPage; 

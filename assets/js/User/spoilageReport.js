@@ -1248,9 +1248,7 @@ window.refreshDetailedReport = async function() {
 };
 
 
-// ============================================================================
 // SPOILAGE REPORT EXPORT AND FILTER FUNCTIONS
-// ============================================================================
 
 // Export spoilage report to CSV
 function exportSpoilageReportCSV() {
@@ -1611,9 +1609,7 @@ function applySpoilageFilters() {
   }
 }
 
-// ============================================================================
 // SPOILAGE ANALYTICS CLASS - Added to integrate with existing spoilage report
-// ============================================================================
 
 class SpoilageAnalytics {
     constructor() {
@@ -2062,9 +2058,8 @@ class SpoilageAnalytics {
     }
 }
 
-// ============================================================================
 // CHART DRAWING FUNCTIONS
-// ============================================================================
+
 
 // Draw no-data state on chart
 function drawNoDataChart(ctx, w, h) {

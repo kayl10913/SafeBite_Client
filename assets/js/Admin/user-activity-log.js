@@ -32,12 +32,19 @@ function formatRelativeTime(timestamp) {
   } else if (diffInDays < 7) {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   } else {
-    // For older dates, show the actual date
-    return logTime.toLocaleDateString('en-US', { 
+    // For older dates, show the actual date and time in "10:51:25 AM" format
+    const dateStr = logTime.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric',
       year: logTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
+    const timeStr = logTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    return `${dateStr} ${timeStr}`;
   }
 }
 

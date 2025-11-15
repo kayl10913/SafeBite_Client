@@ -418,14 +418,55 @@ function debounce(func, wait) {
   };
 }
 
-// Function to format date for display
+// Function to format date for display (date only)
 function formatDate(dateString) {
+  if (!dateString) return '';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  
+  // Format date only (e.g., "Jan 15, 2024")
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
+}
+
+// Function to format date for input fields (YYYY-MM-DD format)
+function formatDateForInput(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  
+  // Format as YYYY-MM-DD for input fields
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Function to format date and time for display
+function formatDateTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  
+  // Format date
+  const dateStr = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  
+  // Format time as "10:51:25 AM"
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  
+  return `${dateStr} ${timeStr}`;
 }
 
 // Mock user data for editing (since we don't have full user details from the list API)
@@ -489,7 +530,7 @@ function openUserModal(editUser) {
     document.getElementById('userEmail').value = editUser.email;
     document.getElementById('userCategory').value = editUser.tester_type_id || '';
     document.getElementById('userStatus').value = editUser.status;
-    document.getElementById('userDateCreated').value = editUser.date_created;
+    document.getElementById('userDateCreated').value = formatDateForInput(editUser.date_created);
     
     // Show both password groups
     passwordGroups.forEach(g => g.style.display = '');
@@ -1300,21 +1341,23 @@ function initUserManager() {
   // Mark as initialized
   window.userManagerInitialized = true;
   
-  // Only fetch users if not already loaded
-  if (!usersData || usersData.length === 0) {
-    console.log('🔧 Fetching users for first time...');
-    fetchUsers(1, userRecordsPerPage);
-  } else {
-    console.log('🔧 Users already loaded, skipping fetch...');
-  }
+  // Always fetch users when page is loaded to ensure fresh data
+  // This ensures data is refreshed when navigating from other sidebar pages
+  console.log('🔧 Fetching users...');
+  fetchUsers(1, userRecordsPerPage);
 }
 
-// Export functions for global access
+// Export functions and variables for global access
 window.changeUserPage = changeUserPage;
 window.changeUserRecordsPerPage = changeUserRecordsPerPage;
 window.initUserManager = initUserManager;
 window.openUserModal = openUserModal;
 window.closeUserModal = closeUserModal;
+// Export variables for SPA navigation
+window.usersData = usersData;
+window.currentUserPage = currentUserPage;
+window.userRecordsPerPage = userRecordsPerPage;
+window.currentUserFilters = currentUserFilters;
 
 // Test function to manually open user modal
 window.testUserModal = function() {

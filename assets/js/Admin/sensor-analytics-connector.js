@@ -1,4 +1,29 @@
 // Sensor Analytics Connector - Connects SensorAnalyticsAPI with Admin Dashboard
+
+// Utility function to format timestamp to "10:51:25 AM" format
+function formatTimestamp(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return timestamp;
+  
+  // Format date
+  const dateStr = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  
+  // Format time as "10:51:25 AM"
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  
+  return `${dateStr} ${timeStr}`;
+}
+
 class SensorAnalyticsConnector {
     constructor() {
         this.api = null;
@@ -869,12 +894,14 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Sensor Analytics Connector loaded');
 });
 
-// Lightweight ML Predictions Manager for SPA ML pages
+//  ML Predictions Manager for SPA ML pages
 (function(){
     if (!window.mlPredictionsManager) {
         window.mlPredictionsManager = {
             _accuracyCalculated: false, // Flag to prevent multiple calculations
             _calculatingAccuracy: false, // Flag to prevent simultaneous calculations
+            _storedAccuracy: null, // Store the calculated accuracy value
+            _storedAccuracySub: null, // Store the accuracy subtitle
             async loadOverview(){
                 try {
                     console.log('Loading ML overview...');
@@ -906,8 +933,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     set('mlKpiConfidenceSub', '+ this week');
                     set('mlKpiSamples', d.training_samples || 0);
                     set('mlKpiSamplesSub', `+${d.training_added_today || 0} added`);
-                    set('mlKpiAccuracy', d.model_accuracy != null ? `${(Number(d.model_accuracy)*100).toFixed(1)}%` : '--%');
-                    set('mlKpiAccuracySub', d.model_accuracy!=null ? '+ improved' : '');
+                    
+                    // Use stored accuracy if available, otherwise use API value
+                    // Only use API value if it's not 0 and not null
+                    let accuracyValue = null;
+                    let accuracySub = '';
+                    
+                    if (this._storedAccuracy !== null) {
+                        // Use stored accuracy value
+                        accuracyValue = this._storedAccuracy;
+                        accuracySub = this._storedAccuracySub || '+ improved';
+                        console.log('Using stored accuracy value:', accuracyValue);
+                    } else if (d.model_accuracy != null && Number(d.model_accuracy) > 0) {
+                        // Use API value if it's valid and greater than 0
+                        accuracyValue = Number(d.model_accuracy);
+                        accuracySub = '+ improved';
+                        // Store it for future use
+                        this._storedAccuracy = accuracyValue;
+                        this._storedAccuracySub = accuracySub;
+                    }
+                    
+                    set('mlKpiAccuracy', accuracyValue != null ? `${(accuracyValue * 100).toFixed(1)}%` : '--%');
+                    set('mlKpiAccuracySub', accuracySub);
 
                     // Removed Recent ML Predictions section per request
                     await this._loadSamples();
@@ -957,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${r.spoilage_probability}%</td>
                             <td>${r.confidence_score}% <div style="color:#9fb2e6;font-size:12px;">Model ${r.model_version||''}</div></td>
                             <td><span class="ml-badge ${String(r.spoilage_status).toLowerCase()}">${String(r.spoilage_status).toUpperCase()}</span></td>
-                            <td>${new Date(r.created_at).toLocaleString()}</td>
+                            <td>${formatTimestamp(r.created_at)}</td>
                             <td><button class="ml-btn secondary" data-id="${r.prediction_id}">Details</button></td>
                         `;
                         tbody.appendChild(tr);
@@ -1161,18 +1208,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     
                     if (result.success) {
+                        // Store the calculated accuracy value
+                        const accuracyPercent = parseFloat(result.accuracy_percent);
+                        const accuracySub = `+${result.correct_predictions}/${result.total_samples} correct`;
+                        
+                        // Store accuracy for persistence across page switches
+                        this._storedAccuracy = accuracyPercent / 100; // Store as decimal (0.8818 for 88.18%)
+                        this._storedAccuracySub = accuracySub;
+                        
                         // Update the accuracy display silently (no toasts)
                         const accuracyEl = document.getElementById('mlKpiAccuracy');
                         const accuracySubEl = document.getElementById('mlKpiAccuracySub');
                         
                         if (accuracyEl) {
-                            accuracyEl.textContent = `${result.accuracy_percent}%`;
+                            accuracyEl.textContent = `${accuracyPercent}%`;
                         }
                         if (accuracySubEl) {
-                            accuracySubEl.textContent = `+${result.correct_predictions}/${result.total_samples} correct`;
+                            accuracySubEl.textContent = accuracySub;
                         }
                         
-                        console.log(`✅ Model accuracy calculated: ${result.accuracy_percent}% (${result.correct_predictions}/${result.total_samples} correct)`);
+                        console.log(`✅ Model accuracy calculated: ${accuracyPercent}% (${result.correct_predictions}/${result.total_samples} correct)`);
+                        console.log(`💾 Stored accuracy value: ${this._storedAccuracy} for persistence`);
                         
                         // Update accuracy in overview without reloading (to avoid toast spam)
                         // Just update the accuracy display directly
@@ -1359,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.forEach(prediction => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${new Date(prediction.timestamp || prediction.created_at).toLocaleString()}</td>
+                        <td>${formatTimestamp(prediction.timestamp || prediction.created_at)}</td>
                         <td>${prediction.device_id || prediction.sensor_id || 'N/A'}</td>
                         <td>${prediction.user_email || prediction.username || 'N/A'}</td>
                         <td>${prediction.sensor_type || prediction.type || 'N/A'}</td>
@@ -1892,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Storage Conditions Card (with sensor readings)
                     if (data.storage_conditions) {
                         const sc = data.storage_conditions;
-                        const timestamp = sc.timestamp ? new Date(sc.timestamp).toLocaleString() : 'N/A';
+                        const timestamp = sc.timestamp ? formatTimestamp(sc.timestamp) : 'N/A';
                         html += `
                             <div style="background: white; padding: 14px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
                                 <div style="font-weight: bold; color: #333; margin-bottom: 10px; font-size: 14px;">📊 Storage Conditions</div>

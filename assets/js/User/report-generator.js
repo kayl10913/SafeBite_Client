@@ -1,4 +1,29 @@
 // Report Generator JavaScript
+
+// Utility function to format timestamp to "10:51:25 AM" format
+function formatTimestampDisplay(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return timestamp;
+  
+  // Format date
+  const dateStr = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  
+  // Format time as "10:51:25 AM"
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  
+  return `${dateStr} ${timeStr}`;
+}
+
 class ReportGenerator {
     constructor() {
         this.reportData = [];
@@ -1679,7 +1704,7 @@ class ReportGenerator {
                 return `
                     <td>${item['LOG ID'] || item.logId || ''}</td>
                     <td><span class="action-badge">${item['ACTION'] || item.action || ''}</span></td>
-                    <td>${item['TIMESTAMP'] || item.timestamp || ''}</td>
+                    <td>${item['TIMESTAMP'] ? formatTimestampDisplay(item['TIMESTAMP']) : (item.timestamp ? formatTimestampDisplay(item.timestamp) : '')}</td>
                 `;
             case 'food-spoilage':
                 return `
@@ -1698,7 +1723,7 @@ class ReportGenerator {
                     <td><span class="severity-badge ${item.severity.toLowerCase()}">${item.severity}</span></td>
                     <td>${item.location}</td>
                     <td>${item.message}</td>
-                    <td>${item.timestampRaw ? new Date(item.timestampRaw).toLocaleString() : (item.timestamp || '')}</td>
+                    <td>${item.timestampRaw ? formatTimestampDisplay(item.timestampRaw) : (item.timestamp ? formatTimestampDisplay(item.timestamp) : '')}</td>
                     <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
                 `;
             default:
@@ -1804,29 +1829,49 @@ class ReportGenerator {
             return;
         }
 
+        // Helper function to escape CSV values
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined) return '';
+            const stringValue = String(value);
+            // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+
         // Create CSV content
-        let csvContent = 'data:text/csv;charset=utf-8,';
+        let csvContent = '';
         
         // Add headers based on report type
         const headers = this.getCSVHeaders();
-        csvContent += headers.join(',') + '\n';
+        csvContent += headers.map(escapeCSV).join(',') + '\n';
         
         // Add data rows
         filteredData.forEach(item => {
             const row = this.getCSVRow(item);
-            csvContent += row.join(',') + '\n';
+            csvContent += row.map(escapeCSV).join(',') + '\n';
         });
 
-        // Create download link
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `${this.currentReportType}-${this.currentDateRange}-${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Create Blob and download
+        try {
+            // Add BOM for UTF-8 to ensure Excel opens it correctly
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${this.currentReportType}-${this.currentDateRange}-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
-        this.showNotification('Excel file downloaded successfully!', 'success');
+            this.showNotification('CSV file downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading CSV:', error);
+            this.showNotification('Failed to download CSV. Please try again.', 'error');
+        }
     }
 
     getCSVHeaders() {
@@ -1842,29 +1887,28 @@ class ReportGenerator {
         switch (this.currentReportType) {
             case 'user-activity':
                 return [
-                    `"${item.logId}"`,
-                    `"${item.action}"`,
-                    `"${item.timestamp}"`
+                    item.logId || '',
+                    item.action || '',
+                    item.timestamp ? formatTimestampDisplay(item.timestamp) : ''
                 ];
             case 'food-spoilage':
                 return [
-                    `"${item.foodId || ''}"`,
-                    `"${item.foodItem}"`,
-                    `"${item.category}"`,
-                    `"${item.status}"`,
-                    `"${item.riskScore}"`,
-                    `"${item.expiryDate}"`,
-                    `"${item.sensorReadings}"`
+                    item.foodItem || '',
+                    item.category || '',
+                    item.status || '',
+                    item.riskScore || '',
+                    item.expiryDate ? formatTimestampDisplay(item.expiryDate) : '',
+                    item.sensorReadings || ''
                 ];
             case 'alert-summary':
                 return [
-                    `"${item.alertId}"`,
-                    `"${item.alertType}"`,
-                    `"${item.severity}"`,
-                    `"${item.location}"`,
-                    `"${item.message}"`,
-                    `"${item.timestamp}"`,
-                    `"${item.status}"`
+                    item.alertId || '',
+                    item.alertType || '',
+                    item.severity || '',
+                    item.location || '',
+                    item.message || '',
+                    item.timestamp ? formatTimestampDisplay(item.timestamp) : '',
+                    item.status || ''
                 ];
             default:
                 return [];

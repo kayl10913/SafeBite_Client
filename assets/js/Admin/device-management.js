@@ -12,6 +12,8 @@ class DeviceManagementManager {
         this.pageSize = 25;
         this.listenersBound = false;
         this.delegatedBound = false;
+        // Store stats for persistence across page switches
+        this._storedStats = null;
         this.init();
     }
 
@@ -301,12 +303,22 @@ class DeviceManagementManager {
         this.filtersActive = false;
         this.filteredData = [];
         
+        // Restore stats if we have stored values
+        if (this._storedStats) {
+            console.log('🔄 Restoring stored stats:', this._storedStats);
+            this._restoreStatistics();
+        }
+        
         // If we already have device data, just re-render the tables
         if (this.deviceData && this.deviceData.length > 0) {
             console.log('🔄 Re-rendering tables with existing data...');
             this.populateTables();
             this.filteredData = this.deviceData;
             this.renderPage();
+            // Update stats in background without resetting if stored stats exist
+            if (!this._storedStats) {
+                this.updateStatistics();
+            }
         } else {
             console.log('🔄 No existing data, refreshing from server...');
             // Refresh the data and render the page
@@ -519,16 +531,49 @@ class DeviceManagementManager {
             
             if (!result.success) {
                 console.error('❌ Stats API returned error:', result.message);
-                this.showToast(`Error loading statistics: ${result.message}`);
+                // Don't show toast on error, just use stored stats or fallback
+                if (!this._storedStats) {
+                    this.showToast(`Error loading statistics: ${result.message}`);
+                }
             }
 
             // Use backend stats if available, otherwise derive from frontend data
             const statCards = document.querySelectorAll('.device-management-stat-card');
             if (statCards.length >= 4) {
+                let stats = null;
+                
                 if (result.success && result.data) {
                     // Use backend statistics
-                    const stats = result.data;
+                    stats = result.data;
                     console.log('📊 Using backend statistics:', stats);
+                    
+                    // Store stats for persistence
+                    this._storedStats = {
+                        total_devices: stats.total_devices || 0,
+                        active_devices: stats.active_devices || 0,
+                        device_health: stats.device_health || 0,
+                        alerts: stats.alerts || 0
+                    };
+                } else if (this._storedStats) {
+                    // Use stored stats if API failed
+                    console.log('📊 Using stored statistics (API failed)');
+                    stats = this._storedStats;
+                } else {
+                    // Fallback to derived statistics
+                    console.log('📊 Using derived statistics (fallback)');
+                    const derived = this.computeDeviceStatsFromSensors();
+                    stats = {
+                        total_devices: derived.totalDevices,
+                        active_devices: derived.activeDevices,
+                        device_health: derived.healthPct,
+                        alerts: derived.alerts
+                    };
+                    // Store derived stats for persistence
+                    this._storedStats = stats;
+                }
+                
+                // Update stat cards with stats
+                if (stats) {
                     statCards[0].querySelector('.stat-value').textContent = String(stats.total_devices || 0);
                     statCards[1].querySelector('.stat-value').textContent = String(stats.active_devices || 0);
                     statCards[2].querySelector('.stat-value').textContent = `${stats.device_health || 0}%`;
@@ -547,36 +592,48 @@ class DeviceManagementManager {
                     
                     const trend3 = statCards[2].querySelector('.stat-trend');
                     if (trend3) trend3.textContent = (stats.device_health || 0) >= 99.5 ? '↑ All operational' : '↓ Needs attention';
-                } else {
-                    // Fallback to derived statistics
-                    console.log('📊 Using derived statistics (fallback)');
-                    const derived = this.computeDeviceStatsFromSensors();
-                    statCards[0].querySelector('.stat-value').textContent = String(derived.totalDevices);
-                    statCards[1].querySelector('.stat-value').textContent = String(derived.activeDevices);
-                    statCards[2].querySelector('.stat-value').textContent = `${derived.healthPct.toFixed(2)}%`;
-                    statCards[3].querySelector('.stat-value').textContent = String(derived.alerts);
-                    
-                    const alertTrend = statCards[3].querySelector('.stat-trend');
-                    if (alertTrend) alertTrend.textContent = derived.alerts > 1 ? 'device issues' : '↓ No issues';
-                    
-                    const trend1 = statCards[0].querySelector('.stat-trend');
-                    if (trend1) trend1.textContent = `↑ ${derived.totalDevices * 3} sensors`;
-                    
-                    const trend2 = statCards[1].querySelector('.stat-trend');
-                    const pctOnline = derived.totalDevices > 0 ? Math.round((derived.activeDevices/derived.totalDevices)*100) : 0;
-                    if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
-                    
-                    const trend3 = statCards[2].querySelector('.stat-trend');
-                    if (trend3) trend3.textContent = derived.healthPct >= 99.5 ? '↑ All operational' : '↓ Needs attention';
-                    
-                    console.log('📈 Derived Statistics applied:', derived);
                 }
             } else {
                 console.error('❌ Not enough stat cards found:', statCards.length);
             }
         } catch (error) {
             console.error('❌ Error fetching statistics:', error);
-            this.showToast(`Error loading statistics: ${error.message}`);
+            // Use stored stats if available, otherwise show error
+            if (this._storedStats) {
+                console.log('📊 Using stored statistics (error occurred)');
+                this._restoreStatistics();
+            } else {
+                this.showToast(`Error loading statistics: ${error.message}`);
+            }
+        }
+    }
+    
+    _restoreStatistics() {
+        if (!this._storedStats) return;
+        
+        const statCards = document.querySelectorAll('.device-management-stat-card');
+        if (statCards.length >= 4) {
+            const stats = this._storedStats;
+            statCards[0].querySelector('.stat-value').textContent = String(stats.total_devices || 0);
+            statCards[1].querySelector('.stat-value').textContent = String(stats.active_devices || 0);
+            statCards[2].querySelector('.stat-value').textContent = `${stats.device_health || 0}%`;
+            statCards[3].querySelector('.stat-value').textContent = String(stats.alerts || 0);
+            
+            // Update trends
+            const alertTrend = statCards[3].querySelector('.stat-trend');
+            if (alertTrend) alertTrend.textContent = (stats.alerts || 0) > 0 ? 'device issues' : '↓ No issues';
+            
+            const trend1 = statCards[0].querySelector('.stat-trend');
+            if (trend1) trend1.textContent = `↑ ${(stats.total_devices || 0) * 3} sensors`;
+            
+            const trend2 = statCards[1].querySelector('.stat-trend');
+            const pctOnline = (stats.total_devices || 0) > 0 ? Math.round(((stats.active_devices || 0)/(stats.total_devices || 1))*100) : 0;
+            if (trend2) trend2.textContent = `↑ ${pctOnline}% online`;
+            
+            const trend3 = statCards[2].querySelector('.stat-trend');
+            if (trend3) trend3.textContent = (stats.device_health || 0) >= 99.5 ? '↑ All operational' : '↓ Needs attention';
+            
+            console.log('✅ Statistics restored from stored values');
         }
     }
 

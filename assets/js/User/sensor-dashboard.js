@@ -1,5 +1,29 @@
 // sensor-dashboard.js - Updated to fetch real Arduino sensor data
 
+// Utility function to format timestamp to "10:51:25 AM" format
+function formatTimestampDisplay(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return timestamp;
+  
+  // Format date
+  const dateStr = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  
+  // Format time as "10:51:25 AM"
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  
+  return `${dateStr} ${timeStr}`;
+}
+
 // List of registered devices (Arduino sensors) - Will be populated from database
 let registeredDevices = [];
 
@@ -1294,7 +1318,7 @@ class SensorDashboard {
           </div>
         </div>
         <div class="ml-history-meta">
-          <div class="ml-history-time">${new Date(item.timestamp).toLocaleString()}</div>
+          <div class="ml-history-time">${formatTimestampDisplay(item.timestamp)}</div>
           <div class="ml-history-status ${item.food_status}">${item.food_status}</div>
         </div>
       </div>

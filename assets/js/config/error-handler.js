@@ -132,15 +132,4 @@ if (document.readyState === 'loading') {
 // Export for use in other modules
 window.SafeBiteErrorHandler = errorHandler;
 
-// Example usage:
-/*
-// Instead of:
-fetch('/api/sensor/data')
-    .then(response => response.json())
-    .catch(error => console.error(error));
 
-// Use:
-errorHandler.apiCall('/api/sensor/data')
-    .then(response => response.json())
-    .then(data => console.log(data));
-*/

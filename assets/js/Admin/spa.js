@@ -89,12 +89,18 @@ async function autoFormatJSONField(textarea) {
 // Toast notification helper (global)
 window.showToastNotification = function(message, type = 'info') {
   const toast = document.createElement('div');
+  const colors = {
+    success: '#4CAF50',
+    error: '#f44336',
+    warning: '#ff9800',
+    info: '#2196F3'
+  };
   toast.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
     padding: 16px 24px;
-    background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : '#2196F3'};
+    background: ${colors[type] || colors.info};
     color: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -250,19 +256,47 @@ function showUsers() {
   const template = document.getElementById('users-template');
   
   if (mainContent && template) {
-    // Check if users page is already loaded to prevent unnecessary reload
-    const existingUserTable = mainContent.querySelector('#userTableBody');
-    if (existingUserTable && window.userManagerInitialized) {
-      console.log('🔧 Users page already loaded, skipping reload...');
-      return;
-    }
-    
     console.log('🔧 Loading users page...');
+    
+    // Always reload the content to ensure proper initialization
     mainContent.innerHTML = template.innerHTML;
     
-    if (window.initUserManager) {
-      window.initUserManager();
+    // Clear existing user data to force fresh fetch when coming from other pages
+    // Access variables from the user.js module scope
+    if (typeof window !== 'undefined') {
+      // Clear users data if accessible
+      if (window.usersData !== undefined) {
+        window.usersData = [];
+        console.log('🔧 Cleared existing users data');
+      }
+      
+      // Reset initialization flag to allow re-initialization
+      window.userManagerInitialized = false;
+      
+      // Reset pagination and filters
+      if (window.currentUserPage !== undefined) window.currentUserPage = 1;
+      if (window.userRecordsPerPage !== undefined) window.userRecordsPerPage = 25;
+      if (window.currentUserFilters !== undefined) {
+        window.currentUserFilters = {
+          search: '',
+          role: '',
+          status: '',
+          dateStart: '',
+          dateEnd: ''
+        };
+      }
     }
+    
+    // Initialize user manager after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      if (window.initUserManager) {
+        window.initUserManager();
+      } else {
+        console.warn('🔧 initUserManager function not found');
+      }
+    }, 100);
+  } else {
+    console.error('🔧 Missing elements for users page:', { mainContent, template });
   }
 }
 
@@ -270,10 +304,18 @@ function showUserActivityLog() {
   const mainContent = document.getElementById('main-content');
   const template = document.getElementById('user-activity-log-template');
   if (mainContent && template) {
+    console.log('🔧 Loading user activity log page...');
     mainContent.innerHTML = template.innerHTML;
-    if (window.initializeUserActivityLog) {
-      window.initializeUserActivityLog();
-    }
+    // Initialize after DOM is ready
+    setTimeout(() => {
+      if (window.initializeUserActivityLog) {
+        window.initializeUserActivityLog();
+      } else {
+        console.warn('🔧 initializeUserActivityLog function not found');
+      }
+    }, 100);
+  } else {
+    console.error('🔧 Missing elements for user activity log page:', { mainContent, template });
   }
 }
 
@@ -339,11 +381,18 @@ function showAdminLog() {
   const mainContent = document.getElementById('main-content');
   const template = document.getElementById('admin-log-template');
   if (mainContent && template) {
+    console.log('🔧 Loading admin log page...');
     mainContent.innerHTML = template.innerHTML;
-    // Initialize admin log functionality
-    if (window.initializeAdminLog) {
-      window.initializeAdminLog();
-    }
+    // Initialize admin log functionality after DOM is ready
+    setTimeout(() => {
+      if (window.initializeAdminLog) {
+        window.initializeAdminLog();
+      } else {
+        console.warn('🔧 initializeAdminLog function not found');
+      }
+    }, 100);
+  } else {
+    console.error('🔧 Missing elements for admin log page:', { mainContent, template });
   }
 }
 
@@ -439,14 +488,38 @@ function showDeviceManagement() {
 }
 
 function switchPage(page) {
+    console.log('SPA: Switching to page:', page);
+    
     // If the page is a detail view, we want the parent summary item in the sidebar to be active.
     const sidebarPage = page === 'analytics-detail' ? 'analytics-summary' : page;
 
     // Update sidebar active state (support both main and detail pages)
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Find and activate the correct sidebar link
     const activeLink = document.querySelector(`.nav-link[data-page="${sidebarPage}"]`);
     if (activeLink) {
-        activeLink.closest('.nav-item').classList.add('active');
+        const navItem = activeLink.closest('.nav-item');
+        if (navItem) {
+            navItem.classList.add('active');
+            console.log('SPA: Sidebar active state set for:', sidebarPage);
+        } else {
+            console.warn('SPA: Could not find nav-item parent for:', sidebarPage);
+        }
+    } else {
+        console.warn('SPA: No sidebar link found for page:', sidebarPage);
+        // Try alternative selector in case of nested structure
+        const altLink = document.querySelector(`[data-page="${sidebarPage}"]`);
+        if (altLink) {
+            const altNavItem = altLink.closest('.nav-item');
+            if (altNavItem) {
+                altNavItem.classList.add('active');
+                console.log('SPA: Sidebar active state set using alternative selector for:', sidebarPage);
+            }
+        }
     }
 
     // Render page content
