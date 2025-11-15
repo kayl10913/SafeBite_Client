@@ -164,7 +164,6 @@ body {
   box-shadow: 0 8px 24px var(--shadow-color, rgba(0, 51, 102, 0.3));
   border-color: var(--light-blue, #4a7ba7);
 }
-}
 .stat-icon {
   font-size: 2em;
   margin-bottom: 4px;
