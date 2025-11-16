@@ -1422,7 +1422,7 @@
         <div class="device-filters-row">
           <div class="df-item df-wide">
             <label>Name Search</label>
-            <input id="dfSearch" placeholder="Search device or user..." />
+            <input id="dfSearch" placeholder="Search username..." />
           </div>
           <div class="df-item">
             <label>Status</label>
@@ -1848,28 +1848,36 @@
       <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
         <div class="form-group" style="flex: 1;">
           <label for="adminEmail">Account (Email) *</label>
-          <input type="email" id="adminEmail" required placeholder="admin@example.com" autocomplete="off" />
+          <input type="email" id="adminEmail" required placeholder="admin@example.com" autocomplete="off" 
+                 maxlength="100" pattern="[^\s@]+@[^\s@]+\.[^\s@]+" />
         </div>
         <div class="form-group" style="flex: 1;">
           <label for="adminUsername">Username</label>
-          <input type="text" id="adminUsername" placeholder="Enter username" autocomplete="off" />
+          <input type="text" id="adminUsername" placeholder="Enter username" autocomplete="off" 
+                 maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" />
         </div>
       </div>
 
       <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
         <div class="form-group" style="flex: 1;">
           <label for="adminFirstName">First Name *</label>
-          <input type="text" id="adminFirstName" required placeholder="First name" autocomplete="off" />
+          <input type="text" id="adminFirstName" required placeholder="First name" autocomplete="off" 
+                 minlength="2" maxlength="50" pattern="[a-zA-Z\s'-]{2,50}" />
         </div>
         <div class="form-group" style="flex: 1;">
           <label for="adminLastName">Last Name *</label>
-          <input type="text" id="adminLastName" required placeholder="Last name" autocomplete="off" />
+          <input type="text" id="adminLastName" required placeholder="Last name" autocomplete="off" 
+                 minlength="2" maxlength="50" pattern="[a-zA-Z\s'-]{2,50}" />
         </div>
       </div>
 
       <div class="form-group" style="margin-bottom: 15px;">
         <label for="adminPassword">Create New Password</label>
-        <input type="text" id="adminPassword" placeholder="Create new password (optional)" />
+        <input type="password" id="adminPassword" placeholder="Create new password (optional)" 
+               minlength="8" autocomplete="new-password" />
+        <small style="color: #bfc9da; font-size: 11px; display: block; margin-top: 4px;">
+          Must be at least 8 characters with uppercase, lowercase, and number
+        </small>
       </div>
 
       <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
@@ -1878,8 +1886,9 @@
           <input type="text" id="adminRole" value="Admin" readonly />
         </div>
         <div class="form-group" style="flex: 1;">
-          <label for="adminPhone">Phone</label>
-          <input type="tel" id="adminPhone" placeholder="+1 555-123-4567" />
+          <label for="adminPhone">Mobile Number</label>
+          <input type="tel" id="adminPhone" placeholder="09123456789 or +639123456789" 
+                 maxlength="15" pattern="(\+63|0)?9[0-9]{9}" />
         </div>
       </div>
 

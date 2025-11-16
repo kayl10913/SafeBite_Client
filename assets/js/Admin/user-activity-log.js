@@ -204,6 +204,7 @@ function renderUserActivityLogTable() {
     const action = row.Activity.toLowerCase();
     if (action.includes('login') || action.includes('logged in')) activityType = 'login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'logout';
+    else if (action.includes('register') || action.includes('registered')) activityType = 'register';
     else if (action.includes('add') || action.includes('created')) activityType = 'add';
     else if (action.includes('edit') || action.includes('updated')) activityType = 'edit';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'delete';
@@ -323,6 +324,7 @@ function exportUserActivityLogExcel() {
     const action = row.Activity.toLowerCase();
     if (action.includes('login') || action.includes('logged in')) activityType = 'Login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'Logout';
+    else if (action.includes('register') || action.includes('registered')) activityType = 'Register';
     else if (action.includes('add') || action.includes('created')) activityType = 'Add';
     else if (action.includes('edit') || action.includes('updated')) activityType = 'Edit';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'Delete';
@@ -345,17 +347,31 @@ function exportUserActivityLogExcel() {
 }
 
 function exportUserActivityLogPDF() {
-  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
+  // Header bar
+  doc.setFillColor(74, 158, 255);
+  doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.text('Generated Report', doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+  doc.setFontSize(24);
+  doc.text('SafeBite', 40, 35);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.text('Report: User Activity Log', doc.internal.pageSize.getWidth() / 2, 90, { align: 'center' });
-  doc.setFontSize(12);
+  doc.setFontSize(18);
+  doc.text('User Activity Log Report', 40, 55);
+
+  // Meta box
+  doc.setTextColor(0, 0, 0);
+  doc.setFillColor(248, 249, 250);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-  doc.text(`Generated on: ${dateStr}`, doc.internal.pageSize.getWidth() / 2, 110, { align: 'center' });
+  doc.text(`Report: USER ACTIVITY LOGS`, 50, 120);
+  doc.text(`Generated on: ${dateStr}`, 50, 135);
+  doc.text(`Total Records: ${userActivityLogData.length}`, 300, 135);
 
   // Prepare table data
   const tableData = userActivityLogData.map(row => {
@@ -364,6 +380,7 @@ function exportUserActivityLogPDF() {
     const action = row.Activity.toLowerCase();
     if (action.includes('login') || action.includes('logged in')) activityType = 'Login';
     else if (action.includes('logout') || action.includes('logged out')) activityType = 'Logout';
+    else if (action.includes('register') || action.includes('registered')) activityType = 'Register';
     else if (action.includes('add') || action.includes('created')) activityType = 'Add';
     else if (action.includes('edit') || action.includes('updated')) activityType = 'Edit';
     else if (action.includes('delete') || action.includes('deleted')) activityType = 'Delete';
@@ -373,15 +390,36 @@ function exportUserActivityLogPDF() {
     
     return [row.User, activityType, relativeTime, row.Activity];
   });
+
+  const pageWidth = doc.internal.pageSize.width;
+  const marginLeft = 40;
+  const marginRight = 40;
+  const availableWidth = pageWidth - marginLeft - marginRight;
+  const colWidths = {
+    0: Math.floor(availableWidth * 0.25),
+    1: Math.floor(availableWidth * 0.15),
+    2: Math.floor(availableWidth * 0.20),
+    3: Math.floor(availableWidth * 0.40)
+  };
   
   doc.autoTable({
-    startY: 130,
+    startY: 180,
     head: [['User', 'Activity', 'Date/Time', 'Details']],
     body: tableData,
-    styles: { fontSize: 12, cellPadding: 8 },
-    headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-    margin: { left: 40, right: 40 }
+    margin: { left: marginLeft, right: marginRight },
+    styles: { fontSize: 10, cellPadding: 6, overflow: 'linebreak', valign: 'middle', lineColor: [200,200,200], lineWidth: 0.5 },
+    headStyles: { fillColor: [74,158,255], textColor: 255, fontStyle: 'bold', halign: 'center' },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: {
+      0: { cellWidth: colWidths[0] },
+      1: { cellWidth: colWidths[1], halign: 'center' },
+      2: { cellWidth: colWidths[2], halign: 'center' },
+      3: { cellWidth: colWidths[3] }
+    },
+    didDrawPage: function (dataHook) {
+      doc.setFontSize(9); doc.setTextColor(120);
+      doc.text(`Page ${dataHook.pageNumber}`, pageWidth - 80, doc.internal.pageSize.height - 20);
+    }
   });
   doc.save('user-activity-log.pdf');
 }

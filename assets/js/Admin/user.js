@@ -883,6 +883,35 @@ async function loadCurrentAdminData() {
   }
 }
 
+// Validation helper functions
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validateName(name) {
+  return name && name.length >= 2 && name.length <= 50 && /^[a-zA-Z\s'-]+$/.test(name);
+}
+
+function validateUsername(username) {
+  if (!username || username.trim() === '') return true; // Optional field
+  return username.length >= 3 && username.length <= 30 && /^[a-zA-Z0-9_]+$/.test(username);
+}
+
+function validatePassword(password) {
+  if (!password || password.trim() === '') return true; // Optional field
+  return password.length >= 8 && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password);
+}
+
+function validatePhone(phone) {
+  if (!phone || phone.trim() === '') return true; // Optional field
+  // Philippine mobile number: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 digits)
+  // Remove spaces, dashes, and parentheses for validation
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const phoneRegex = /^(\+63|0)?9[0-9]{9}$/;
+  return phoneRegex.test(cleaned);
+}
+
 async function handleAdminAccountFormSubmit(e) {
   e.preventDefault();
   
@@ -893,9 +922,79 @@ async function handleAdminAccountFormSubmit(e) {
   const password = document.getElementById('adminPassword').value;
   const phone = document.getElementById('adminPhone').value.trim();
   
-  // Validate required fields (password optional)
+  // Validate required fields
   if (!account || !firstName || !lastName) {
-    showToast('Please fill in all required fields.', 'warning');
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Please fill in all required fields (Email, First Name, Last Name).', 'warning');
+    } else {
+      alert('Please fill in all required fields (Email, First Name, Last Name).');
+    }
+    return;
+  }
+  
+  // Validate email format
+  if (!validateEmail(account)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Please enter a valid email address.', 'error');
+    } else {
+      alert('Please enter a valid email address.');
+    }
+    document.getElementById('adminEmail').focus();
+    return;
+  }
+  
+  // Validate first name
+  if (!validateName(firstName)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('First name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.', 'error');
+    } else {
+      alert('First name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.');
+    }
+    document.getElementById('adminFirstName').focus();
+    return;
+  }
+  
+  // Validate last name
+  if (!validateName(lastName)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Last name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.', 'error');
+    } else {
+      alert('Last name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.');
+    }
+    document.getElementById('adminLastName').focus();
+    return;
+  }
+  
+  // Validate username (if provided)
+  if (username && !validateUsername(username)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Username must be 3-30 characters and contain only letters, numbers, and underscores.', 'error');
+    } else {
+      alert('Username must be 3-30 characters and contain only letters, numbers, and underscores.');
+    }
+    document.getElementById('adminUsername').focus();
+    return;
+  }
+  
+  // Validate password (if provided)
+  if (password && !validatePassword(password)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.', 'error');
+    } else {
+      alert('Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.');
+    }
+    document.getElementById('adminPassword').focus();
+    return;
+  }
+  
+  // Validate phone (if provided)
+  if (phone && !validatePhone(phone)) {
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Please enter a valid mobile number (e.g., 09123456789 or +639123456789).', 'error');
+    } else {
+      alert('Please enter a valid Philippine mobile number (e.g., 09123456789 or +639123456789).');
+    }
+    document.getElementById('adminPhone').focus();
     return;
   }
   
@@ -965,19 +1064,22 @@ async function handleAdminAccountFormSubmit(e) {
           localStorage.setItem('currentAdmin', JSON.stringify(currentAdmin));
         }
         
-        // Show success toast similar to logout
-        (function showSuccessToast(message){
-          var toast = document.createElement('div');
-          toast.style.cssText = 'position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:15px 20px;border-radius:8px;z-index:10000;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15)';
-          toast.textContent = message;
-          document.body.appendChild(toast);
-          setTimeout(()=>{ if (toast.parentNode) toast.parentNode.removeChild(toast); }, 1200);
-        })('Profile updated successfully');
+        // Show success toast
+        if (typeof window.showToastNotification === 'function') {
+          window.showToastNotification('Profile updated successfully!', 'success');
+        } else {
+          alert('Profile updated successfully!');
+        }
         // Refresh latest profile and close modal
         await loadCurrentAdminData();
         closeAdminAccountModal();
       } else {
-        alert(`Error updating account: ${result.error || result.message || 'Unknown error'}`);
+        const errorMsg = result.error || result.message || 'Unknown error';
+        if (typeof window.showToastNotification === 'function') {
+          window.showToastNotification(`Error updating account: ${errorMsg}`, 'error');
+        } else {
+          alert(`Error updating account: ${errorMsg}`);
+        }
       }
     } else {
       // Try to read server error body for details
@@ -994,11 +1096,19 @@ async function handleAdminAccountFormSubmit(e) {
         }
       } catch (_) {}
       console.error('Update profile failed:', message);
-      alert(message);
+      if (typeof window.showToastNotification === 'function') {
+        window.showToastNotification(message, 'error');
+      } else {
+        alert(message);
+      }
     }
   } catch (error) {
     console.error('Error updating admin account:', error);
-    alert('Error updating account. Please try again.');
+    if (typeof window.showToastNotification === 'function') {
+      window.showToastNotification('Error updating account. Please try again.', 'error');
+    } else {
+      alert('Error updating account. Please try again.');
+    }
   }
 }
 
@@ -1421,6 +1531,37 @@ window.resetUserManager = function() {
   console.log('✅ User manager reset');
 };
 // Admin Account Modal Event Binding Function
+// Helper function to show field error
+function showFieldError(inputId, message) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  
+  // Remove existing error
+  const existingError = input.parentElement.querySelector('.field-error');
+  if (existingError) existingError.remove();
+  
+  // Add error message
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'field-error';
+  errorDiv.style.cssText = 'color: #f44336; font-size: 12px; margin-top: 4px;';
+  errorDiv.textContent = message;
+  input.parentElement.appendChild(errorDiv);
+  
+  // Add error styling to input
+  input.style.borderColor = '#f44336';
+}
+
+// Helper function to clear field error
+function clearFieldError(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  
+  const existingError = input.parentElement.querySelector('.field-error');
+  if (existingError) existingError.remove();
+  
+  input.style.borderColor = '';
+}
+
 function bindAdminAccountModalEvents() {
   const adminAccountModal = document.getElementById('adminAccountModal');
   const adminAccountForm = document.getElementById('adminAccountForm');
@@ -1436,6 +1577,80 @@ function bindAdminAccountModalEvents() {
 
   if (adminAccountForm) {
     adminAccountForm.onsubmit = handleAdminAccountFormSubmit;
+    
+    // Add real-time validation
+    const emailInput = document.getElementById('adminEmail');
+    const usernameInput = document.getElementById('adminUsername');
+    const firstNameInput = document.getElementById('adminFirstName');
+    const lastNameInput = document.getElementById('adminLastName');
+    const passwordInput = document.getElementById('adminPassword');
+    const phoneInput = document.getElementById('adminPhone');
+    
+    if (emailInput) {
+      emailInput.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !validateEmail(value)) {
+          showFieldError('adminEmail', 'Please enter a valid email address.');
+        } else {
+          clearFieldError('adminEmail');
+        }
+      });
+    }
+    
+    if (firstNameInput) {
+      firstNameInput.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !validateName(value)) {
+          showFieldError('adminFirstName', 'First name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.');
+        } else {
+          clearFieldError('adminFirstName');
+        }
+      });
+    }
+    
+    if (lastNameInput) {
+      lastNameInput.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !validateName(value)) {
+          showFieldError('adminLastName', 'Last name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes.');
+        } else {
+          clearFieldError('adminLastName');
+        }
+      });
+    }
+    
+    if (usernameInput) {
+      usernameInput.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !validateUsername(value)) {
+          showFieldError('adminUsername', 'Username must be 3-30 characters and contain only letters, numbers, and underscores.');
+        } else {
+          clearFieldError('adminUsername');
+        }
+      });
+    }
+    
+    if (passwordInput) {
+      passwordInput.addEventListener('blur', function() {
+        const value = this.value;
+        if (value && !validatePassword(value)) {
+          showFieldError('adminPassword', 'Password must be at least 8 characters with uppercase, lowercase, and number.');
+        } else {
+          clearFieldError('adminPassword');
+        }
+      });
+    }
+    
+    if (phoneInput) {
+      phoneInput.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !validatePhone(value)) {
+          showFieldError('adminPhone', 'Please enter a valid Philippine mobile number (e.g., 09123456789 or +639123456789).');
+        } else {
+          clearFieldError('adminPhone');
+        }
+      });
+    }
   }
 
   if (cancelAdminAccountBtn) {

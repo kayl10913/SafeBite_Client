@@ -773,9 +773,11 @@ class FeedbacksManager {
                 headers.join(','),
                 ...excelData.map(row => 
                     headers.map(header => {
-                        const value = row[header] || '';
+                        const value = row[header];
+                        // Handle null/undefined as empty string, but preserve 0
+                        const csvValue = (value === null || value === undefined || value === '') ? '' : value;
                         // Escape commas and quotes in CSV
-                        return `"${value.toString().replace(/"/g, '""')}"`;
+                        return `"${csvValue.toString().replace(/"/g, '""')}"`;
                     }).join(',')
                 )
             ].join('\n');
@@ -811,6 +813,31 @@ class FeedbacksManager {
                 return;
             }
 
+            // Ensure jsPDF and autoTable are loaded
+            const ensurePdfLibs = async () => {
+                const loadScript = (src) => new Promise((resolve, reject) => {
+                    if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return resolve();
+                    const s = document.createElement('script');
+                    s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('Failed to load ' + src));
+                    document.head.appendChild(s);
+                });
+
+                if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                }
+                const hasAutoTable = !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+                if (!hasAutoTable) {
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js');
+                }
+                return !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+            };
+
+            const libsOk = await ensurePdfLibs();
+            if (!libsOk) {
+                this.showToast('PDF export libraries not available. Please check your internet connection and try again.', 'error');
+                return;
+            }
+
             // Helper function to convert null/undefined/empty to 0 for numeric fields
             const getNumericValue = (value, fallback = 0) => {
                 if (value === null || value === undefined || value === '') {
@@ -820,86 +847,98 @@ class FeedbacksManager {
                 return isNaN(num) ? fallback : num;
             };
 
-            // Create HTML content for PDF
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <title>Feedbacks Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        h1 { color: #333; text-align: center; }
-                        .report-info { margin: 20px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f2f2f2; font-weight: bold; }
-                        tr:nth-child(even) { background-color: #f9f9f9; }
-                        .status-open { color: #007bff; }
-                        .status-resolved { color: #28a745; }
-                        .status-closed { color: #6c757d; }
-                        .priority-critical { color: #dc3545; font-weight: bold; }
-                        .priority-high { color: #fd7e14; }
-                        .priority-medium { color: #ffc107; }
-                        .priority-low { color: #28a745; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Feedbacks Report</h1>
-                    <div class="report-info">
-                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>Total Records:</strong> ${filteredData.length}</p>
-                        <p><strong>Export Type:</strong> PDF Report</p>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Customer</th>
-                                <th>Email</th>
-                                <th>Feedback</th>
-                                <th>Type</th>
-                                <th>Priority</th>
-                                <th>Rating</th>
-                                <th>Sentiment</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filteredData.map(feedback => {
-                                const feedbackId = getNumericValue(feedback['FEEDBACK ID'] ?? feedback.feedback_id);
-                                const starRating = getNumericValue(feedback['STAR RATE'] ?? feedback.star_rating);
-                                return `
-                                <tr>
-                                    <td>${feedbackId}</td>
-                                    <td>${feedback['CUSTOMER NAME'] || feedback.customer_name || ''}</td>
-                                    <td>${feedback['CUSTOMER EMAIL'] || feedback.customer_email || ''}</td>
-                                    <td>${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').substring(0, 100)}${(feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').length > 100 ? '...' : ''}</td>
-                                    <td>${feedback['FEEDBACK TYPE'] || feedback.feedback_type || ''}</td>
-                                    <td class="priority-${(feedback['PRIORITY'] || feedback.priority || '').toLowerCase()}">${feedback['PRIORITY'] || feedback.priority || ''}</td>
-                                    <td>${starRating} ⭐</td>
-                                    <td>${feedback['SENTIMENT'] || feedback.sentiment || ''}</td>
-                                    <td class="status-${(feedback['STATUS'] || feedback.status || '').toLowerCase().replace(' ', '-')}">${feedback['STATUS'] || feedback.status || ''}</td>
-                                </tr>
-                            `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
-
-            // Create a new window for PDF generation
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
+            const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
             
-            // Wait for content to load then print
-            printWindow.onload = function() {
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
+            // Header bar
+            doc.setFillColor(74, 158, 255);
+            doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(24);
+            doc.text('SafeBite', 40, 35);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(18);
+            doc.text('Feedbacks Report', 40, 55);
+
+            // Meta box
+            doc.setTextColor(0, 0, 0);
+            doc.setFillColor(248, 249, 250);
+            doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            const today = new Date();
+            const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+            doc.text(`Report: FEEDBACKS`, 50, 120);
+            doc.text(`Generated on: ${dateStr}`, 50, 135);
+            doc.text(`Total Records: ${filteredData.length}`, 300, 135);
+
+            // Prepare table data
+            const tableData = filteredData.map(feedback => {
+                const feedbackId = getNumericValue(feedback['FEEDBACK ID'] ?? feedback.feedback_id);
+                const starRating = getNumericValue(feedback['STAR RATE'] ?? feedback.star_rating, 0);
+                const feedbackText = (feedback['FEEDBACK TEXT'] || feedback.feedback_text || '').substring(0, 80);
+                const fullText = (feedback['FEEDBACK TEXT'] || feedback.feedback_text || '');
+                const truncatedText = fullText.length > 80 ? feedbackText + '...' : feedbackText;
+                
+                return [
+                    feedbackId,
+                    feedback['CUSTOMER NAME'] || feedback.customer_name || '',
+                    feedback['CUSTOMER EMAIL'] || feedback.customer_email || '',
+                    truncatedText,
+                    feedback['FEEDBACK TYPE'] || feedback.feedback_type || '',
+                    feedback['PRIORITY'] || feedback.priority || '',
+                    starRating.toString(),
+                    feedback['SENTIMENT'] || feedback.sentiment || '',
+                    feedback['STATUS'] || feedback.status || ''
+                ];
+            });
+
+            const pageWidth = doc.internal.pageSize.width;
+            const marginLeft = 40;
+            const marginRight = 40;
+            const availableWidth = pageWidth - marginLeft - marginRight;
+            
+            // Calculate column widths (9 columns)
+            const colWidths = {
+                0: Math.floor(availableWidth * 0.06),  // ID
+                1: Math.floor(availableWidth * 0.12),  // Customer Name
+                2: Math.floor(availableWidth * 0.14),  // Email
+                3: Math.floor(availableWidth * 0.20),  // Feedback Text
+                4: Math.floor(availableWidth * 0.10),  // Type
+                5: Math.floor(availableWidth * 0.08),  // Priority
+                6: Math.floor(availableWidth * 0.08),  // Rating
+                7: Math.floor(availableWidth * 0.10),  // Sentiment
+                8: Math.floor(availableWidth * 0.12)   // Status
             };
+
+            doc.autoTable({
+                startY: 180,
+                head: [['ID', 'Customer', 'Email', 'Feedback', 'Type', 'Priority', 'Rating', 'Sentiment', 'Status']],
+                body: tableData,
+                margin: { left: marginLeft, right: marginRight },
+                styles: { fontSize: 8, cellPadding: 4, overflow: 'linebreak', valign: 'middle', lineColor: [200,200,200], lineWidth: 0.5 },
+                headStyles: { fillColor: [74,158,255], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 9 },
+                alternateRowStyles: { fillColor: [248, 249, 250] },
+                columnStyles: {
+                    0: { cellWidth: colWidths[0], halign: 'center' },
+                    1: { cellWidth: colWidths[1] },
+                    2: { cellWidth: colWidths[2] },
+                    3: { cellWidth: colWidths[3] },
+                    4: { cellWidth: colWidths[4], halign: 'center' },
+                    5: { cellWidth: colWidths[5], halign: 'center' },
+                    6: { cellWidth: colWidths[6], halign: 'center' },
+                    7: { cellWidth: colWidths[7], halign: 'center' },
+                    8: { cellWidth: colWidths[8], halign: 'center' }
+                },
+                didDrawPage: function (dataHook) {
+                    doc.setFontSize(9); doc.setTextColor(120);
+                    doc.text(`Page ${dataHook.pageNumber}`, pageWidth - 80, doc.internal.pageSize.height - 20);
+                }
+            });
+            
+            doc.save('feedbacks-report.pdf');
             
             this.showToast('PDF export completed successfully!', 'success');
         } catch (error) {

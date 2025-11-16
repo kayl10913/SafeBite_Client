@@ -199,6 +199,11 @@
   color: #155724;
 }
 
+.activity-register {
+  background: #cce5ff;
+  color: #004085;
+}
+
 /* Empty State Styles */
 .empty-state {
   text-align: center;

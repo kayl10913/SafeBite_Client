@@ -529,8 +529,8 @@ function exportReportCSV() {
       if (typeof window.showToastNotification === 'function') {
         window.showToastNotification(message, type);
       } else {
-        // Fallback to alert if toast function is not available
-        alert(message);
+        // Fallback to console if toast function is not available
+        console.warn('Toast notification not available:', message);
       }
     };
 
@@ -633,28 +633,47 @@ function exportReportCSV() {
     if (typeof window.showToastNotification === 'function') {
       window.showToastNotification('An error occurred while exporting CSV. Please try again.', 'error');
     } else {
-      alert('An error occurred while exporting CSV. Please try again.');
+      console.error('An error occurred while exporting CSV. Please try again.');
     }
   }
 }
 
 function exportReportPDF() {
   if (reportData.length === 0) {
-        alert('Please generate a report first.');
+        if (typeof window.showToastNotification === 'function') {
+          window.showToastNotification('Please generate a report first.', 'warning');
+        } else {
+          console.warn('Please generate a report first.');
+        }
         return;
       }
   
-  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4', compress: true });
+  // Header bar
+  doc.setFillColor(74, 158, 255);
+  doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.text('Generated Report', doc.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
+  doc.setFontSize(24);
+  doc.text('SafeBite', 40, 35);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.text(`Report: ${currentReportType.replace(/_/g, ' ').toUpperCase()}`, doc.internal.pageSize.getWidth() / 2, 90, { align: 'center' });
-  doc.setFontSize(12);
+  doc.setFontSize(18);
+  const reportTitle = currentReportType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  doc.text(reportTitle + ' Report', 40, 55);
+
+  // Meta box
+  doc.setTextColor(0, 0, 0);
+  doc.setFillColor(248, 249, 250);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(40, 100, doc.internal.pageSize.width - 80, 60, 'S');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-  doc.text(`Generated on: ${dateStr}`, doc.internal.pageSize.getWidth() / 2, 110, { align: 'center' });
+  doc.text(`Report: ${currentReportType.replace(/_/g, ' ').toUpperCase()}`, 50, 120);
+  doc.text(`Generated on: ${dateStr}`, 50, 135);
+  doc.text(`Total Records: ${reportData.length}`, 300, 135);
   
   // Prepare table data based on report type
   let tableData = [];
@@ -689,18 +708,41 @@ function exportReportPDF() {
       ]);
       break;
   }
+
+  const pageWidth = doc.internal.pageSize.width;
+  const marginLeft = 40;
+  const marginRight = 40;
+  const availableWidth = pageWidth - marginLeft - marginRight;
+  
+  // Calculate column widths dynamically based on number of columns
+  const numCols = headers.length;
+  const colWidth = Math.floor(availableWidth / numCols);
+  const columnStyles = {};
+  for (let i = 0; i < numCols; i++) {
+    columnStyles[i] = { cellWidth: colWidth, halign: i === 0 ? 'left' : 'center' };
+  }
   
   doc.autoTable({
-    startY: 130,
+    startY: 180,
     head: [headers],
     body: tableData,
-    styles: { fontSize: 12, cellPadding: 8 },
-    headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-    margin: { left: 40, right: 40 }
+    margin: { left: marginLeft, right: marginRight },
+    styles: { fontSize: 10, cellPadding: 6, overflow: 'linebreak', valign: 'middle', lineColor: [200,200,200], lineWidth: 0.5 },
+    headStyles: { fillColor: [74,158,255], textColor: 255, fontStyle: 'bold', halign: 'center' },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: columnStyles,
+    didDrawPage: function (dataHook) {
+      doc.setFontSize(9); doc.setTextColor(120);
+      doc.text(`Page ${dataHook.pageNumber}`, pageWidth - 80, doc.internal.pageSize.height - 20);
+    }
   });
   
   doc.save(`${currentReportType}-report.pdf`);
+  
+  // Show success toast
+  if (typeof window.showToastNotification === 'function') {
+    window.showToastNotification('PDF file downloaded successfully!', 'success');
+  }
 }
 
 // Initialize report generator ( admin-log.js style)
