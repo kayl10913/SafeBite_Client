@@ -44,22 +44,14 @@ async function loadSensorData() {
           // Create monthly data array (12 months)
           chartData.monthly = new Array(12).fill(0);
           
-          // The API returns data.datasets with sensor arrays
-          if (data.datasets) {
-            // Count devices (not sum sensor readings) - one device = 3 sensors
-            for (let i = 0; i < 12; i++) {
-              let deviceCount = 0;
-              // If any sensor has data for this month, count it as 1 device
-              if ((data.datasets.temperature && data.datasets.temperature[i] > 0) ||
-                  (data.datasets.humidity && data.datasets.humidity[i] > 0) ||
-                  (data.datasets.gas && data.datasets.gas[i] > 0)) {
-                deviceCount = 1; // One device active this month
-              }
-              chartData.monthly[i] = deviceCount;
-            }
-          } else {
-            // Fallback to hardcoded data
-            chartData.monthly[8] = 2; // September = 2 devices
+          // The API now returns scan counts directly
+          if (data.scanCounts && Array.isArray(data.scanCounts)) {
+            // Use scan counts directly, ensuring they are integers
+            chartData.monthly = data.scanCounts.map(count => Math.round(Number(count) || 0));
+          } else if (data.datasets && data.datasets.temperature && Array.isArray(data.datasets.temperature)) {
+            // Fallback: use temperature dataset but ensure it's treated as scan counts (integers)
+            // This should only happen if backend hasn't been updated yet
+            chartData.monthly = data.datasets.temperature.map(val => Math.round(Number(val) || 0));
           }
           
           console.log('Updated monthly data:', chartData.monthly);
@@ -67,27 +59,27 @@ async function loadSensorData() {
           // Create yearly data array (6 years: 2020-2025)
           chartData.yearly = new Array(6).fill(0);
           
-          // The API returns data.datasets with sensor arrays
-          if (data.datasets && data.labels) {
+          // The API now returns scan counts per year
+          if (data.scanCounts && Array.isArray(data.scanCounts) && data.labels) {
             // Map years to our 6-year array (2020-2025)
             data.labels.forEach((yearStr, index) => {
               const year = parseInt(yearStr);
               const yearIndex = year - 2020; // 2020=0, 2021=1, ..., 2025=5
               
-              if (yearIndex >= 0 && yearIndex < 6) {
-                let deviceCount = 0;
-                // If any sensor has data for this year, count it as 1 device
-                if ((data.datasets.temperature && data.datasets.temperature[index] > 0) ||
-                    (data.datasets.humidity && data.datasets.humidity[index] > 0) ||
-                    (data.datasets.gas && data.datasets.gas[index] > 0)) {
-                  deviceCount = 1; // One device active this year
-                }
-                chartData.yearly[yearIndex] = deviceCount;
+              if (yearIndex >= 0 && yearIndex < 6 && data.scanCounts[index] !== undefined) {
+                chartData.yearly[yearIndex] = Math.round(Number(data.scanCounts[index]) || 0);
               }
             });
-          } else {
-            // Fallback to hardcoded data
-            chartData.yearly[5] = 2; // 2025 = 2 devices
+          } else if (data.datasets && data.datasets.temperature && Array.isArray(data.datasets.temperature) && data.labels) {
+            // Fallback: use temperature dataset but ensure it's treated as scan counts (integers)
+            data.labels.forEach((yearStr, index) => {
+              const year = parseInt(yearStr);
+              const yearIndex = year - 2020;
+              
+              if (yearIndex >= 0 && yearIndex < 6 && data.datasets.temperature[index] !== undefined) {
+                chartData.yearly[yearIndex] = Math.round(Number(data.datasets.temperature[index]) || 0);
+              }
+            });
           }
           
           console.log('Updated yearly data:', chartData.yearly);
@@ -235,31 +227,40 @@ function initializeActivityChart() {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  // Draw modern dots matching page design
+  // Draw modern dots matching page design with numbers
   data.forEach((val, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const y = padding + chartH - ((val - minVal) / range) * chartH;
     
-    // Only draw dots for non-zero values
+    // Draw dots for all values (including zero)
+    // Outer glow effect
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = val > 0 ? 'rgba(74, 158, 255, 0.3)' : 'rgba(191, 201, 218, 0.2)';
+    ctx.fill();
+    
+    // Main dot
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = val > 0 ? '#4a9eff' : '#bfc9da';
+    ctx.fill();
+    
+    // Inner highlight (only for non-zero values)
     if (val > 0) {
-      // Outer glow effect
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(74, 158, 255, 0.3)';
-      ctx.fill();
-      
-      // Main dot
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = '#4a9eff';
-      ctx.fill();
-      
-      // Inner highlight
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, 2 * Math.PI);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
     }
+    
+    // Add number label above the dot
+    ctx.font = 'bold 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = val > 0 ? '#4a9eff' : '#bfc9da';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    // Position number above the dot with some spacing
+    const labelY = y - 15;
+    ctx.fillText(val.toString(), x, labelY);
   });
 
   // Draw Y axis labels - Dynamic scaling with more intervals for better visibility

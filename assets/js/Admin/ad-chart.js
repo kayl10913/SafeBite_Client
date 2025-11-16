@@ -850,21 +850,28 @@ function initializeActivityChart() {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  // Draw dots with hover detection
+  // Draw dots with numbers on them
   data.forEach((val, i) => {
     const x = padding + (i * chartW / (data.length - 1));
     const y = padding + chartH - ((val - minVal) / range) * chartH;
     
-    // Only draw dots for non-zero values
-    if (val > 0) {
+    // Draw dots for all values (including zero)
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#4a5b8d';
+    ctx.fillStyle = val > 0 ? '#4a5b8d' : 'rgba(224, 230, 246, 0.5)';
     ctx.fill();
-    ctx.strokeStyle = '#2a3b6d';
+    ctx.strokeStyle = val > 0 ? '#2a3b6d' : 'rgba(224, 230, 246, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
-    }
+    
+    // Add number label above the dot
+    ctx.font = 'bold 11px Open Sans, Arial, sans-serif';
+    ctx.fillStyle = val > 0 ? '#4a5b8d' : 'rgba(224, 230, 246, 0.6)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    // Position number above the dot with some spacing
+    const labelY = y - 12;
+    ctx.fillText(val.toString(), x, labelY);
   });
 
   // Draw Y axis labels - Dynamic scaling
