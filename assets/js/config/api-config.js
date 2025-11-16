@@ -214,11 +214,22 @@ async function makeApiRequest(endpoint, options = {}) {
             // Extract error message from response
             const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
             
-            // Check if this is a login endpoint - don't redirect to error page for login failures
-            const isLoginEndpoint = endpoint.includes('/login') || endpoint.includes('/auth/login') || endpoint.includes('/admin/login');
+            // Check if this is an auth endpoint that shouldn't redirect to error page
+            // Include login, forgot password, OTP, and registration endpoints
+            const isAuthEndpoint = endpoint.includes('/login') || 
+                                  endpoint.includes('/auth/login') || 
+                                  endpoint.includes('/admin/login') ||
+                                  endpoint.includes('/forgot-password') ||
+                                  endpoint.includes('/forgot_password') ||
+                                  endpoint.includes('/send-signup-otp') ||
+                                  endpoint.includes('/verify-signup-otp') ||
+                                  endpoint.includes('/send-otp') ||
+                                  endpoint.includes('/verify-otp') ||
+                                  endpoint.includes('/register') ||
+                                  endpoint.includes('/signup');
             
-            // Use error handler for Hostinger + Render setup (but skip redirect for login endpoints)
-            if (window.SafeBiteErrorHandler && !isLoginEndpoint) {
+            // Use error handler for Hostinger + Render setup (but skip redirect for auth endpoints)
+            if (window.SafeBiteErrorHandler && !isAuthEndpoint) {
                 window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
                 // Return error object instead of null so login functions can access error message
                 return {
@@ -229,7 +240,7 @@ async function makeApiRequest(endpoint, options = {}) {
                 };
             }
             
-            // For login endpoints, return error object without redirecting
+            // For auth endpoints, return error object without redirecting
             return {
                 success: false,
                 error: errorMessage,
