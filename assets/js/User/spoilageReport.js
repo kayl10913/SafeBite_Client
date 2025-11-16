@@ -1347,7 +1347,7 @@ async function exportDetailedReportPDF() {
     const doc = new window.jspdf.jsPDF({ 
       orientation: 'landscape', 
       unit: 'pt', 
-      format: 'A4',
+      format: 'legal',
       compress: true
     });
     
