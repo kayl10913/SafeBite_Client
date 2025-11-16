@@ -3436,6 +3436,26 @@ main {
   margin-bottom: 20px;
 }
 
+/* Center single card (No Sensors) */
+.sensor-cards-container:has(.sensor-card:only-child),
+.sensor-cards-container:has(.sensor-card.offline:only-child) {
+  justify-content: center;
+  align-items: center;
+}
+
+/* Fallback for browsers that don't support :has() */
+.sensor-cards-container .sensor-card:only-child {
+  max-width: 500px;
+  margin: 0 auto;
+  flex: 0 1 auto;
+}
+
+/* Override Bootstrap row margin when centering single card */
+.sensor-cards-container:has(.sensor-card:only-child) > .sensor-card {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .sensor-card {
   background: var(--background-card);
   color: var(--text-light);
@@ -3452,6 +3472,17 @@ main {
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Vertically center content for No Sensors card */
+.sensor-card.offline {
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ensure all direct children of offline card don't expand */
+.sensor-card.offline > * {
+  flex: 0 0 auto;
 }
 
 .sensor-card::before {
@@ -3486,6 +3517,24 @@ main {
   text-align: center;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
+  width: 100%;
+}
+
+/* Adjust spacing for No Sensors card to center content */
+.sensor-card.offline .sensor-card-title {
+  margin-bottom: 20px;
+  flex: 0 0 auto;
+}
+
+.sensor-card.offline .sensor-gauge {
+  flex: 0 0 auto !important;
+  margin-bottom: 20px;
+  height: auto;
+}
+
+.sensor-card.offline .sensor-info {
+  margin-top: 0;
+  flex: 0 0 auto;
 }
 
 .sensor-gauge {
@@ -3499,6 +3548,26 @@ main {
   width: 120px;
   height: 120px;
   position: relative;
+}
+
+.sensor-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.sensor-info .sensor-label,
+.sensor-info .sensor-value {
+  text-align: center;
+  width: 100%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 
@@ -4879,6 +4948,23 @@ main {
   font-family: 'Courier New', monospace;
 }
 
+/* Ensure text is centered in sensor-info (No Sensors card) */
+.sensor-info .sensor-label {
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sensor-info .sensor-value {
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .scan-expiry {
   display: flex;
   justify-content: space-between;
@@ -6027,6 +6113,14 @@ main {
     overflow: hidden;
   }
 
+  /* Center single card on mobile */
+  .sensor-cards-container:has(.sensor-card:only-child) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr;
+  }
+
   /* Scope sizing to cards inside the container only */
   .sensor-cards-container .sensor-card {
     width: 100% !important;
@@ -6037,6 +6131,11 @@ main {
     min-height: 110px;
     border-radius: 10px;
     box-sizing: border-box;
+  }
+
+  /* Center single card on mobile with max width */
+  .sensor-cards-container:has(.sensor-card:only-child) .sensor-card {
+    max-width: 400px !important;
   }
 
   /* Ensure inner gauge/content does not overflow */
