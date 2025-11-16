@@ -1189,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('OTP for development:', data.otp);
                 }
                 
+                // Show success message
                 showToast(data.message, 'success');
                 
                 // Navigate to OTP verification view
@@ -1197,13 +1198,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     startOTPTimer();
                 }, 1000);
             } else {
-                // Check if account is inactive
-                if (data.error && (data.error.includes('inactive') || data.error.includes('contact admin'))) {
-                    showToast('User is inactive. Please contact admin.', 'error');
-                    return;
+                // Check if account is inactive - show specific toast message
+                if (data.error && (data.error.includes('inactive') || data.error.includes('reactivate'))) {
+                    showToast('Account is inactive. Please contact admin to reactivate your account.', 'error');
+                } else {
+                    showToast(data.error || 'Password reset failed. Please try again.', 'error');
                 }
-                
-                showToast(data.error || 'Password reset failed. Please try again.', 'error');
                 if (data.details) {
                     console.error("Backend error details:", data.details);
                 }
