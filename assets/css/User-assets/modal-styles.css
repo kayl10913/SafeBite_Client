@@ -898,6 +898,27 @@ body.modal-open {
   font-size: 16px;
 }
 
+/* Error states (matching registration style) */
+#editAccountModal .config-modal-group.error input,
+#editAccountModal .config-modal-group.error input[type="text"],
+#editAccountModal .config-modal-group.error input[type="email"],
+#editAccountModal .config-modal-group.error input[type="tel"],
+#editAccountModal .config-modal-group.error input[type="password"] {
+  border-color: #f44336 !important;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1) !important;
+}
+
+#editAccountModal .config-modal-group.error label i {
+  color: #f44336 !important;
+}
+
+#editAccountModal .config-modal-group .error-message {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
 /* Hide scrollbars visually but keep scrolling enabled in Edit Account modal */
 #editAccountModal .config-modal-form { 
   overflow-y: auto !important; 

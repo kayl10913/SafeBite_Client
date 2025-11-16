@@ -232,7 +232,7 @@ window.initAnalysisPage = function() {
           // Show message to user
           const catLabel = document.getElementById('analysisCategoryInfo');
           if (catLabel) {
-            catLabel.textContent = `Selected: ${nameFromOption} - No sensor data available`;
+            catLabel.textContent = `Selected: ${nameFromOption}`;
             catLabel.style.color = '#ffc107';
           }
         }

@@ -761,7 +761,7 @@
               <i class="bi bi-telephone"></i>
               Contact Number
             </label>
-            <input type="tel" id="editContactNumber" placeholder="Enter contact number" />
+            <input type="tel" id="editContactNumber" required placeholder="Enter Philippine mobile number (e.g., 09123456789)" />
           </div>
         </div>
       </div>
@@ -1941,26 +1941,260 @@
     }
   }
   
-  // Handle form submission
+  // Validation helper functions (matching registration style)
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  function validatePassword(password) {
+    // Same validation as registration: min 6 characters
+    return password.length >= 6;
+  }
+
+  function validateName(name) {
+    return name.trim().length >= 2;
+  }
+
+  function validateUsername(username) {
+    return /^[a-zA-Z0-9_]{3,30}$/.test(username);
+  }
+
+  function validatePhoneNumber(phone) {
+    if (!phone || phone.trim() === '') return false; // Required field
+    // Remove common formatting characters (spaces, dashes, parentheses, plus signs)
+    const cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+    
+    // Philippine mobile number patterns only:
+    // Mobile: 09XXXXXXXXX (11 digits starting with 09) - most common format
+    // Mobile without leading 0: 9XXXXXXXXX (10 digits starting with 9)
+    // Mobile with country code: 639XXXXXXXXX (12 digits starting with 639)
+    
+    // Check for mobile numbers only
+    const mobilePattern1 = /^09\d{9}$/; // 09XXXXXXXXX (11 digits) - standard PH mobile format
+    const mobilePattern2 = /^9\d{9}$/; // 9XXXXXXXXX (10 digits, without leading 0)
+    const mobilePattern3 = /^639\d{9}$/; // 639XXXXXXXXX (12 digits with country code +63)
+    
+    // Return true if it matches any Philippine mobile pattern
+    return mobilePattern1.test(cleaned) || 
+           mobilePattern2.test(cleaned) || 
+           mobilePattern3.test(cleaned);
+  }
+
+  // Error handling functions (matching registration style)
+  function showError(input, message) {
+    const inputField = input.closest('.config-modal-group');
+    if (!inputField) return;
+    inputField.classList.add('error');
+    
+    // Remove existing error message if any
+    const existingError = inputField.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+    
+    // Add error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    inputField.appendChild(errorDiv);
+  }
+
+  function clearError(input) {
+    const inputField = input.closest('.config-modal-group');
+    if (!inputField) return;
+    inputField.classList.remove('error');
+    
+    const errorMessage = inputField.querySelector('.error-message');
+    if (errorMessage) {
+      errorMessage.remove();
+    }
+  }
+
+  // Real-time validation (matching registration style)
+  const editFirstNameInput = document.getElementById('editFirstName');
+  const editLastNameInput = document.getElementById('editLastName');
+  const editUsernameInput = document.getElementById('editUsername');
+  const editEmailInput = document.getElementById('editEmail');
+  const editContactNumberInput = document.getElementById('editContactNumber');
+  const editNewPasswordInput = document.getElementById('editNewPassword');
+  const editReenterPasswordInput = document.getElementById('editReenterPassword');
+
+  if (editFirstNameInput) {
+    editFirstNameInput.addEventListener('blur', function() {
+      const name = this.value.trim();
+      if (name && !validateName(name)) {
+        showError(this, 'First name must be at least 2 characters long');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editLastNameInput) {
+    editLastNameInput.addEventListener('blur', function() {
+      const name = this.value.trim();
+      if (name && !validateName(name)) {
+        showError(this, 'Last name must be at least 2 characters long');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editUsernameInput) {
+    editUsernameInput.addEventListener('blur', function() {
+      const username = this.value.trim();
+      if (username && !validateUsername(username)) {
+        showError(this, 'Username must be 3-30 characters and contain only letters, numbers, and underscores');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editEmailInput) {
+    editEmailInput.addEventListener('blur', function() {
+      const email = this.value.trim();
+      if (email && !validateEmail(email)) {
+        showError(this, 'Please enter a valid email address');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editContactNumberInput) {
+    editContactNumberInput.addEventListener('blur', function() {
+      const phone = this.value.trim();
+      if (!phone) {
+        showError(this, 'Contact number is required');
+      } else if (!validatePhoneNumber(phone)) {
+        showError(this, 'Please enter a valid phone number (e.g., 09123456789)');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editNewPasswordInput) {
+    editNewPasswordInput.addEventListener('blur', function() {
+      const password = this.value;
+      if (password && !validatePassword(password)) {
+        showError(this, 'Password must be at least 6 characters long');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  if (editReenterPasswordInput) {
+    editReenterPasswordInput.addEventListener('blur', function() {
+      const password = editNewPasswordInput ? editNewPasswordInput.value : '';
+      const reenterPassword = this.value;
+      if (reenterPassword && password !== reenterPassword) {
+        showError(this, 'Passwords do not match');
+      } else {
+        clearError(this);
+      }
+    });
+  }
+
+  // Handle form submission (matching registration style)
   document.getElementById('editAccountForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const newPassword = document.getElementById('editNewPassword').value;
-    const reenterPassword = document.getElementById('editReenterPassword').value;
+    // Clear all previous errors
+    if (editFirstNameInput) clearError(editFirstNameInput);
+    if (editLastNameInput) clearError(editLastNameInput);
+    if (editUsernameInput) clearError(editUsernameInput);
+    if (editEmailInput) clearError(editEmailInput);
+    if (editContactNumberInput) clearError(editContactNumberInput);
+    if (editNewPasswordInput) clearError(editNewPasswordInput);
+    if (editReenterPasswordInput) clearError(editReenterPasswordInput);
     
-    // Validate password matching if new password is provided
-    if (newPassword && newPassword !== reenterPassword) {
-      window.modalSystem.warning('New password and re-enter password do not match. Please try again.', 'Password Mismatch');
+    // Get form values
+    const firstName = editFirstNameInput ? editFirstNameInput.value.trim() : '';
+    const lastName = editLastNameInput ? editLastNameInput.value.trim() : '';
+    const username = editUsernameInput ? editUsernameInput.value.trim() : '';
+    const email = editEmailInput ? editEmailInput.value.trim() : '';
+    const contactNumber = editContactNumberInput ? editContactNumberInput.value.trim() : '';
+    const newPassword = editNewPasswordInput ? editNewPasswordInput.value : '';
+    const reenterPassword = editReenterPasswordInput ? editReenterPasswordInput.value : '';
+    
+    let hasErrors = false;
+    
+    // Validate First Name
+    if (!firstName) {
+      if (editFirstNameInput) showError(editFirstNameInput, 'First name is required');
+      hasErrors = true;
+    } else if (!validateName(firstName)) {
+      if (editFirstNameInput) showError(editFirstNameInput, 'First name must be at least 2 characters long');
+      hasErrors = true;
+    }
+    
+    // Validate Last Name
+    if (!lastName) {
+      if (editLastNameInput) showError(editLastNameInput, 'Last name is required');
+      hasErrors = true;
+    } else if (!validateName(lastName)) {
+      if (editLastNameInput) showError(editLastNameInput, 'Last name must be at least 2 characters long');
+      hasErrors = true;
+    }
+    
+    // Validate Username
+    if (!username) {
+      if (editUsernameInput) showError(editUsernameInput, 'Username is required');
+      hasErrors = true;
+    } else if (!validateUsername(username)) {
+      if (editUsernameInput) showError(editUsernameInput, 'Username must be 3-30 characters and contain only letters, numbers, and underscores');
+      hasErrors = true;
+    }
+    
+    // Validate Email
+    if (!email) {
+      if (editEmailInput) showError(editEmailInput, 'Email is required');
+      hasErrors = true;
+    } else if (!validateEmail(email)) {
+      if (editEmailInput) showError(editEmailInput, 'Please enter a valid email address');
+      hasErrors = true;
+    }
+    
+    // Validate Contact Number (required)
+    if (!contactNumber) {
+      if (editContactNumberInput) showError(editContactNumberInput, 'Contact number is required');
+      hasErrors = true;
+    } else if (!validatePhoneNumber(contactNumber)) {
+      if (editContactNumberInput) showError(editContactNumberInput, 'Please enter a valid mobile number (e.g., 09123456789)');
+      hasErrors = true;
+    }
+    
+    // Validate Password (optional but must meet requirements if provided)
+    if (newPassword) {
+      if (!validatePassword(newPassword)) {
+        if (editNewPasswordInput) showError(editNewPasswordInput, 'Password must be at least 6 characters long');
+        hasErrors = true;
+      } else if (newPassword !== reenterPassword) {
+        if (editReenterPasswordInput) showError(editReenterPasswordInput, 'Passwords do not match');
+        hasErrors = true;
+      }
+    } else if (reenterPassword) {
+      // If re-enter password is provided but new password is not
+      if (editNewPasswordInput) showError(editNewPasswordInput, 'Please enter a new password');
+      hasErrors = true;
+    }
+    
+    if (hasErrors) {
       return;
     }
     
     const formData = {
-      first_name: document.getElementById('editFirstName').value,
-      last_name: document.getElementById('editLastName').value,
-      username: document.getElementById('editUsername').value,
-      email: document.getElementById('editEmail').value,
-      contact_number: document.getElementById('editContactNumber').value,
-      new_password: newPassword
+      first_name: firstName,
+      last_name: lastName,
+      username: username,
+      email: email,
+      contact_number: contactNumber,
+      new_password: newPassword || undefined
     };
     
     try {
