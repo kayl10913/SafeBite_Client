@@ -1351,7 +1351,7 @@ async function exportDetailedReportPDF() {
       compress: true
     });
     
-    // Calculate available width for table (landscape A4 = 842pt, minus margins)
+    // Calculate available width for table (landscape Legal = 1008pt, minus margins)
     const pageWidth = doc.internal.pageSize.width;
     const marginLeft = 40;
     const marginRight = 40;
@@ -1404,34 +1404,56 @@ async function exportDetailedReportPDF() {
       const riskScore = item['RISK SCORE'] || 0;
       const formattedRiskScore = `${parseFloat(riskScore).toFixed(1)}%`;
       
-      // Format recommendations for PDF (shorter format)
+      // Format recommendations for PDF (show all recommendations)
       const recommendations = item['RECOMMENDATIONS'] || '';
       let formattedRecommendations = 'None';
       if (recommendations) {
         try {
           const recArray = typeof recommendations === 'string' ? JSON.parse(recommendations) : recommendations;
           if (Array.isArray(recArray) && recArray.length > 0) {
-            // Limit to first 2 recommendations for PDF
-            const limitedRecs = recArray.slice(0, 2);
-            formattedRecommendations = limitedRecs.join('; ');
-            if (recArray.length > 2) {
-              formattedRecommendations += '...';
-            }
+            // Show all recommendations (no truncation)
+            formattedRecommendations = recArray.join('; ');
           } else if (typeof recArray === 'object' && recArray.main) {
-            // Handle object format
-            formattedRecommendations = recArray.main;
+            // Handle object format - show main and details if available
+            if (recArray.details && Array.isArray(recArray.details) && recArray.details.length > 0) {
+              formattedRecommendations = recArray.main + '; ' + recArray.details.join('; ');
+            } else {
+              formattedRecommendations = recArray.main;
+            }
           }
         } catch (error) {
-          formattedRecommendations = 'Invalid';
+          // If parsing fails, use as string (might already be formatted)
+          formattedRecommendations = typeof recommendations === 'string' ? recommendations : 'Invalid';
         }
       }
       
-      // Format sensor readings for PDF (shorter format)
+      // Format sensor readings for PDF (show full readings with proper formatting)
       const sensorReadings = item['SENSOR READINGS'] || '';
-      let formattedSensorReadings = sensorReadings;
-      if (sensorReadings && sensorReadings.length > 50) {
-        // Truncate long sensor readings for PDF
-        formattedSensorReadings = sensorReadings.substring(0, 47) + '...';
+      let formattedSensorReadings = 'N/A';
+      
+      if (sensorReadings && sensorReadings !== 'No sensor data') {
+        // If it's already a formatted string, use it directly
+        if (typeof sensorReadings === 'string') {
+          // Clean up formatting - ensure proper spacing between readings
+          formattedSensorReadings = sensorReadings
+            .replace(/,(\w)/g, ', $1')  // Add space after comma before word
+            .replace(/(\d)([A-Z])/g, '$1 $2')  // Add space between number and letter
+            .replace(/\s+/g, ' ')  // Normalize multiple spaces
+            .trim();
+        } else if (typeof sensorReadings === 'object') {
+          // If it's an object, format it nicely
+          const parts = [];
+          if (sensorReadings.gas !== undefined) {
+            parts.push(`Gas: ${parseFloat(sensorReadings.gas).toFixed(2)} ${sensorReadings.gasUnit || 'ppm'}`);
+          }
+          if (sensorReadings.humidity !== undefined) {
+            parts.push(`Humidity: ${parseFloat(sensorReadings.humidity).toFixed(2)}%`);
+          }
+          if (sensorReadings.temperature !== undefined) {
+            parts.push(`Temperature: ${parseFloat(sensorReadings.temperature).toFixed(2)}°C`);
+          }
+          formattedSensorReadings = parts.length > 0 ? parts.join(', ') : 'N/A';
+        }
       }
       
       return [
@@ -1445,64 +1467,72 @@ async function exportDetailedReportPDF() {
       ];
     });
     
-    // Calculate optimal column widths to fit the page
+    // Calculate optimal column widths to fit the page (adjusted for better recommendations visibility)
     const columnWidths = {
-      0: Math.floor(availableWidth * 0.20), // Food Item (20%)
-      1: Math.floor(availableWidth * 0.14), // Category (14%)
-      2: Math.floor(availableWidth * 0.12), // Status (12%)
-      3: Math.floor(availableWidth * 0.12), // Risk Score (12%)
-      4: Math.floor(availableWidth * 0.14), // Expiry Date (14%)
-      5: Math.floor(availableWidth * 0.22), // Sensor Readings (22%)
-      6: Math.floor(availableWidth * 0.16)  // Recommendations (16%)
+      0: Math.floor(availableWidth * 0.16), // Food Item (16%)
+      1: Math.floor(availableWidth * 0.12), // Category (12%)
+      2: Math.floor(availableWidth * 0.10), // Status (10%)
+      3: Math.floor(availableWidth * 0.10), // Risk Score (10%)
+      4: Math.floor(availableWidth * 0.12), // Expiry Date (12%)
+      5: Math.floor(availableWidth * 0.18), // Sensor Readings (18%)
+      6: Math.floor(availableWidth * 0.22)  // Recommendations (22% - increased for better visibility)
     };
+    
+    // Store total page count for pagination
+    let totalPages = 1;
     
     // Add professional table
     if (typeof doc.autoTable !== 'function') {
       // Fallback if plugin attached to prototype
       if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && typeof window.jspdf.jsPDF.API.autoTable === 'function') {
-        window.jspdf.jsPDF.API.autoTable.apply(doc, [{
+        const result = window.jspdf.jsPDF.API.autoTable.apply(doc, [{
           head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Recommendations']],
           body: tableData,
           startY: 180,
           margin: { left: marginLeft, right: marginRight },
           tableWidth: 'wrap',
-          styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', halign: 'left', valign: 'top', lineColor: [200,200,200], lineWidth: 0.5, textColor: [0,0,0] },
+          styles: { fontSize: 7, cellPadding: 4, overflow: 'linebreak', halign: 'left', valign: 'top', lineColor: [200,200,200], lineWidth: 0.5, textColor: [0,0,0], minCellHeight: 10 },
           headStyles: { fillColor: [74,158,255], textColor: [255,255,255], fontStyle: 'bold', fontSize: 9, halign: 'center', valign: 'middle' },
           alternateRowStyles: { fillColor: [248,249,250] },
           columnStyles: {
-            0: { cellWidth: columnWidths[0], halign: 'left' },
-            1: { cellWidth: columnWidths[1], halign: 'center' },
-            2: { cellWidth: columnWidths[2], halign: 'center' },
-            3: { cellWidth: columnWidths[3], halign: 'center' },
-            4: { cellWidth: columnWidths[4], halign: 'center' },
-            5: { cellWidth: columnWidths[5], halign: 'left' },
-            6: { cellWidth: columnWidths[6], halign: 'center' },
-            7: { cellWidth: columnWidths[7], halign: 'left' }
+            0: { cellWidth: columnWidths[0], halign: 'left', cellPadding: 4 },
+            1: { cellWidth: columnWidths[1], halign: 'center', cellPadding: 4 },
+            2: { cellWidth: columnWidths[2], halign: 'center', cellPadding: 4 },
+            3: { cellWidth: columnWidths[3], halign: 'center', cellPadding: 4 },
+            4: { cellWidth: columnWidths[4], halign: 'center', cellPadding: 4 },
+            5: { cellWidth: columnWidths[5], halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 12 },   // Sensor Readings - with wrapping
+            6: { cellWidth: columnWidths[6], halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 15 }    // Recommendations - wider with better wrapping
           },
           didDrawPage: function (data) {
-            doc.setFontSize(8); doc.setTextColor(128,128,128);
-            doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, doc.internal.pageSize.width - 100, doc.internal.pageSize.height - 20);
+            // Track page count (will be updated after table is complete)
+            totalPages = data.pageCount || doc.internal.getNumberOfPages() || totalPages;
+            // Page numbers will be added after table is complete
           }
         }]);
+        // Get total pages from result if available
+        if (result && result.finalY) {
+          totalPages = doc.internal.getNumberOfPages();
+        }
       } else {
         throw new Error('autoTable plugin not available');
       }
     } else {
-      doc.autoTable({
+      const result = doc.autoTable({
       head: [['Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings', 'Recommendations']],
       body: tableData,
       startY: 180,
       margin: { left: marginLeft, right: marginRight },
       tableWidth: 'wrap',
       styles: {
-        fontSize: 8,
-        cellPadding: 3,
+        fontSize: 7,
+        cellPadding: 4,
         overflow: 'linebreak',
         halign: 'left',
         valign: 'top',
         lineColor: [200, 200, 200],
         lineWidth: 0.5,
-        textColor: [0, 0, 0]
+        textColor: [0, 0, 0],
+        minCellHeight: 10
       },
       headStyles: {
         fillColor: [74, 158, 255],
@@ -1516,23 +1546,37 @@ async function exportDetailedReportPDF() {
         fillColor: [248, 249, 250]
       },
       columnStyles: {
-        0: { cellWidth: columnWidths[0], halign: 'left' },   // Food Item
-        1: { cellWidth: columnWidths[1], halign: 'center' }, // Category
-        2: { cellWidth: columnWidths[2], halign: 'center' }, // Status
-        3: { cellWidth: columnWidths[3], halign: 'center' }, // Risk Score
-        4: { cellWidth: columnWidths[4], halign: 'center' }, // Expiry Date
-        5: { cellWidth: columnWidths[5], halign: 'left' },   // Sensor Readings
-        6: { cellWidth: columnWidths[6], halign: 'left' }    // Recommendations
+        0: { cellWidth: columnWidths[0], halign: 'left', cellPadding: 4 },   // Food Item
+        1: { cellWidth: columnWidths[1], halign: 'center', cellPadding: 4 }, // Category
+        2: { cellWidth: columnWidths[2], halign: 'center', cellPadding: 4 }, // Status
+        3: { cellWidth: columnWidths[3], halign: 'center', cellPadding: 4 }, // Risk Score
+        4: { cellWidth: columnWidths[4], halign: 'center', cellPadding: 4 }, // Expiry Date
+        5: { cellWidth: columnWidths[5], halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 12 },   // Sensor Readings - with wrapping
+        6: { cellWidth: columnWidths[6], halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 15 }    // Recommendations - wider with better wrapping
       },
       didDrawPage: function (data) {
-        // Add page number
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, 
-                 doc.internal.pageSize.width - 100, 
-                 doc.internal.pageSize.height - 20);
+        // Track page count (will be updated after table is complete)
+        totalPages = data.pageCount || doc.internal.getNumberOfPages() || totalPages;
+        // Page numbers will be added after table is complete
       }
       });
+      // Get total pages after table is drawn
+      totalPages = doc.internal.getNumberOfPages();
+    }
+    
+    // Add page numbers to all pages after table is complete
+    const totalPagesCount = doc.internal.getNumberOfPages();
+    if (totalPagesCount > 0) {
+      const pageSize = doc.internal.pageSize;
+      const pageWidth = pageSize.width;
+      const pageHeight = pageSize.height;
+      
+      for (let i = 1; i <= totalPagesCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Page ${i} of ${totalPagesCount}`, pageWidth - 100, pageHeight - 20);
+      }
     }
     
     // Save the PDF

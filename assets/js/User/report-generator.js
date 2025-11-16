@@ -878,16 +878,20 @@ class ReportGenerator {
                 return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Unresolved';
             };
 
-            const all = rows.map(r => ({
-                alertId: r.alert_id,
-                alertType: r.alert_type, // from alerts table
-                severity: r.alert_level,
-                location: r.food_name || 'Unknown Location', // join provided by backend
-                message: r.message,
-                timestamp: (r.timestamp ? new Date(r.timestamp).toLocaleString() : ''),
-                timestampRaw: r.timestamp,
-                status: normalizeStatus(r.is_resolved)
-            }));
+            const all = rows.map(r => {
+                // Use TIMESTAMP from data table (uppercase) or fallback to lowercase timestamp
+                const timestampValue = r.TIMESTAMP || r.timestamp || r.created_at || r.alert_timestamp;
+                return {
+                    alertId: r.alert_id,
+                    alertType: r.alert_type, // from alerts table
+                    severity: r.alert_level,
+                    location: r.food_name || 'Unknown Location', // join provided by backend
+                    message: r.message,
+                    timestamp: (timestampValue ? new Date(timestampValue).toLocaleString() : ''),
+                    timestampRaw: timestampValue, // Use raw timestamp from data table
+                    status: normalizeStatus(r.is_resolved)
+                };
+            });
 
             // Date range filter (client-side, inclusive to end-of-day) with daily exact-date handling
             const { startDate, endDate } = this.getDatesFromPicker();
@@ -901,13 +905,21 @@ class ReportGenerator {
                 return `${y}-${m}-${da}`;
             };
 
+            const formatLocal = (d) => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const da = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${da}`;
+            };
+
             const isDaily = this.currentDateRange === 'daily';
             const dailyUTCStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
 
             let filtered;
             if (isDaily) {
                 filtered = all.filter(item => {
-                    const ts = item.timestampRaw || item.timestamp;
+                    // Use timestampRaw (raw timestamp from data table) for filtering
+                    const ts = item.timestampRaw;
                     if (!ts) return false;
                     const d = new Date(ts);
                     if (isNaN(d.getTime())) return false;
@@ -925,7 +937,8 @@ class ReportGenerator {
                     cur.setDate(cur.getDate() + 1);
                 }
                 filtered = all.filter(item => {
-                    const ts = item.timestampRaw || item.timestamp;
+                    // Use timestampRaw (raw timestamp from data table) for filtering
+                    const ts = item.timestampRaw;
                     if (!ts) return false;
                     const d = new Date(ts);
                     if (isNaN(d.getTime())) return false;
@@ -933,7 +946,8 @@ class ReportGenerator {
                 });
             } else {
                 filtered = all.filter(item => {
-                    const ts = item.timestampRaw || item.timestamp;
+                    // Use timestampRaw (raw timestamp from data table) for filtering
+                    const ts = item.timestampRaw;
                     if (!ts) return false;
                     const d = new Date(ts);
                     if (isNaN(d.getTime())) return false;
@@ -1736,11 +1750,13 @@ class ReportGenerator {
 
         // Filter by date range
         const today = new Date();
-        const currentDate = new Date();
 
+        // Use getDatesFromPicker for all date ranges to ensure consistency
         if (this.currentDateRange === 'custom' && this.customStartDate && this.customEndDate) {
             const start = new Date(this.customStartDate);
+            start.setHours(0, 0, 0, 0);
             const end = new Date(this.customEndDate);
+            end.setHours(23, 59, 59, 999);
             filtered = filtered.filter(item => {
                 const itemDate = this.getDateFromItem(item);
                 return itemDate && itemDate >= start && itemDate <= end;
@@ -1748,34 +1764,19 @@ class ReportGenerator {
             return filtered;
         }
 
-        switch (this.currentDateRange) {
-            case 'daily':
-                filtered = filtered.filter(item => {
-                    const itemDate = this.getDateFromItem(item);
-                    return itemDate && itemDate.toDateString() === today.toDateString();
-                });
-                break;
-            case 'weekly':
-                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                filtered = filtered.filter(item => {
-                    const itemDate = this.getDateFromItem(item);
-                    return itemDate && itemDate >= weekAgo;
-                });
-                break;
-            case 'monthly':
-                const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-                filtered = filtered.filter(item => {
-                    const itemDate = this.getDateFromItem(item);
-                    return itemDate && itemDate >= monthAgo;
-                });
-                break;
-            case 'yearly':
-                const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-                filtered = filtered.filter(item => {
-                    const itemDate = this.getDateFromItem(item);
-                    return itemDate && itemDate >= yearAgo;
-                });
-                break;
+        // Get start and end dates from picker for all ranges
+        const { startDate, endDate } = this.getDatesFromPicker();
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            
+            filtered = filtered.filter(item => {
+                const itemDate = this.getDateFromItem(item);
+                if (!itemDate) return false;
+                return itemDate >= start && itemDate <= end;
+            });
         }
 
         return filtered;
@@ -1789,6 +1790,14 @@ class ReportGenerator {
         if (this.currentReportType === 'user-activity') {
             return item.timestamp ? new Date(item.timestamp) : null;
         }
+        
+        // For alert-summary, use timestampRaw (raw TIMESTAMP from data table) for date range filtering
+        if (this.currentReportType === 'alert-summary') {
+            // Prioritize timestampRaw which comes directly from the data table TIMESTAMP field
+            const timestamp = item.timestampRaw || item.timestamp || item.TIMESTAMP;
+            return timestamp ? new Date(timestamp) : null;
+        }
+        
         if (dateField) {
             return new Date(dateField);
         }
@@ -1941,7 +1950,7 @@ class ReportGenerator {
 
             // Create PDF document with professional settings
             const doc = new window.jspdf.jsPDF({ 
-                orientation: 'portrait', 
+                orientation: 'landscape', 
                 unit: 'pt', 
                 format: 'A4',
                 compress: true
@@ -1993,6 +2002,9 @@ class ReportGenerator {
             const recordsPerPage = 25; // Approximate records per page
             const estimatedTotalPages = Math.ceil(tableData.length / recordsPerPage) || 1;
             
+            // Store total pages for pagination
+            let totalPages = 1;
+            
             // Add professional table
             doc.autoTable({
                 head: [tableConfig.headers],
@@ -2000,13 +2012,15 @@ class ReportGenerator {
                 startY: 160,
                 margin: { left: 40, right: 40 },
                 styles: {
-                    fontSize: 8,
-                    cellPadding: 2,
+                    fontSize: 7,
+                    cellPadding: 4,
                     overflow: 'linebreak',
                     halign: 'left',
-                    valign: 'middle',
+                    valign: 'top',
                     lineColor: [200, 200, 200],
-                    lineWidth: 0.5
+                    lineWidth: 0.5,
+                    textColor: [0, 0, 0],
+                    minCellHeight: 10
                 },
                 headStyles: {
                     fillColor: [74, 158, 255],
@@ -2020,15 +2034,26 @@ class ReportGenerator {
                 },
                 columnStyles: tableConfig.columnStyles,
                 didDrawPage: function (data) {
-                    // Add page number
-                    doc.setFontSize(8);
-                    doc.setTextColor(128, 128, 128);
-                    const pageCount = data.pageCount || data.totalPages || estimatedTotalPages || 1;
-                    doc.text(`Page ${data.pageNumber} of ${pageCount}`, 
-                             doc.internal.pageSize.width - 100, 
-                             doc.internal.pageSize.height - 20);
+                    // Track page count (will be updated after table is complete)
+                    totalPages = data.pageCount || doc.internal.getNumberOfPages() || totalPages;
+                    // Page numbers will be added after table is complete
                 }
             });
+            
+            // Add page numbers to all pages after table is complete
+            const totalPagesCount = doc.internal.getNumberOfPages();
+            if (totalPagesCount > 0) {
+                const pageSize = doc.internal.pageSize;
+                const pageWidth = pageSize.width;
+                const pageHeight = pageSize.height;
+                
+                for (let i = 1; i <= totalPagesCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(128, 128, 128);
+                    doc.text(`Page ${i} of ${totalPagesCount}`, pageWidth - 100, pageHeight - 20);
+                }
+            }
             
             // Save the PDF
             const fileName = `SafeBite_${this.currentReportType.replace('-', '_')}_Report_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -2056,33 +2081,33 @@ class ReportGenerator {
             'user-activity': {
                 headers: ['LOG ID', 'ACTION', 'TIMESTAMP'],
                 columnStyles: {
-                    0: { cellWidth: 50, halign: 'center' },   // LOG ID
-                    1: { cellWidth: 300, halign: 'left' },    // ACTION
-                    2: { cellWidth: 120, halign: 'center' }   // TIMESTAMP
+                    0: { cellWidth: 50, halign: 'center', cellPadding: 4 },   // LOG ID
+                    1: { cellWidth: 380, halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 10 },    // ACTION - wider with wrapping
+                    2: { cellWidth: 110, halign: 'center', cellPadding: 4 }   // TIMESTAMP
                 }
             },
             'food-spoilage': {
                 headers: ['Food ID', 'Food Item', 'Category', 'Status', 'Risk Score', 'Expiry Date', 'Sensor Readings'],
                 columnStyles: {
-                    0: { cellWidth: 60, halign: 'center' },   // Food ID
-                    1: { cellWidth: 100, halign: 'left' },    // Food Item
-                    2: { cellWidth: 70, halign: 'center' },   // Category
-                    3: { cellWidth: 70, halign: 'center' },   // Status
-                    4: { cellWidth: 70, halign: 'center' },   // Risk Score
-                    5: { cellWidth: 80, halign: 'center' },   // Expiry Date
-                    6: { cellWidth: 150, halign: 'left' }     // Sensor Readings
+                    0: { cellWidth: 55, halign: 'center', cellPadding: 4 },   // Food ID
+                    1: { cellWidth: 90, halign: 'left', cellPadding: 4 },    // Food Item
+                    2: { cellWidth: 65, halign: 'center', cellPadding: 4 },   // Category
+                    3: { cellWidth: 65, halign: 'center', cellPadding: 4 },   // Status
+                    4: { cellWidth: 65, halign: 'center', cellPadding: 4 },   // Risk Score
+                    5: { cellWidth: 75, halign: 'center', cellPadding: 4 },   // Expiry Date
+                    6: { cellWidth: 180, halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 12 }     // Sensor Readings - wider with wrapping
                 }
             },
             'alert-summary': {
                 headers: ['Alert ID', 'Alert Type', 'Severity', 'Location', 'Message', 'Timestamp', 'Status'],
                 columnStyles: {
-                    0: { cellWidth: 70, halign: 'center' },   // Alert ID
-                    1: { cellWidth: 90, halign: 'center' },   // Alert Type
-                    2: { cellWidth: 70, halign: 'center' },   // Severity
-                    3: { cellWidth: 120, halign: 'left' },    // Location
-                    4: { cellWidth: 200, halign: 'left' },    // Message
-                    5: { cellWidth: 120, halign: 'center' },  // Timestamp
-                    6: { cellWidth: 70, halign: 'center' }    // Status
+                    0: { cellWidth: 60, halign: 'center', cellPadding: 4 },   // Alert ID
+                    1: { cellWidth: 80, halign: 'center', cellPadding: 4 },   // Alert Type
+                    2: { cellWidth: 65, halign: 'center', cellPadding: 4 },   // Severity
+                    3: { cellWidth: 100, halign: 'left', cellPadding: 4 },    // Location
+                    4: { cellWidth: 220, halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 12 },    // Message - wider with wrapping
+                    5: { cellWidth: 110, halign: 'center', cellPadding: 4 },  // Timestamp
+                    6: { cellWidth: 65, halign: 'center', cellPadding: 4 }    // Status
                 }
             }
         };
@@ -2103,6 +2128,37 @@ class ReportGenerator {
                 const expiryDate = item.expiryDate || '';
                 const formattedExpiry = expiryDate ? new Date(expiryDate).toLocaleDateString() : '';
                 
+                // Format sensor readings for PDF (show full readings with proper formatting)
+                const sensorReadings = item.sensorReadings || item['SENSOR READINGS'] || '';
+                let formattedSensorReadings = 'N/A';
+                
+                if (sensorReadings && sensorReadings !== 'No sensor data') {
+                    // If it's already a formatted string, use it directly with cleanup
+                    if (typeof sensorReadings === 'string') {
+                        // Clean up formatting - ensure proper spacing and use "Temp" abbreviation to prevent truncation
+                        formattedSensorReadings = sensorReadings
+                            .replace(/Temperature/gi, 'Temp')  // Replace Temperature with Temp for better fit in PDF
+                            .replace(/Temper(\s|:)/gi, 'Temp$1')  // Fix any truncated "Temper" back to "Temp"
+                            .replace(/,(\w)/g, ', $1')  // Add space after comma before word
+                            .replace(/(\d)([A-Z])/g, '$1 $2')  // Add space between number and letter
+                            .replace(/\s+/g, ' ')  // Normalize multiple spaces
+                            .trim();
+                    } else if (typeof sensorReadings === 'object') {
+                        // If it's an object, format it nicely using "Temp" abbreviation
+                        const parts = [];
+                        if (sensorReadings.gas !== undefined) {
+                            parts.push(`Gas: ${parseFloat(sensorReadings.gas).toFixed(2)} ${sensorReadings.gasUnit || 'ppm'}`);
+                        }
+                        if (sensorReadings.humidity !== undefined) {
+                            parts.push(`Humidity: ${parseFloat(sensorReadings.humidity).toFixed(2)}%`);
+                        }
+                        if (sensorReadings.temperature !== undefined) {
+                            parts.push(`Temp: ${parseFloat(sensorReadings.temperature).toFixed(2)}°C`);  // Use Temp instead of Temperature
+                        }
+                        formattedSensorReadings = parts.length > 0 ? parts.join(', ') : 'N/A';
+                    }
+                }
+                
                 return [
                     item.foodId || '',
                     item.foodItem || '',
@@ -2110,7 +2166,7 @@ class ReportGenerator {
                     item.status || '',
                     formattedRiskScore,
                     formattedExpiry,
-                    item.sensorReadings || ''
+                    formattedSensorReadings
                 ];
             case 'alert-summary':
                 return [

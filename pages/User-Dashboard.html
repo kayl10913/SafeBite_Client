@@ -2907,7 +2907,7 @@
             priority: item.PRIORITY || item.priority || item.priority_level || 'Low',
             status: item.STATUS || item.status || item.feedback_status || 'Active',
             rating: finalRating,
-            date: item.created_at || item.date || item.submission_date || formatPhilippineDate(new Date()),
+            date: item.created_at ? formatPhilippineDate(new Date(item.created_at)) : (item.date || item.submission_date ? formatPhilippineDate(new Date(item.date || item.submission_date)) : formatPhilippineDate(new Date())),
             // Admin response fields - try multiple variations
             admin_notes: item.admin_notes || item.adminNotes || item['ADMIN NOTES'] || '',
             response_text: item.response_text || item.responseText || item['RESPONSE TEXT'] || ''

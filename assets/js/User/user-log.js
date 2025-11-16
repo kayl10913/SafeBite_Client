@@ -50,7 +50,8 @@ window.initUserLogPage = function() {
   }
 
   const currentUserId = getCurrentUserId();
-  let userLogData = [];
+  let userLogData = []; // Current page data
+  let allFilteredUserLogData = []; // All filtered data for export
   let currentPage = 1;
   let totalPages = 1;
   let totalRecords = 0;
@@ -422,6 +423,9 @@ window.initUserLogPage = function() {
         // Apply client-side filtering
         const filteredData = applyClientSideFilters(allData, filters);
         console.log('Filtered user log data:', filteredData);
+        
+        // Store all filtered data for export
+        allFilteredUserLogData = filteredData;
         
         // Update pagination info based on filtered data
         totalRecords = filteredData.length;
@@ -845,12 +849,301 @@ window.initUserLogPage = function() {
     applyFilters();
   };
   
+  // Export user log to CSV
+  function exportUserLogCSV() {
+    try {
+      // Use all filtered data for export
+      const dataToExport = allFilteredUserLogData.length > 0 ? allFilteredUserLogData : userLogData;
+      
+      if (!dataToExport || dataToExport.length === 0) {
+        if (typeof showInfoToast === 'function') {
+          showInfoToast('No data available to export. Please apply filters first.', 'warning');
+        } else {
+          alert('No data available to export. Please apply filters first.');
+        }
+        return;
+      }
+      
+      // Create CSV headers
+      const headers = ['Username', 'Activity', 'Timestamp', 'Details'];
+      
+      // Create CSV content
+      let csvContent = 'data:text/csv;charset=utf-8,';
+      
+      // Add BOM for UTF-8 to ensure Excel opens it correctly
+      csvContent += '\uFEFF';
+      
+      // Add headers
+      csvContent += headers.map(h => `"${h}"`).join(',') + '\n';
+      
+      // Add data rows
+      const allowed = ['login','logout','update'];
+      dataToExport.forEach(item => {
+        const badgeType = extractActionType(item.activity, item.details);
+        if (!allowed.includes(badgeType)) return; // skip non-allowed activities
+        
+        const displayAction = formatActionText(item.activity, item.details);
+        const username = item.username || 'User ' + (item.user_id || '');
+        const timestamp = item.date_time || item.timestamp || '';
+        const details = (item.details || item.action || '').replace(/"/g, '""');
+        
+        const row = [
+          `"${username}"`,
+          `"${displayAction}"`,
+          `"${timestamp}"`,
+          `"${details}"`
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+      
+      // Create download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      
+      // Create filename with filters and date
+      const dateRange = currentFilters.date_range || 'all';
+      const actionType = currentFilters.action_type || 'all';
+      const fileName = `user-log-${actionType}-${dateRange}-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      if (typeof showInfoToast === 'function') {
+        showInfoToast('User log exported to CSV successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      if (typeof showInfoToast === 'function') {
+        showInfoToast('Failed to export CSV. Please try again.', 'error');
+      } else {
+        alert('Failed to export CSV. Please try again.');
+      }
+    }
+  }
+  
+  // Export user log to PDF
+  async function exportUserLogPDF() {
+    try {
+      // Use all filtered data for export
+      const dataToExport = allFilteredUserLogData.length > 0 ? allFilteredUserLogData : userLogData;
+      
+      if (!dataToExport || dataToExport.length === 0) {
+        if (typeof showInfoToast === 'function') {
+          showInfoToast('No data available to export. Please apply filters first.', 'warning');
+        } else {
+          alert('No data available to export. Please apply filters first.');
+        }
+        return;
+      }
+      
+      // Ensure jsPDF and autoTable are loaded
+      const ensurePdfLibs = async () => {
+        const loadScript = (src) => new Promise((resolve, reject) => {
+          // Avoid duplicate loads
+          if ([...document.getElementsByTagName('script')].some(s => s.src === src)) return resolve();
+          const s = document.createElement('script');
+          s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('Failed to load '+src));
+          document.head.appendChild(s);
+        });
+
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        }
+        // After jsPDF, ensure autotable
+        const hasAutoTable = !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+        if (!hasAutoTable) {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js');
+        }
+        return (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+      };
+
+      const libsOk = await ensurePdfLibs();
+      if (!libsOk) {
+        if (typeof showInfoToast === 'function') {
+          showInfoToast('PDF export libraries not available. Please check your internet connection and try again.', 'error');
+        } else {
+          alert('PDF export libraries not available. Please check your internet connection and try again.');
+        }
+        return;
+      }
+
+      // Create PDF document with professional settings
+      const doc = new window.jspdf.jsPDF({ 
+        orientation: 'portrait', 
+        unit: 'pt', 
+        format: 'A4',
+        compress: true
+      });
+      
+      // Calculate available width for table
+      const pageWidth = doc.internal.pageSize.width;
+      const marginLeft = 40;
+      const marginRight = 40;
+      const availableWidth = pageWidth - marginLeft - marginRight;
+      
+      // Add professional header with logo area
+      doc.setFillColor(74, 158, 255); // SafeBite blue
+      doc.rect(0, 0, doc.internal.pageSize.width, 80, 'F');
+      
+      // Company name and title
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SafeBite', 40, 35);
+      
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'normal');
+      doc.text('User Activity Log Report', 40, 55);
+      
+      // Reset text color for content
+      doc.setTextColor(0, 0, 0);
+      
+      // Add report metadata in a professional box
+      doc.setFillColor(248, 249, 250);
+      doc.rect(40, 100, doc.internal.pageSize.width - 80, 50, 'F');
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(40, 100, doc.internal.pageSize.width - 80, 50, 'S');
+      
+      // Report info with better formatting
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      const currentDate = new Date().toLocaleDateString();
+      const currentTime = new Date().toLocaleTimeString();
+      doc.text(`Report Generated: ${currentDate} at ${currentTime}`, 50, 115);
+      doc.text(`Total Records: ${dataToExport.length}`, 50, 130);
+      
+      // Get filter values for report info
+      const dateRange = currentFilters.date_range || 'All';
+      const actionType = currentFilters.action_type || 'All';
+      doc.text(`Date Range: ${dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}`, 50, 145);
+      doc.text(`Activity Type: ${actionType.charAt(0).toUpperCase() + actionType.slice(1)}`, 300, 145);
+      
+      // Prepare table data
+      const allowed = ['login','logout','update'];
+      const tableData = dataToExport.map(item => {
+        const badgeType = extractActionType(item.activity, item.details);
+        if (!allowed.includes(badgeType)) return null; // skip non-allowed activities
+        
+        const displayAction = formatActionText(item.activity, item.details);
+        const username = item.username || 'User ' + (item.user_id || '');
+        const timestamp = item.date_time || item.timestamp || '';
+        
+        // Format timestamp for PDF
+        let formattedTimestamp = '';
+        if (timestamp) {
+          try {
+            const date = new Date(timestamp);
+            if (!isNaN(date.getTime())) {
+              formattedTimestamp = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+              });
+            } else {
+              formattedTimestamp = timestamp.toString();
+            }
+          } catch (e) {
+            formattedTimestamp = timestamp.toString();
+          }
+        }
+        
+        const details = (item.details || item.action || '').substring(0, 100); // Limit length for PDF
+        
+        return [username, displayAction, formattedTimestamp, details];
+      }).filter(row => row !== null); // Remove null entries
+      
+      // Store total pages for pagination
+      let totalPages = 1;
+      
+      // Add professional table
+      const result = doc.autoTable({
+        head: [['Username', 'Activity', 'Timestamp', 'Details']],
+        body: tableData,
+        startY: 160,
+        margin: { left: marginLeft, right: marginRight },
+        styles: {
+          fontSize: 7,
+          cellPadding: 4,
+          overflow: 'linebreak',
+          halign: 'left',
+          valign: 'top',
+          lineColor: [200, 200, 200],
+          lineWidth: 0.5,
+          textColor: [0, 0, 0],
+          minCellHeight: 10
+        },
+        headStyles: {
+          fillColor: [74, 158, 255],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9,
+          halign: 'center',
+          valign: 'middle'
+        },
+        alternateRowStyles: {
+          fillColor: [248, 249, 250]
+        },
+        columnStyles: {
+          0: { cellWidth: availableWidth * 0.20, halign: 'left', cellPadding: 4 },   // Username
+          1: { cellWidth: availableWidth * 0.15, halign: 'center', cellPadding: 4 }, // Activity
+          2: { cellWidth: availableWidth * 0.25, halign: 'center', cellPadding: 4 }, // Timestamp
+          3: { cellWidth: availableWidth * 0.40, halign: 'left', cellPadding: 4, overflow: 'linebreak', minCellHeight: 12 } // Details - with wrapping
+        },
+        didDrawPage: function (data) {
+          // Track page count (will be updated after table is complete)
+          totalPages = data.pageCount || doc.internal.getNumberOfPages() || totalPages;
+          // Page numbers will be added after table is complete
+        }
+      });
+      
+      // Add page numbers to all pages after table is complete
+      const totalPagesCount = doc.internal.getNumberOfPages();
+      if (totalPagesCount > 0) {
+        const pageSize = doc.internal.pageSize;
+        const pageWidth = pageSize.width;
+        const pageHeight = pageSize.height;
+        
+        for (let i = 1; i <= totalPagesCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(128, 128, 128);
+          doc.text(`Page ${i} of ${totalPagesCount}`, pageWidth - 100, pageHeight - 20);
+        }
+      }
+      
+      // Save the PDF
+      const dateRangeStr = currentFilters.date_range || 'all';
+      const actionTypeStr = currentFilters.action_type || 'all';
+      const fileName = `SafeBite_User_Log_${actionTypeStr}_${dateRangeStr}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+      if (typeof showInfoToast === 'function') {
+        showInfoToast('User log exported to PDF successfully!', 'success');
+      }
+      
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      if (typeof showInfoToast === 'function') {
+        showInfoToast('Failed to export PDF. Please try again.', 'error');
+      } else {
+        alert('Failed to export PDF. Please try again.');
+      }
+    }
+  }
+  
   document.getElementById('userLogDownloadExcel').onclick = function() {
-    if (typeof showInfoToast === 'function') showInfoToast('Excel export coming soon');
+    exportUserLogCSV();
   };
   
   document.getElementById('userLogDownloadPDF').onclick = function() {
-    if (typeof showInfoToast === 'function') showInfoToast('PDF export coming soon');
+    exportUserLogPDF();
   };
 
   // Setup filter event listeners
