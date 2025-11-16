@@ -1067,6 +1067,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = '/pages/User-Dashboard.html';
                 }, 1000);
             } else {
+                // Check if account is inactive
+                if (data.error && (data.error.includes('inactive') || data.error.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+                
                 // Show backend error message if present (don't show 401 status)
                 let errorMessage = data.error || data.message || 'Invalid email or password. Please check your credentials and try again.';
                 
@@ -1088,6 +1094,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('User Login error:', error);
+            
+            // Check if error object contains inactive account message
+            if (error && typeof error === 'object') {
+                if (error.error && (error.error.includes('inactive') || error.error.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+                if (error.message && (error.message.includes('inactive') || error.message.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+            }
+            
             // Provide more specific error messages (don't show 401 status)
             if (error.message && error.message.includes('Failed to fetch')) {
                 showToast('Cannot connect to server. Make sure the Node.js server is running on port 3000', 'error');
@@ -1178,6 +1197,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     startOTPTimer();
                 }, 1000);
             } else {
+                // Check if account is inactive
+                if (data.error && (data.error.includes('inactive') || data.error.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+                
                 showToast(data.error || 'Password reset failed. Please try again.', 'error');
                 if (data.details) {
                     console.error("Backend error details:", data.details);
@@ -1185,6 +1210,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('User Password reset error:', error);
+            
+            // Check if error object contains inactive account message
+            if (error && typeof error === 'object') {
+                if (error.error && (error.error.includes('inactive') || error.error.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+                if (error.message && (error.message.includes('inactive') || error.message.includes('contact admin'))) {
+                    showToast('User is inactive. Please contact admin.', 'error');
+                    return;
+                }
+            }
             
             if (error.message && error.message.includes('Failed to fetch')) {
                 showToast('Cannot connect to server. Make sure the Node.js server is running on port 3000', 'error');
