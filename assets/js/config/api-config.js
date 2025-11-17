@@ -216,27 +216,39 @@ async function makeApiRequest(endpoint, options = {}) {
             
             // Check if this is an auth endpoint that shouldn't redirect to error page
             // Include login, forgot password, OTP, and registration endpoints
-            const isAuthEndpoint = endpoint.includes('/login') || 
-                                  endpoint.includes('/auth/login') || 
-                                  endpoint.includes('/admin/login') ||
-                                  endpoint.includes('/forgot-password') ||
-                                  endpoint.includes('/forgot_password') ||
-                                  endpoint.includes('/send-signup-otp') ||
-                                  endpoint.includes('/verify-signup-otp') ||
-                                  endpoint.includes('/send-otp') ||
-                                  endpoint.includes('/verify-otp') ||
-                                  endpoint.includes('/register') ||
-                                  endpoint.includes('/signup');
+            // Check both the endpoint parameter and the response URL for safety
+            const endpointLower = endpoint.toLowerCase();
+            const responseUrl = (response.url || '').toLowerCase();
+            const isAuthEndpoint = endpointLower.includes('/login') || 
+                                  endpointLower.includes('/auth/login') || 
+                                  endpointLower.includes('/admin/login') ||
+                                  endpointLower.includes('/forgot-password') ||
+                                  endpointLower.includes('/forgot_password') ||
+                                  endpointLower.includes('/send-signup-otp') ||
+                                  endpointLower.includes('/verify-signup-otp') ||
+                                  endpointLower.includes('/send-otp') ||
+                                  endpointLower.includes('/verify-otp') ||
+                                  endpointLower.includes('/register') ||
+                                  endpointLower.includes('/signup') ||
+                                  endpointLower.includes('/auth/register') ||
+                                  responseUrl.includes('/login') ||
+                                  responseUrl.includes('/register') ||
+                                  responseUrl.includes('/signup') ||
+                                  responseUrl.includes('/forgot-password') ||
+                                  responseUrl.includes('/send-signup-otp') ||
+                                  responseUrl.includes('/verify-signup-otp');
             
             // Check if this is a password-related endpoint that shouldn't redirect
-            const isPasswordEndpoint = endpoint.includes('/password') || 
-                                      endpoint.includes('/verify-password');
+            const isPasswordEndpoint = endpointLower.includes('/password') || 
+                                      endpointLower.includes('/verify-password') ||
+                                      responseUrl.includes('/password');
             
             // For auth and signup endpoints, NEVER redirect to error pages
             // Just return the error object so the form can handle it gracefully
             if (isAuthEndpoint || isPasswordEndpoint) {
                 // Don't call error handler at all for auth/signup endpoints
                 // Just return error object for form to handle
+                console.warn(`Auth endpoint error (not redirecting): ${endpoint} - ${errorMessage}`);
                 return {
                     success: false,
                     error: errorMessage,
@@ -246,8 +258,9 @@ async function makeApiRequest(endpoint, options = {}) {
             }
             
             // Use error handler for other endpoints (but 404s won't redirect anyway)
+            // Also pass preventRedirect flag for extra safety
             if (window.SafeBiteErrorHandler) {
-                window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
+                window.SafeBiteErrorHandler.handleApiError(response, errorMessage, false);
             }
             
             // Return error object for all cases

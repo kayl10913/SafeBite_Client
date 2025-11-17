@@ -13,9 +13,36 @@ class SafeBiteErrorHandler {
      * Handle API response errors
      * @param {Response} response - Fetch API response object
      * @param {string} customMessage - Optional custom error message
+     * @param {boolean} preventRedirect - If true, don't redirect (for auth/signup endpoints)
      */
-    handleApiError(response, customMessage = null) {
+    handleApiError(response, customMessage = null, preventRedirect = false) {
         const status = response.status;
+        
+        // Check if this is an auth/signup endpoint by examining the URL
+        const url = response.url || '';
+        const isAuthEndpoint = url.includes('/login') || 
+                              url.includes('/register') ||
+                              url.includes('/signup') ||
+                              url.includes('/forgot-password') ||
+                              url.includes('/forgot_password') ||
+                              url.includes('/send-signup-otp') ||
+                              url.includes('/verify-signup-otp') ||
+                              url.includes('/send-otp') ||
+                              url.includes('/verify-otp') ||
+                              url.includes('/password') ||
+                              preventRedirect;
+        
+        // Never redirect for auth/signup endpoints or if preventRedirect is true
+        if (isAuthEndpoint) {
+            console.warn(`API Error ${status} (auth endpoint - not redirecting):`, {
+                url: response.url,
+                status: response.status,
+                statusText: response.statusText,
+                customMessage
+            });
+            return; // Exit early, don't redirect
+        }
+        
         let errorPage = '';
 
         switch (status) {
@@ -53,7 +80,7 @@ class SafeBiteErrorHandler {
             customMessage
         });
 
-        // Redirect to error page (only for critical errors, not 404s)
+        // Redirect to error page (only for critical errors, not 404s or auth endpoints)
         window.location.href = errorPage;
     }
 
