@@ -1337,7 +1337,7 @@ class SensorDashboard {
     return iconMap[status] || 'question-circle';
   }
 
-  // Perform ML prediction using existing training data
+  // Perform AI prediction using existing training data
   async performMLPrediction(foodId, foodName, foodCategory, sensorData, actualOutcome = null, isTrainingData = false) {
     const callId = Math.random().toString(36).slice(2, 8);
     console.log(`🔍 [${callId}] performMLPrediction called with:`, { foodId, foodName, foodCategory, isTrainingData });
@@ -1362,7 +1362,7 @@ class SensorDashboard {
         is_training_data: isTrainingData ? 1 : 0
       };
 
-      console.log(`🔍 [${callId}] Performing ML prediction:`, predictionData);
+      console.log(`🔍 [${callId}] Performing AI prediction:`, predictionData);
 
       const response = await fetch('/api/ml/predict', {
         method: 'POST',
@@ -1374,17 +1374,17 @@ class SensorDashboard {
       });
 
       const result = await response.json();
-      console.log(`🔍 [${callId}] ML prediction API response:`, result);
+      console.log(`🔍 [${callId}] AI prediction API response:`, result);
       
       if (result.success) {
-        console.log(`✅ [${callId}] ML prediction successful:`, result);
+        console.log(`✅ [${callId}] AI prediction successful:`, result);
         return { success: true, prediction: result.prediction };
       } else {
-        console.error(`❌ [${callId}] ML prediction failed:`, result.error);
+        console.error(`❌ [${callId}] AI prediction failed:`, result.error);
         return { success: false, error: result.error || 'Prediction failed' };
       }
     } catch (error) {
-      console.error('Error performing ML prediction:', error);
+      console.error('Error performing AI prediction:', error);
       return { success: false, error: error.message };
     }
   }
@@ -2226,15 +2226,15 @@ class SensorDashboard {
     }
   }
 
-  // Show ML prediction results in custom modal (SmartSense-aligned)
+  // Show AI prediction results in custom modal (SmartSense-aligned)
   showMLPredictionResults(foodName, prediction) {
     const modal = document.getElementById('mlPredictionResultsModal');
     if (!modal) {
-      console.error('ML Prediction Results Modal not found');
+      console.error('AI Prediction Results Modal not found');
       return;
     }
 
-    console.log('Showing ML prediction results:', { foodName, prediction });
+    console.log('Showing AI prediction results:', { foodName, prediction });
 
     // Populate the modal with prediction data
     const foodElement = document.getElementById('mlResultFood');
@@ -2269,7 +2269,7 @@ class SensorDashboard {
         statusElement.classList.add('status-at-risk');
       }
 
-      // Create scanner alert for caution/unsafe conditions using ML prediction data
+      // Create scanner alert for caution/unsafe conditions using AI prediction data
       try {
         const isCaution = status.includes('caution') || status.includes('risk');
         const isUnsafe = status.includes('unsafe') || status.includes('spoiled');
@@ -2278,7 +2278,7 @@ class SensorDashboard {
                         localStorage.getItem('sessionToken') || 
                         localStorage.getItem('session_token');
           if (token && prediction?.prediction_id) {
-            // Fetch ML prediction data using prediction ID
+            // Fetch AI prediction data using prediction ID
             const fetchMLPredictionData = async () => {
               try {
                 const response = await fetch(`/api/ml-prediction/${prediction.prediction_id}`, {
@@ -2288,18 +2288,18 @@ class SensorDashboard {
                 
                 if (response.ok) {
                   const mlData = await response.json();
-                  console.log('📊 Fetched ML prediction data:', mlData);
+                  console.log('📊 Fetched AI prediction data:', mlData);
                   
-                  // Use actual ML prediction data for alert
+                  // Use actual AI prediction data for alert
                   const actualSpoilageStatus = mlData.data?.spoilage_status || prediction?.spoilage_status || status;
                   const actualSpoilageProbability = mlData.data?.spoilage_probability || prediction?.spoilage_probability || 75;
                   const actualConfidenceScore = mlData.data?.confidence_score || prediction?.confidence_score || 75;
                   
-                  // Only create alert if ML prediction shows unsafe or caution
+                  // Only create alert if AI prediction shows unsafe or caution
                   if (actualSpoilageStatus === 'unsafe' || actualSpoilageStatus === 'caution') {
                     const body = {
                       food_id: prediction?.food_id || null,
-                      message: `ML Prediction: ${foodName} is ${actualSpoilageStatus.toUpperCase()} (${Math.round(actualSpoilageProbability)}% probability)`,
+                      message: `AI Prediction: ${foodName} is ${actualSpoilageStatus.toUpperCase()} (${Math.round(actualSpoilageProbability)}% probability)`,
                       alert_level: actualSpoilageStatus === 'unsafe' ? 'High' : 'Medium',
                       alert_type: 'ml_prediction',
                       ml_prediction_id: prediction.prediction_id,
@@ -2330,20 +2330,20 @@ class SensorDashboard {
                     });
                     
                     if (!alertResponse.ok) {
-                      console.warn('ML prediction alert insert failed with status:', alertResponse.status);
+                      console.warn('AI prediction alert insert failed with status:', alertResponse.status);
                     } else {
-                      console.log('✅ ML prediction alert created successfully for', actualSpoilageStatus);
+                      console.log('✅ AI prediction alert created successfully for', actualSpoilageStatus);
                     }
                   } else {
-                    console.log('✅ No alert needed - ML prediction shows safe status:', actualSpoilageStatus);
+                    console.log('✅ No alert needed - AI prediction shows safe status:', actualSpoilageStatus);
                   }
                 } else {
-                  console.warn('Failed to fetch ML prediction data, using fallback');
-                  // Fallback to original logic if ML prediction fetch fails
+                  console.warn('Failed to fetch AI prediction data, using fallback');
+                  // Fallback to original logic if AI prediction fetch fails
                   this.createFallbackAlert(foodName, prediction, token, isUnsafe);
                 }
               } catch (error) {
-                console.warn('Error fetching ML prediction data:', error);
+                console.warn('Error fetching AI prediction data:', error);
                 // Fallback to original logic
                 this.createFallbackAlert(foodName, prediction, token, isUnsafe);
               }
@@ -2351,11 +2351,11 @@ class SensorDashboard {
             
             fetchMLPredictionData();
           } else {
-            console.warn('Skipping ML prediction alert: no auth token or prediction ID');
+            console.warn('Skipping AI prediction alert: no auth token or prediction ID');
           }
         }
       } catch (error) {
-        console.warn('Error in ML prediction alert creation:', error);
+        console.warn('Error in AI prediction alert creation:', error);
       }
     }
     
@@ -2764,7 +2764,7 @@ class SensorDashboard {
       console.log('🔍 Formatted prediction result:', prediction);
       
       if (prediction.success) {
-        // Show ML prediction results in custom modal
+        // Show AI prediction results in custom modal
         this.showMLPredictionResults(foodName, prediction.prediction);
         foodSelect.value = '';
         
@@ -2817,7 +2817,7 @@ class SensorDashboard {
         return;
       }
       
-      console.error('ML prediction error:', error);
+      console.error('AI prediction error:', error);
       if (typeof showErrorToast === 'function') showErrorToast('Prediction error');
       // Complete scan session even on error
       try {
@@ -3587,7 +3587,7 @@ class SensorDashboard {
     
     const body = {
       food_id: prediction?.food_id || null,
-      message: `ML Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageScore)}% probability)`,
+      message: `AI Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageScore)}% probability)`,
       alert_level: spoilageStatus === 'unsafe' ? 'High' : 'Medium',
       alert_type: 'ml_prediction',
       ml_prediction_id: prediction?.prediction_id || null,
@@ -3982,8 +3982,8 @@ class SensorDashboard {
         throw new Error('Failed to store training data: ' + trainingResult.error);
       }
       
-      // Step 2: Generate ML prediction
-      console.log('Generating ML prediction...');
+      // Step 2: Generate AI prediction
+      console.log('Generating AI prediction...');
       const predictionResponse = await fetch('/api/ml-workflow/predict', {
         method: 'POST',
         headers: {
@@ -4014,7 +4014,7 @@ class SensorDashboard {
 
       const predictionResult = await predictionResponse.json();
       if (!predictionResult.success) {
-        throw new Error('Failed to generate ML prediction: ' + predictionResult.error);
+        throw new Error('Failed to generate AI prediction: ' + predictionResult.error);
       }
 
       // Step 3: Update food item with sensor data

@@ -178,9 +178,9 @@ window.initConfigPage = function() {
       btn.onclick = function() {
         const foodName = this.getAttribute('data-name');
         if (!foodName) return;
-        if (!confirm(`Delete all ML prediction data for "${foodName}"? This will remove all scan history for this food item.`)) return;
+        if (!confirm(`Delete all AI prediction data for "${foodName}"? This will remove all scan history for this food item.`)) return;
         
-        // Delete ML predictions for this food item
+        // Delete AI predictions for this food item
         fetch(`/api/users/ml-predictions/${encodeURIComponent(foodName)}`, {
           method: 'DELETE',
           headers: {
@@ -194,10 +194,10 @@ window.initConfigPage = function() {
             window.modalSystem.success(`Successfully deleted ${j.deleted_count} scan records for ${foodName}`, 'Records Deleted');
             loadFoodItems(); // Reload the list
           } else {
-            window.modalSystem.error(j && j.message ? j.message : 'Failed to delete ML prediction data', 'Delete Failed');
+            window.modalSystem.error(j && j.message ? j.message : 'Failed to delete AI prediction data', 'Delete Failed');
           }
         })
-        .catch(() => window.modalSystem.error('Failed to delete ML prediction data', 'Delete Failed'));
+        .catch(() => window.modalSystem.error('Failed to delete AI prediction data', 'Delete Failed'));
       };
     });
   }
@@ -208,7 +208,7 @@ window.initConfigPage = function() {
   }
 
   function loadFoodItems() {
-    // Load ML predictions instead of food items
+    // Load AI predictions instead of food items
     fetch('/api/users/ml-predictions', { headers: { ...authHeader() }})
       .then(r => r.json())
       .then(j => {

@@ -68,10 +68,10 @@ window.initAnalysisPage = function() {
       </div>`;
   }
 
-  // Populate Food Type options from ML prediction data - using SmartSense Scanner approach
+  // Populate Food Type options from AI prediction data - using SmartSense Scanner approach
   async function populateFoodItems() {
     try {
-      console.log('Populating food items from ML prediction data...');
+      console.log('Populating food items from AI prediction data...');
       const foodTypeSelect = document.getElementById('analysisProductType');
       if (!foodTypeSelect) {
         console.log('Food type select not found');
@@ -87,7 +87,7 @@ window.initAnalysisPage = function() {
         return;
       }
       
-      console.log('Fetching food types from ML prediction data...');
+      console.log('Fetching food types from AI prediction data...');
       const res = await fetch('/api/ml/food-types', {
         method: 'GET',
         headers: {
@@ -96,10 +96,10 @@ window.initAnalysisPage = function() {
       });
       
       const data = await res.json();
-      console.log('ML prediction food types API response:', data);
+      console.log('AI prediction food types API response:', data);
       
       if (data && data.success && Array.isArray(data.foodTypes) && data.foodTypes.length) {
-        console.log(`Found ${data.foodTypes.length} food types from ML prediction data`);
+        console.log(`Found ${data.foodTypes.length} food types from AI prediction data`);
         // Clear existing options
         foodTypeSelect.innerHTML = '';
         
@@ -109,7 +109,7 @@ window.initAnalysisPage = function() {
         placeholder.value = '';
         foodTypeSelect.appendChild(placeholder);
         
-        // Add food names from ML prediction data
+        // Add food names from AI prediction data
         data.foodTypes.forEach(foodType => {
           const opt = document.createElement('option');
           opt.textContent = foodType.food_name;
@@ -167,7 +167,7 @@ window.initAnalysisPage = function() {
       }
     });
     
-    // When selecting a food, attempt to autofill sensor data from ML prediction data
+    // When selecting a food, attempt to autofill sensor data from AI prediction data
     foodTypeSelect.addEventListener('change', async function() {
       const foodName = this.value;
       const nameFromOption = this.selectedOptions && this.selectedOptions[0] ? this.selectedOptions[0].dataset.name : '';
@@ -192,7 +192,7 @@ window.initAnalysisPage = function() {
                              localStorage.getItem('sessionToken') || 
                              localStorage.getItem('session_token');
         
-        // Fetch latest ML prediction data for this food type to get sensor readings
+        // Fetch latest AI prediction data for this food type to get sensor readings
         const url = `/api/ml/latest-sensor-data?food_name=${encodeURIComponent(foodName)}`;
         const res = await fetch(url, {
           method: 'GET',
@@ -205,12 +205,12 @@ window.initAnalysisPage = function() {
         console.log('Latest sensor data response:', data);
         
         if (data && data.success && data.sensorData) {
-          // Auto-fill sensor values from the latest ML prediction data
+          // Auto-fill sensor values from the latest AI prediction data
           const tempEl = document.getElementById('analysisTemp');
           const humEl = document.getElementById('analysisHumidity');
           const gasEl = document.getElementById('analysisGas');
 
-          // Map sensor data from ML prediction
+          // Map sensor data from AI prediction
           if (data.sensorData.temperature !== null && data.sensorData.temperature !== undefined) {
             if (tempEl) tempEl.value = data.sensorData.temperature;
             console.log('Auto-filled temperature:', data.sensorData.temperature);
@@ -226,7 +226,7 @@ window.initAnalysisPage = function() {
             console.log('Auto-filled gas:', data.sensorData.gas_level);
           }
           
-          console.log('Sensor data auto-filled successfully from ML prediction data');
+          console.log('Sensor data auto-filled successfully from AI prediction data');
         } else {
           console.log('No sensor data available for this food type');
           // Show message to user

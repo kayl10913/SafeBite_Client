@@ -192,7 +192,7 @@ class AlertsManager {
   getAlertTypeLabel(type) {
     const t = String(type || '').toLowerCase();
     if (t === 'scanner') return 'Scanner';
-    if (t === 'ml_prediction') return 'AI/ML';
+    if (t === 'ml_prediction') return 'AI';
     if (t === 'system') return 'System';
     if (t === 'device') return 'Device';
     if (t === 'sensor') return 'Sensor';

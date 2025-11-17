@@ -247,7 +247,7 @@ class SensorAnalyticsConnector {
             });
         }
 
-        // Populate food type options from ML prediction data
+        // Populate food type options from AI prediction data
         this.populateFoodTypeOptions();
     }
 
@@ -261,7 +261,7 @@ class SensorAnalyticsConnector {
             foodTypeSelect.innerHTML = '';
             if (allOption) foodTypeSelect.appendChild(allOption);
 
-            // Fetch unique food types from ML prediction data
+            // Fetch unique food types from AI prediction data
             const response = await fetch('/api/ml/food-types', {
                 headers: {
                     'Authorization': `Bearer ${this.api.getAuthToken()}`
@@ -271,7 +271,7 @@ class SensorAnalyticsConnector {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && Array.isArray(data.foodTypes)) {
-                    // Add unique food types from ML prediction data
+                    // Add unique food types from AI prediction data
                     data.foodTypes.forEach(foodType => {
                         const option = document.createElement('option');
                         option.value = foodType.food_name;
@@ -281,7 +281,7 @@ class SensorAnalyticsConnector {
                     });
                 }
             } else {
-                console.warn('Failed to fetch food types from ML prediction data');
+                console.warn('Failed to fetch food types from AI prediction data');
                 // Fallback to static options if API fails
                 this.addFallbackFoodTypes(foodTypeSelect);
             }
@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Sensor Analytics Connector loaded');
 });
 
-//  ML Predictions Manager for SPA ML pages
+//  AI Predictions Manager for SPA ML pages
 (function(){
     if (!window.mlPredictionsManager) {
         window.mlPredictionsManager = {
@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     set('mlKpiAccuracy', accuracyValue != null ? `${(accuracyValue * 100).toFixed(1)}%` : '--%');
                     set('mlKpiAccuracySub', accuracySub);
 
-                    // Removed Recent ML Predictions section per request
+                    // Removed Recent AI Predictions section per request
                     await this._loadSamples();
                     this.setupEventListeners();
                     console.log('ML overview loaded successfully');
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             async _loadRecent(){
                 try {
-                    console.log('Loading recent ML predictions...');
+                    console.log('Loading recent AI predictions...');
                     const res = await fetch('/api/ml/analytics/recent?limit=5', { headers: this._authHeaders() });
                     const json = await res.json();
                     console.log('Recent predictions API response:', json);
@@ -1284,26 +1284,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 const exportBtn = document.getElementById('mlExport');
                 if (exportBtn) exportBtn.addEventListener('click', ()=> alert('Export coming soon'));
                 
-                // ML Predictions Update button
+                // AI Predictions Update button
                 const mlUpdateBtn = document.getElementById('mlUpdate');
                 if (mlUpdateBtn) {
                     mlUpdateBtn.addEventListener('click', async () => {
                         try {
-                            console.log('🔄 Updating ML Predictions data...');
+                            console.log('🔄 Updating AI Predictions data...');
                             mlUpdateBtn.disabled = true;
                             mlUpdateBtn.innerHTML = '<span>🔄</span>Updating...';
                             
-                            // Refresh ML predictions data
+                            // Refresh AI predictions data
                             if (this.loadDetail) {
                                 await this.loadDetail();
                             }
                             
                             // Show success message
-                            this.showToast('ML Predictions data updated successfully!', 'success');
+                            this.showToast('AI Predictions data updated successfully!', 'success');
                             
                         } catch (error) {
-                            console.error('Error updating ML predictions:', error);
-                            this.showToast('Error updating ML predictions data', 'error');
+                            console.error('Error updating AI predictions:', error);
+                            this.showToast('Error updating AI predictions data', 'error');
                         } finally {
                             mlUpdateBtn.disabled = false;
                             mlUpdateBtn.innerHTML = '<span>🔄</span>Update';
@@ -1352,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             async loadDetail(){
                 try {
-                    console.log('Loading ML predictions detail data...');
+                    console.log('Loading AI predictions detail data...');
                     
                     // Get filter values
                     const search = document.getElementById('mlSearch')?.value || '';
@@ -1377,29 +1377,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     const url = `/api/ml/analytics/detail?${params.toString()}`;
-                    console.log('Fetching ML predictions from:', url);
+                    console.log('Fetching AI predictions from:', url);
                     
                     const response = await fetch(url, { headers: this._authHeaders() });
                     const result = await response.json();
                     
                     if (!result.success) {
-                        throw new Error(result.message || 'Failed to load ML predictions');
+                        throw new Error(result.message || 'Failed to load AI predictions');
                     }
                     
                     // Update the table with new data
                     this.updateMlPredictionsTable(result.data || []);
                     
-                    console.log('ML predictions detail loaded successfully');
+                    console.log('AI predictions detail loaded successfully');
                     
                 } catch (error) {
-                    console.error('Error loading ML predictions detail:', error);
-                    this.showToast('Error loading ML predictions data', 'error');
+                    console.error('Error loading AI predictions detail:', error);
+                    this.showToast('Error loading AI predictions data', 'error');
                 }
             },
             updateMlPredictionsTable(data) {
                 const tbody = document.querySelector('#ml-predictions-detail-template tbody, .admin-log-table tbody');
                 if (!tbody) {
-                    console.error('ML predictions table body not found');
+                    console.error('AI predictions table body not found');
                     return;
                 }
                 
@@ -1407,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (!data || data.length === 0) {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td colspan="7" style="text-align: center; padding: 20px; color: #666;">No ML predictions found</td>';
+                    row.innerHTML = '<td colspan="7" style="text-align: center; padding: 20px; color: #666;">No AI predictions found</td>';
                     tbody.appendChild(row);
                     return;
                 }

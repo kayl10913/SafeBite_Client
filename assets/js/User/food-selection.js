@@ -768,14 +768,14 @@ class FoodSelection {
     }
   }
 
-  // Create an alert for SmartSense Scanner using ML prediction data
+  // Create an alert for SmartSense Scanner using AI prediction data
   async createScannerAlert(foodName, mlPredictionData, sensorData) {
     try {
       console.log('🚨 ML-Based Alert Creation Check:');
       console.log('  Food Name:', foodName);
-      console.log('  ML Prediction Data:', mlPredictionData);
+      console.log('  AI Prediction Data:', mlPredictionData);
       
-      // Use ML prediction spoilage status instead of table condition
+        // Use AI prediction spoilage status instead of table condition
       const spoilageStatus = mlPredictionData?.spoilage_status || mlPredictionData?.status;
       const spoilageProbability = mlPredictionData?.spoilage_probability || mlPredictionData?.probability || 0;
       const confidenceScore = mlPredictionData?.confidence_score || mlPredictionData?.confidence || 0;
@@ -785,7 +785,7 @@ class FoodSelection {
       console.log('  Should Create Alert:', spoilageStatus && spoilageStatus !== 'safe');
       
       if (!spoilageStatus || spoilageStatus === 'safe') {
-        console.log('✅ Skipping alert creation - ML prediction shows safe');
+        console.log('✅ Skipping alert creation - AI prediction shows safe');
         return;
       }
       
@@ -811,7 +811,7 @@ class FoodSelection {
 
       const body = {
         food_id: mlPredictionData?.food_id || null,
-        message: `ML Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageProbability)}% probability)`,
+        message: `AI Prediction: ${foodName} is ${spoilageStatus.toUpperCase()} (${Math.round(spoilageProbability)}% probability)`,
         alert_level: alertLevel,
         alert_type: 'ml_prediction',
         ml_prediction_id: mlPredictionData?.prediction_id || null,
@@ -985,7 +985,7 @@ class FoodSelection {
         // Continue anyway - the blocking will just prevent Arduino data
       }
 
-      // Start polling sensors and trigger ML prediction → expiry update
+      // Start polling sensors and trigger AI prediction → expiry update
       this.isScanningInProgress = true;
       this.startSensorPollingAndPredict();
     } else {
@@ -1187,7 +1187,7 @@ class FoodSelection {
         return;
       }
       
-      console.log('🔍 Smart Training system proceeding with ML prediction');
+      console.log('🔍 Smart Training system proceeding with AI prediction');
       
       // create a new idempotency id for this scan
       this._scanId = `scan_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
@@ -1382,7 +1382,7 @@ class FoodSelection {
       // Prefer estimatedShelfLifeHours if provided; otherwise map risk
       const expiry = this.deriveExpiryFromAi(aiResult);
 
-      // Store expiry for use in ML prediction
+      // Store expiry for use in AI prediction
       this.predictedExpiry = expiry;
 
       // Check if scanning was cancelled before updating expiry
@@ -1622,7 +1622,7 @@ class FoodSelection {
     
     return `${yyyy}-${mm}-${dd}`;
   }
-//---derive expiry from ML prediction---
+//---derive expiry from AI prediction---
   deriveExpiryDate(prediction) {
     // Heuristic mapping from spoilage status to days remaining
     const now = new Date();
@@ -2167,7 +2167,7 @@ class FoodSelection {
         }
       }
       
-      // Get ML predictions if available
+      // Get AI predictions if available
       if (mlPredictions) {
         const predictions = JSON.parse(mlPredictions);
         if (Array.isArray(predictions)) {
@@ -2815,7 +2815,7 @@ class FoodSelection {
     });
   }
 
-  // Automatically perform ML prediction with scanned data
+  // Automatically perform AI prediction with scanned data
   async autoTrainMLModel(sensorData) {
     // Check if scanning was cancelled before starting ML workflow
     if (this.isScanningCancelled) {
@@ -2845,7 +2845,7 @@ class FoodSelection {
     }
 
     try {
-      console.log('Performing ML prediction with sensor data:', sensorData);
+      console.log('Performing AI prediction with sensor data:', sensorData);
       
       // First check if ML data already exists for this food
       const mlDataExists = await this.checkExistingMLData(this.selectedFood.name, this.selectedFood.category);
@@ -2902,7 +2902,7 @@ class FoodSelection {
         `;
       }
 
-      // Perform ML prediction using the scanned data
+          // Perform AI prediction using the scanned data
       if (this.selectedFood && sensorData) {
         // Create or find food item for Smart Training
         let foodId = null;
@@ -3010,7 +3010,7 @@ class FoodSelection {
         // Fire alert immediately for caution/unsafe conditions
         if (finalCondition === 'caution' || finalCondition === 'unsafe') {
           console.log('Creating SmartSense alert for condition:', finalCondition, 'score:', assessed.spoilageScore);
-          // Create a temporary ML prediction data object for alert creation
+          // Create a temporary AI prediction data object for alert creation
           const tempMLData = {
             spoilage_status: finalCondition,
             spoilage_probability: assessed.spoilageScore,
@@ -3055,7 +3055,7 @@ class FoodSelection {
           
           console.log('📊 Stored validated analysis result:', this._lastAnalysisResult);
           
-          // Create alert using actual ML prediction results by fetching from database
+          // Create alert using actual AI prediction results by fetching from database
           if (mlWorkflowResult.prediction_id) {
             try {
               const token = this.getAuthToken();
@@ -3067,7 +3067,7 @@ class FoodSelection {
                 
                 if (response.ok) {
                   const mlData = await response.json();
-                  console.log('📊 Fetched ML prediction data for alert:', mlData);
+                  console.log('📊 Fetched AI prediction data for alert:', mlData);
                   
                   const mlPredictionData = {
                     spoilage_status: mlData.data?.spoilage_status || mlWorkflowResult.spoilage_status,
@@ -3078,13 +3078,13 @@ class FoodSelection {
                     model: mlData.data?.model || 'ml_workflow'
                   };
                   
-                  // Only create alert if ML prediction indicates caution or unsafe
+                  // Only create alert if AI prediction indicates caution or unsafe
                   if (mlPredictionData.spoilage_status === 'caution' || mlPredictionData.spoilage_status === 'unsafe') {
                     console.log('Creating ML-based alert for spoilage status:', mlPredictionData.spoilage_status);
                     await this.createScannerAlert(this.selectedFood.name, mlPredictionData, sensorData);
                   }
                 } else {
-                  console.warn('Failed to fetch ML prediction data, using workflow result');
+                  console.warn('Failed to fetch AI prediction data, using workflow result');
                   // Fallback to workflow result
                   const mlPredictionData = {
                     spoilage_status: mlWorkflowResult.spoilage_status,
@@ -3102,7 +3102,7 @@ class FoodSelection {
                 }
               }
             } catch (error) {
-              console.warn('Error fetching ML prediction data:', error);
+              console.warn('Error fetching AI prediction data:', error);
             }
           }
           
@@ -3239,7 +3239,7 @@ class FoodSelection {
       }
       
     } catch (error) {
-      console.error('Error in ML prediction:', error);
+      console.error('Error in AI prediction:', error);
       if (trainingStatus) {
         trainingStatus.innerHTML = `
           <div class="training-status-header">
@@ -3656,8 +3656,8 @@ class FoodSelection {
       console.log('  Gas Risk Level:', trainingResult.gas_risk_level);
       console.log('  Provided Status:', spoilageStatus);
 
-      // Step 2: Generate ML prediction
-      console.log('Generating ML prediction...', {
+      // Step 2: Generate AI prediction
+      console.log('Generating AI prediction...', {
         food_id: foodId,
         food_name: foodName,
         food_category: foodCategory,
@@ -3712,7 +3712,7 @@ class FoodSelection {
       console.log('Prediction response:', predictionResult);
       
       if (!predictionResult.success) {
-        throw new Error('Failed to generate ML prediction: ' + predictionResult.error);
+        throw new Error('Failed to generate AI prediction: ' + predictionResult.error);
       }
 
       // Step 3: Update food item with sensor data and scan status
@@ -4217,7 +4217,7 @@ class FoodSelection {
     }
   }
 
-  // Perform ML prediction using existing training data
+  // Perform AI prediction using existing training data
   async performMLPrediction(foodId, foodName, foodCategory, sensorData, actualOutcome = null, isTrainingData = false) {
     try {
       const sessionToken = localStorage.getItem('jwt_token') || 
@@ -4245,7 +4245,7 @@ class FoodSelection {
         is_training_data: isTrainingData ? 1 : 0
       };
 
-      console.log('Performing ML prediction:', predictionData);
+      console.log('Performing AI prediction:', predictionData);
 
       const response = await fetch('/api/ml/predict', {
         method: 'POST',
@@ -4259,14 +4259,14 @@ class FoodSelection {
       const result = await response.json();
       
       if (result.success) {
-        console.log('ML prediction successful:', result);
+        console.log('AI prediction successful:', result);
         return { success: true, prediction: result.prediction };
       } else {
-        console.error('ML prediction failed:', result.error);
+        console.error('AI prediction failed:', result.error);
         return { success: false, error: result.error || 'Prediction failed' };
       }
     } catch (error) {
-      console.error('Error performing ML prediction:', error);
+      console.error('Error performing AI prediction:', error);
       return { success: false, error: error.message };
     }
   }
