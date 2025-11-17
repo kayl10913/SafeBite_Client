@@ -84,8 +84,9 @@ class SafeBiteErrorHandler {
             return response;
         } catch (error) {
             console.error('Network error:', error);
-            // Redirect to 500 error page for network issues
-            window.location.href = 'error/500';
+            // Don't redirect for network errors - they're often temporary
+            // Just log and return null
+            console.warn('Network error occurred, but not redirecting to prevent disruption');
             return null;
         }
     }
@@ -99,30 +100,41 @@ class SafeBiteErrorHandler {
         if (error.status) {
             this.handleApiError({ status: error.status });
         } else {
-            // Unknown error - redirect to 500 page
-            window.location.href = 'error/500';
+            // Unknown error - log but don't redirect to prevent disruption
+            console.warn('Unknown error occurred, but not redirecting to prevent disruption');
         }
     }
 
     /**
      * Initialize error handling for the page
+     * NOTE: Global error handlers are disabled to prevent disruption during normal usage.
+     * Only explicit API error handling will trigger redirects.
      */
     init() {
         // Global error handler for unhandled promise rejections
+        // DISABLED: Don't automatically redirect on promise rejections
+        // This prevents disruption when typing in forms or during normal interactions
         window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            if (event.reason && event.reason.status) {
-                this.handleApiError(event.reason);
-            }
+            console.warn('Unhandled promise rejection (logged, not redirecting):', event.reason);
+            // Don't redirect - just log the error
+            // Only explicit API error handling in makeApiRequest will trigger redirects
         });
 
         // Global error handler for JavaScript errors
+        // DISABLED: Don't automatically redirect on JavaScript errors
+        // This prevents disruption when typing in password fields or during form interactions
         window.addEventListener('error', (event) => {
-            console.error('JavaScript error:', event.error);
-            // Only redirect to error page for critical errors
-            if (event.error && event.error.name === 'TypeError') {
-                window.location.href = 'error/500';
-            }
+            // Only log errors, don't redirect
+            // This prevents the 404 error page from appearing when typing in password fields
+            console.warn('JavaScript error (logged, not redirecting):', {
+                message: event.error ? event.error.message : event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+            // Don't redirect - just log the error
+            // Only explicit API error handling in makeApiRequest will trigger redirects
         });
     }
 }
