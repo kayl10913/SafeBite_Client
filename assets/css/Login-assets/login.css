@@ -438,11 +438,12 @@ input[type="password"] {
     overflow: hidden;
 }
 
-.signin-btn:not(:disabled):not(.loading) {
+.signin-btn:not(:disabled):not(.loading):not(.btn-disabled) {
     cursor: pointer !important;
 }
 
-.signin-btn:disabled {
+.signin-btn:disabled,
+.signin-btn.btn-disabled {
     cursor: not-allowed !important;
 }
 
@@ -1165,6 +1166,19 @@ body::before {
 .btn-disabled:hover {
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Override cursor when button is enabled (not disabled) - must be more specific than .btn-disabled */
+.signin-btn:not(:disabled):not(.btn-disabled):not(.loading),
+.signin-btn.btn-enabled:not(:disabled):not(.btn-disabled),
+.signin-btn:not(:disabled).btn-enabled {
+    cursor: pointer !important;
+}
+
+/* Ensure enabled button always shows pointer cursor */
+#signupSubmitBtn:not(:disabled):not(.btn-disabled),
+#signupSubmitBtn.btn-enabled:not(:disabled) {
+    cursor: pointer !important;
 }
 
 /* Progress Indicator */

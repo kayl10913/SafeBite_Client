@@ -2164,10 +2164,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = false;
                 submitButton.style.opacity = '1';
                 submitButton.style.cursor = 'pointer';
+                submitButton.classList.remove('btn-disabled');
+                submitButton.classList.add('btn-enabled');
             } else {
                 submitButton.disabled = true;
                 submitButton.style.opacity = '0.6';
                 submitButton.style.cursor = 'not-allowed';
+                submitButton.classList.add('btn-disabled');
+                submitButton.classList.remove('btn-enabled');
             }
         }
     }
