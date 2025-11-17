@@ -2433,7 +2433,7 @@ class FoodSelection {
     const steps = [
       { id: 1, delay: 300, text: 'Sensor data collected' },
       { id: 2, delay: 800, text: statusText },
-      { id: 3, delay: 1300, text: 'ML training data uploaded to database' },
+      { id: 3, delay: 1300, text: 'Sensor Data uploaded to database' },
       { id: 4, delay: 1800, text: predictionText },
       { id: 5, delay: 2300, text: confidenceText },
       { id: 6, delay: 2800, text: 'AI Insight: AI analysis completed' }
@@ -2514,7 +2514,7 @@ class FoodSelection {
       if (header) {
         header.innerHTML = `
           <h3>🎉 Smart Training Complete!</h3>
-          <p>New ML training data created and uploaded to database</p>
+          <p>New Sensor Data created and uploaded to database</p>
         `;
       }
       
@@ -2827,22 +2827,6 @@ class FoodSelection {
     this.showAnalysisLoading();
 
     const trainingStatus = document.getElementById('autoTrainingStatus');
-    
-    if (trainingStatus) {
-      trainingStatus.style.display = 'block';
-      trainingStatus.innerHTML = `
-        <div class="training-status-header">
-          <h4>🔍 Checking ML Data...</h4>
-          <p>Checking if training data already exists for this food</p>
-        </div>
-        <div class="training-status-items">
-          <div class="status-item">
-            <div class="circle-loading warning"></div>
-            <span>Checking existing ML data...</span>
-          </div>
-        </div>
-      `;
-    }
 
     try {
       console.log('Performing AI prediction with sensor data:', sensorData);
@@ -2855,13 +2839,13 @@ class FoodSelection {
         if (trainingStatus) {
           trainingStatus.innerHTML = `
             <div class="training-status-header">
-              <h4>✅ ML Data Already Exists</h4>
+              <h4>✅ AI Data Already Exists</h4>
               <p>Training data for ${this.selectedFood.name} is already available</p>
             </div>
             <div class="training-status-items">
               <div class="status-item">
                 <i class="bi bi-check-circle-fill text-success"></i>
-                <span>ML data found for ${this.selectedFood.name}</span>
+                <span>AI data found for ${this.selectedFood.name}</span>
               </div>
               <div class="status-item">
                 <i class="bi bi-info-circle text-info"></i>
@@ -2888,7 +2872,7 @@ class FoodSelection {
           <div class="training-status-items">
             <div class="status-item">
               <i class="bi bi-check-circle-fill text-success"></i>
-              <span>No existing ML data found</span>
+              <span>No existing AI data found</span>
             </div>
             <div class="status-item">
               <i class="bi bi-check-circle-fill text-success"></i>
@@ -2948,7 +2932,7 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-info-circle text-info"></i>
-                  <span>ML training data will not be uploaded</span>
+                  <span>Sensor Data will not be uploaded</span>
                 </div>
               </div>
             `;
@@ -3147,7 +3131,7 @@ class FoodSelection {
             trainingStatus.innerHTML = `
               <div class="training-status-header">
                 <h4>🤖 Smart Training Complete!</h4>
-                <p>New ML training data created and uploaded to database</p>
+                <p>New Sensor Data created and uploaded to database</p>
               </div>
               <div class="training-status-items">
                 <div class="status-item">
@@ -3160,7 +3144,7 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
-                  <span>ML training data uploaded to database</span>
+                  <span>Sensor Data uploaded to database</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
@@ -3213,7 +3197,7 @@ class FoodSelection {
             trainingStatus.innerHTML = `
               <div class="training-status-header">
                 <h4>⚠️ Training Data Created (Prediction Failed)</h4>
-                <p>ML data uploaded but prediction failed</p>
+                <p>AI data uploaded but prediction failed</p>
               </div>
               <div class="training-status-items">
                 <div class="status-item">
@@ -3226,7 +3210,7 @@ class FoodSelection {
                 </div>
                 <div class="status-item">
                   <i class="bi bi-check-circle-fill text-success"></i>
-                  <span>ML training data uploaded to database</span>
+                  <span>Sensor Data uploaded to database</span>
                 </div>
                 <div class="status-item">
                   <i class="bi bi-exclamation-triangle text-warning"></i>
