@@ -1175,9 +1175,19 @@ body::before {
     cursor: pointer !important;
 }
 
-/* Ensure enabled button always shows pointer cursor */
+/* Ensure enabled button always shows pointer cursor - highest specificity */
 #signupSubmitBtn:not(:disabled):not(.btn-disabled),
-#signupSubmitBtn.btn-enabled:not(:disabled) {
+#signupSubmitBtn.btn-enabled:not(:disabled),
+#signupSubmitBtn.btn-enabled:not(:disabled):hover,
+#signupSubmitBtn.signin-btn.btn-enabled:not(:disabled),
+button#signupSubmitBtn.btn-enabled:not(:disabled),
+button#signupSubmitBtn.signin-btn.btn-enabled:not(:disabled) {
+    cursor: pointer !important;
+}
+
+/* Force pointer cursor on hover for enabled button */
+#signupSubmitBtn.btn-enabled:hover,
+#signupSubmitBtn:not(:disabled):not(.btn-disabled):hover {
     cursor: pointer !important;
 }
 

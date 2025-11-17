@@ -1775,7 +1775,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.classList.add('btn-enabled');
                 submitBtn.classList.remove('btn-disabled');
                 submitBtn.style.cursor = 'pointer';
+                submitBtn.style.setProperty('cursor', 'pointer', 'important');
                 submitBtn.style.opacity = '1';
+                // Force cursor update
+                setTimeout(() => {
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitBtn.style.cursor = 'pointer';
+                        submitBtn.style.setProperty('cursor', 'pointer', 'important');
+                    }
+                }, 0);
             }
             return true;
         } else {
@@ -2187,8 +2195,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = false;
                 submitButton.style.opacity = '1';
                 submitButton.style.cursor = 'pointer';
+                submitButton.style.setProperty('cursor', 'pointer', 'important');
                 submitButton.classList.remove('btn-disabled');
                 submitButton.classList.add('btn-enabled');
+                // Force cursor update by removing and re-adding the style
+                setTimeout(() => {
+                    if (submitButton && !submitButton.disabled) {
+                        submitButton.style.cursor = 'pointer';
+                        submitButton.style.setProperty('cursor', 'pointer', 'important');
+                    }
+                }, 0);
             } else {
                 submitButton.disabled = true;
                 submitButton.style.opacity = '0.6';
