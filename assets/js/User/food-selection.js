@@ -2872,10 +2872,6 @@ class FoodSelection {
           <div class="training-status-items">
             <div class="status-item">
               <i class="bi bi-check-circle-fill text-success"></i>
-              <span>No existing AI data found</span>
-            </div>
-            <div class="status-item">
-              <i class="bi bi-check-circle-fill text-success"></i>
               <span>Sensor data collected</span>
             </div>
             <div class="status-item">
