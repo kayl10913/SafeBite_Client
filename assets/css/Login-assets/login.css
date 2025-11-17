@@ -438,6 +438,14 @@ input[type="password"] {
     overflow: hidden;
 }
 
+.signin-btn:not(:disabled):not(.loading) {
+    cursor: pointer !important;
+}
+
+.signin-btn:disabled {
+    cursor: not-allowed !important;
+}
+
 .signin-btn::before {
     content: '';
     position: absolute;

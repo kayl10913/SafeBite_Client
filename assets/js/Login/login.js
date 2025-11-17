@@ -1759,6 +1759,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = false;
                 submitBtn.classList.add('btn-enabled');
                 submitBtn.classList.remove('btn-disabled');
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.style.opacity = '1';
             }
             return true;
         } else {
@@ -1767,6 +1769,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('btn-disabled');
                 submitBtn.classList.remove('btn-enabled');
+                submitBtn.style.cursor = 'not-allowed';
+                submitBtn.style.opacity = '0.6';
             }
             return false;
         }
