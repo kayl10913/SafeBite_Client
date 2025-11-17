@@ -228,19 +228,22 @@ async function makeApiRequest(endpoint, options = {}) {
                                   endpoint.includes('/register') ||
                                   endpoint.includes('/signup');
             
-            // Use error handler for Hostinger + Render setup (but skip redirect for auth endpoints)
-            if (window.SafeBiteErrorHandler && !isAuthEndpoint) {
+            // Check if this is a password-related endpoint that shouldn't redirect
+            const isPasswordEndpoint = endpoint.includes('/password') || 
+                                      endpoint.includes('/verify-password');
+            
+            // Use error handler for Hostinger + Render setup
+            // Note: 404 errors are handled gracefully by the error handler (no redirect)
+            // Auth and password endpoints also won't redirect on errors
+            if (window.SafeBiteErrorHandler && !isAuthEndpoint && !isPasswordEndpoint) {
                 window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
-                // Return error object instead of null so login functions can access error message
-                return {
-                    success: false,
-                    error: errorMessage,
-                    message: errorMessage,
-                    status: response.status
-                };
+            } else if (window.SafeBiteErrorHandler && (isAuthEndpoint || isPasswordEndpoint)) {
+                // For auth and password endpoints, still log errors but don't redirect
+                // The error handler will handle 404s gracefully (no redirect)
+                window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
             }
             
-            // For auth endpoints, return error object without redirecting
+            // Return error object for all cases (auth endpoints, password endpoints, and others)
             return {
                 success: false,
                 error: errorMessage,

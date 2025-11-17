@@ -29,8 +29,15 @@ class SafeBiteErrorHandler {
                 errorPage = 'error/403';
                 break;
             case 404:
-                errorPage = 'error/404';
-                break;
+                // Don't redirect for 404 errors - they're often non-critical (missing endpoints, etc.)
+                // Just log the error instead
+                console.warn(`API 404 Error (non-critical):`, {
+                    url: response.url,
+                    status: response.status,
+                    statusText: response.statusText,
+                    customMessage
+                });
+                return; // Exit early, don't redirect
             case 500:
                 errorPage = 'error/500';
                 break;
@@ -46,7 +53,7 @@ class SafeBiteErrorHandler {
             customMessage
         });
 
-        // Redirect to error page
+        // Redirect to error page (only for critical errors, not 404s)
         window.location.href = errorPage;
     }
 
@@ -69,6 +76,7 @@ class SafeBiteErrorHandler {
             });
 
             if (!response.ok) {
+                // Handle error (404s won't redirect, other errors will)
                 this.handleApiError(response);
                 return null;
             }
