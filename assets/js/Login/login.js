@@ -1753,7 +1753,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const privacyAccepted = modalState.privacyRead;
         const submitBtn = document.getElementById('signupSubmitBtn');
         
-        if (termsAccepted && privacyAccepted) {
+        // Check password requirements as well
+        const signupPasswordInput = document.getElementById('signupPassword');
+        let passwordRequirementsMet = false;
+        if (signupPasswordInput) {
+            const password = signupPasswordInput.value;
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+            passwordRequirementsMet = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+        }
+        
+        const shouldBeEnabled = termsAccepted && privacyAccepted && passwordRequirementsMet;
+        
+        if (shouldBeEnabled) {
             // Enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -2154,13 +2169,21 @@ document.addEventListener('DOMContentLoaded', function() {
         let submitButton;
         
         if (type === 'signup') {
-            submitButton = document.querySelector('#signupForm .signin-btn');
+            submitButton = document.querySelector('#signupForm .signin-btn') || document.getElementById('signupSubmitBtn');
         } else if (type === 'reset') {
             submitButton = document.querySelector('#resetPasswordForm .signin-btn');
         }
         
         if (submitButton) {
-            if (requirementsMet) {
+            // For signup, also check if terms and privacy are accepted
+            let shouldBeEnabled = requirementsMet;
+            if (type === 'signup') {
+                const termsAccepted = modalState && modalState.termsRead;
+                const privacyAccepted = modalState && modalState.privacyRead;
+                shouldBeEnabled = requirementsMet && termsAccepted && privacyAccepted;
+            }
+            
+            if (shouldBeEnabled) {
                 submitButton.disabled = false;
                 submitButton.style.opacity = '1';
                 submitButton.style.cursor = 'pointer';
