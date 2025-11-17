@@ -232,18 +232,25 @@ async function makeApiRequest(endpoint, options = {}) {
             const isPasswordEndpoint = endpoint.includes('/password') || 
                                       endpoint.includes('/verify-password');
             
-            // Use error handler for Hostinger + Render setup
-            // Note: 404 errors are handled gracefully by the error handler (no redirect)
-            // Auth and password endpoints also won't redirect on errors
-            if (window.SafeBiteErrorHandler && !isAuthEndpoint && !isPasswordEndpoint) {
-                window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
-            } else if (window.SafeBiteErrorHandler && (isAuthEndpoint || isPasswordEndpoint)) {
-                // For auth and password endpoints, still log errors but don't redirect
-                // The error handler will handle 404s gracefully (no redirect)
+            // For auth and signup endpoints, NEVER redirect to error pages
+            // Just return the error object so the form can handle it gracefully
+            if (isAuthEndpoint || isPasswordEndpoint) {
+                // Don't call error handler at all for auth/signup endpoints
+                // Just return error object for form to handle
+                return {
+                    success: false,
+                    error: errorMessage,
+                    message: errorMessage,
+                    status: response.status
+                };
+            }
+            
+            // Use error handler for other endpoints (but 404s won't redirect anyway)
+            if (window.SafeBiteErrorHandler) {
                 window.SafeBiteErrorHandler.handleApiError(response, errorMessage);
             }
             
-            // Return error object for all cases (auth endpoints, password endpoints, and others)
+            // Return error object for all cases
             return {
                 success: false,
                 error: errorMessage,
@@ -261,7 +268,30 @@ async function makeApiRequest(endpoint, options = {}) {
     } catch (error) {
         console.error('API Request Error:', error);
         
-        // Use error handler for network errors
+        // Check if this is a signup/auth endpoint - don't redirect for these
+        const isAuthEndpoint = endpoint.includes('/login') || 
+                              endpoint.includes('/auth/login') || 
+                              endpoint.includes('/admin/login') ||
+                              endpoint.includes('/forgot-password') ||
+                              endpoint.includes('/forgot_password') ||
+                              endpoint.includes('/send-signup-otp') ||
+                              endpoint.includes('/verify-signup-otp') ||
+                              endpoint.includes('/send-otp') ||
+                              endpoint.includes('/verify-otp') ||
+                              endpoint.includes('/register') ||
+                              endpoint.includes('/signup');
+        
+        // Don't use error handler for auth/signup endpoints - just return error object
+        if (isAuthEndpoint) {
+            return {
+                success: false,
+                error: error.message || 'Network error occurred',
+                message: error.message || 'Network error occurred',
+                status: 0
+            };
+        }
+        
+        // Use error handler for network errors (but it won't redirect for network errors anymore)
         if (window.SafeBiteErrorHandler && !error.status) {
             window.SafeBiteErrorHandler.handleSafeBiteError(error, 'API Request');
             return null;
