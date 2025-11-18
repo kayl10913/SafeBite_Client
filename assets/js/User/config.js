@@ -181,7 +181,10 @@ window.initConfigPage = function() {
         if (!confirm(`Delete all AI prediction data for "${foodName}"? This will remove all scan history for this food item.`)) return;
         
         // Delete AI predictions for this food item
-        fetch(`/api/users/ml-predictions/${encodeURIComponent(foodName)}`, {
+        const deleteUrl = typeof buildApiUrl === 'function' 
+          ? buildApiUrl(`/api/users/ml-predictions/${encodeURIComponent(foodName)}`)
+          : `/api/users/ml-predictions/${encodeURIComponent(foodName)}`;
+        fetch(deleteUrl, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -209,7 +212,10 @@ window.initConfigPage = function() {
 
   function loadFoodItems() {
     // Load AI predictions instead of food items
-    fetch('/api/users/ml-predictions', { headers: { ...authHeader() }})
+    const fetchUrl = typeof buildApiUrl === 'function' 
+      ? buildApiUrl('/api/users/ml-predictions')
+      : '/api/users/ml-predictions';
+    fetch(fetchUrl, { headers: { ...authHeader() }})
       .then(r => r.json())
       .then(j => {
         const items = (j && j.success && Array.isArray(j.food_items)) ? j.food_items : [];
