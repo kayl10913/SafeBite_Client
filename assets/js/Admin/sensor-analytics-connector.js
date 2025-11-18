@@ -1871,6 +1871,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveBtn.textContent = 'Updating...';
                 
                 // Send data to backend
+                // Training model removed - using rule-based prediction instead
+                alert('Training model has been removed. The system now uses rule-based prediction instead of machine learning training.');
+                console.log('Training data update skipped - using rule-based prediction');
+                return;
+                
                 fetch(`/api/ml-training/update/${trainingId}`, {
                     method: 'PUT',
                     headers: {
@@ -2153,6 +2158,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     try {
                         // Call AI formatting endpoint
+                        // Training model removed - skip formatting
+                        console.log('Training data formatting skipped - using rule-based prediction');
+                        return;
+                        
                         const response = await fetch('/api/ml-training/format-env-factors', {
                             method: 'POST',
                             headers: {

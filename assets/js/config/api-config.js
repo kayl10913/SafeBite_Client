@@ -82,14 +82,12 @@ const API_CONFIG = {
             CHAT: '/api/ai/chat',
             ANALYSIS_HISTORY: '/api/ai/analysis-history',
             CHAT_HISTORY: '/api/ai/chat-history',
-            TRAINING: '/api/ai/training',
             FOOD_ANALYSIS: '/api/ai/food-analysis'
         },
         
         // ML endpoints
         ML: {
             PREDICTION: '/api/ml/prediction',
-            TRAINING: '/api/ml-training',
             MODELS: '/api/ml-models',
             WORKFLOW: '/api/ml-workflow',
             ANALYTICS: '/api/ml/analytics'

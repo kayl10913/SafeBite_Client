@@ -3421,51 +3421,11 @@ class FoodSelection {
     };
   }
 
-  // Create AI-powered training data from Smart Training scan
+  // Create AI-powered training data from Smart Training scan (DEPRECATED - using rule-based prediction)
   async createAITrainingData(foodName, foodCategory, sensorData) {
-    try {
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch('/api/ai/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_name: foodName,
-          food_category: foodCategory,
-          temperature: sensorData.temperature?.value,
-          humidity: sensorData.humidity?.value,
-          gas_level: sensorData.gas?.value,
-          sensor_data: {
-            temperature: sensorData.temperature,
-            humidity: sensorData.humidity,
-            gas: sensorData.gas,
-            timestamp: new Date().toISOString()
-          }
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('AI training data created successfully:', result);
-        return result;
-      } else {
-        console.error('Failed to create AI training data:', result.error);
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      console.error('Error creating AI training data:', error);
-      return { success: false, error: 'Network error' };
-    }
+    // Training model removed - using rule-based prediction instead
+    console.log('Training data creation skipped - using rule-based prediction');
+    return { success: true, message: 'Using rule-based prediction (training model removed)' };
   }
 
   // Get validated AI analysis that waits for backend validation to complete
@@ -3586,8 +3546,8 @@ class FoodSelection {
         throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
       }
 
-      // Step 1: Store training data
-      console.log('Storing training data...', {
+      // Training model removed - using rule-based prediction directly
+      console.log('Using rule-based prediction (training model removed)...', {
         food_name: foodName,
         food_category: foodCategory,
         temperature: temp,
@@ -3595,48 +3555,8 @@ class FoodSelection {
         gas_level: gas,
         spoilage_status: spoilageStatus
       });
-      
-      const trainingResponse = await fetch('/api/ml-workflow/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'X-Scan-Id': this._scanId || '',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_name: foodName,
-          food_category: foodCategory,
-          temperature: temp,
-          humidity: humidity,
-          gas_level: gas,
-          spoilage_status: spoilageStatus,
-          confidence_score: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          storage_conditions: {
-            temperature: temp,
-            humidity: humidity,
-            gas_level: gas,
-            timestamp: new Date().toISOString()
-          }
-        })
-      });
 
-      console.log('Training data response status:', trainingResponse.status);
-      const trainingResult = await trainingResponse.json();
-      console.log('Training data response:', trainingResult);
-      
-      if (!trainingResult.success) {
-        throw new Error('Failed to store training data: ' + trainingResult.error);
-      }
-      
-      // Log the actual training data status for debugging
-      console.log('🔍 Training Data Collection Debug:');
-      console.log('  Training ID:', trainingResult.training_id);
-      console.log('  Actual Spoilage Status:', trainingResult.actual_spoilage_status);
-      console.log('  Gas Risk Level:', trainingResult.gas_risk_level);
-      console.log('  Provided Status:', spoilageStatus);
-
-      // Step 2: Generate AI prediction
+      // Step 1: Generate rule-based prediction (no training data step)
       console.log('Generating AI prediction...', {
         food_id: foodId,
         food_name: foodName,
@@ -3757,15 +3677,13 @@ class FoodSelection {
       
       const result = {
         success: true,
-        training_id: trainingResult.training_id,
         prediction_id: predictionResult.prediction_id,
         spoilage_status: validatedSpoilageStatus, // Use validated AI result
         spoilage_probability: validatedConfidence,
         confidence_score: validatedConfidence,
         ai_risk_level: validatedRiskLevel, // Include original risk level
         display_override_status: spoilageStatus, // Keep original for comparison
-        actual_spoilage_status: trainingResult.actual_spoilage_status, // Training data status
-        gas_risk_level: trainingResult.gas_risk_level // Gas emission risk level
+        gas_risk_level: predictionResult.gas_emission_support?.risk_level || 'low' // Gas emission risk level from prediction
       };
       
       // Store the analysis result for use in modal and history
@@ -3783,47 +3701,11 @@ class FoodSelection {
     }
   }
 
-  // Create training data from Smart Training scan (fallback)
+  // Create training data from Smart Training scan (DEPRECATED - using rule-based prediction)
   async createTrainingData(foodName, foodCategory, sensorData, actualCondition) {
-    try {
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        throw new Error('Authentication required');
-      }
-
-      const trainingData = {
-        food_name: foodName,
-        food_category: foodCategory,
-        temperature: temp,
-        humidity: humidity,
-        gas_level: gas,
-        actual_spoilage_status: actualCondition,
-        data_source: 'sensor',
-        quality_score: 1.0
-      };
-
-      const response = await fetch('/api/ml/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(trainingData)
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('Training data created successfully:', result);
-      } else {
-        console.error('Failed to create training data:', result.error);
-      }
-    } catch (error) {
-      console.error('Error creating training data:', error);
-    }
+    // Training model removed - using rule-based prediction instead
+    console.log('Training data creation skipped - using rule-based prediction');
+    return { success: true, message: 'Using rule-based prediction (training model removed)' };
   }
 
   // Find existing pending food item or create new one

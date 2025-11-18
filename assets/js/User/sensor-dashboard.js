@@ -1157,65 +1157,11 @@ class SensorDashboard {
     }
   }
 
-  // Upload current sensor data for ML training
+  // Upload current sensor data for ML training (DEPRECATED - using rule-based prediction)
   async uploadMLTrainingData(foodId, status, notes = '') {
-    try {
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        console.error('No session token found');
-        return { success: false, error: 'Authentication required' };
-      }
-
-      // Get current sensor data
-      const sensorData = await this.getCurrentSensorData();
-      if (!sensorData) {
-        return { success: false, error: 'No sensor data available' };
-      }
-
-      // Prepare ML training data
-      const trainingData = {
-        food_id: foodId,
-        food_status: status,
-        temperature: sensorData.temperature?.value || null,
-        humidity: sensorData.humidity?.value || null,
-        gas_level: sensorData.gas?.value || null,
-        notes: notes,
-        timestamp: new Date().toISOString()
-      };
-
-      console.log('Uploading ML training data:', trainingData);
-
-      const response = await fetch('/api/ml/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(trainingData)
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('ML training data uploaded successfully');
-        
-        // Create alert for ML training completion
-        await this.createMLTrainingAlert(foodId, status, sensorData);
-        
-        // Update ML history
-        this.updateMLHistory();
-        return { success: true, data: result };
-      } else {
-        console.error('Failed to upload ML training data:', result.error);
-        return { success: false, error: result.error || 'Upload failed' };
-      }
-    } catch (error) {
-      console.error('Error uploading ML training data:', error);
-      return { success: false, error: error.message };
-    }
+    // Training model removed - using rule-based prediction instead
+    console.log('Training data upload skipped - using rule-based prediction');
+    return { success: true, message: 'Using rule-based prediction (training model removed)' };
   }
 
   // Get current sensor data for ML upload
@@ -1271,18 +1217,10 @@ class SensorDashboard {
                            localStorage.getItem('sessionToken') || 
                            localStorage.getItem('session_token');
 
-      const response = await fetch('/api/ml/training-history', {
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          this.renderMLHistory(result.data);
-        }
+      // Training model removed - no history to fetch
+      console.log('Training history fetch skipped - using rule-based prediction');
+      if (this.renderMLHistory) {
+        this.renderMLHistory([]); // Show empty history
       }
     } catch (error) {
       console.error('Error fetching ML training history:', error);
@@ -3951,39 +3889,12 @@ class SensorDashboard {
         throw new Error('Missing required sensor readings: temperature, humidity, or gas level');
       }
 
-      // Step 1: Store training data
-      console.log('Storing training data...');
-      const trainingResponse = await fetch('/api/ml-workflow/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          food_name: foodName,
-          food_category: foodCategory,
-          temperature: temp,
-          humidity: humidity,
-          gas_level: gas,
-          spoilage_status: spoilageStatus,
-          confidence_score: aiAnalysisResult.success ? 
-            (aiAnalysisResult.analysis.riskScore || 75) : 75,
-          storage_conditions: {
-            temperature: temp,
-            humidity: humidity,
-            gas_level: gas,
-            timestamp: new Date().toISOString()
-          }
-        })
-      });
-
-      const trainingResult = await trainingResponse.json();
-      if (!trainingResult.success) {
-        throw new Error('Failed to store training data: ' + trainingResult.error);
-      }
+      // Training model removed - using rule-based prediction directly
+      console.log('Using rule-based prediction (training model removed)...');
+      // Skip training data step - go directly to prediction
       
-      // Step 2: Generate AI prediction
-      console.log('Generating AI prediction...');
+      // Step 1: Generate rule-based prediction (no training data step)
+      console.log('Generating rule-based prediction...');
       const predictionResponse = await fetch('/api/ml-workflow/predict', {
         method: 'POST',
         headers: {
@@ -4045,7 +3956,6 @@ class SensorDashboard {
 
       return {
         success: true,
-        training_id: trainingResult.training_id,
         prediction_id: predictionResult.prediction_id,
         spoilage_status: predictionResult.spoilage_status,
         spoilage_probability: predictionResult.spoilage_probability,

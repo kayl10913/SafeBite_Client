@@ -43,6 +43,10 @@ async function autoFormatJSONField(textarea) {
       };
       
       // Call AI formatting endpoint
+      // Training model removed - skip formatting
+      console.log('Training data formatting skipped - using rule-based prediction');
+      return;
+      
       const response = await fetch('/api/ml-training/format-env-factors', {
         method: 'POST',
         headers: {
@@ -738,98 +742,20 @@ function handleUpdateFormSubmit(e) {
 }
 
 function addMlTrainingData() {
-  const formData = {
-    foodName: document.getElementById('mlFoodName').value,
-    category: document.getElementById('mlCategory').value,
-    temperature: parseFloat(document.getElementById('mlTemperature').value),
-    humidity: parseFloat(document.getElementById('mlHumidity').value),
-    ph: parseFloat(document.getElementById('mlPh').value),
-    actualStatus: document.getElementById('mlActualStatus').value,
-    source: document.getElementById('mlSource').value,
-    dataQuality: parseInt(document.getElementById('mlDataQuality').value),
-    environmentalFactors: document.getElementById('mlEnvironmentalFactors').value
-  };
-
-  // Validate form data
-  if (!formData.foodName || !formData.category || !formData.actualStatus || !formData.source) {
-    alert('Please fill in all required fields');
-    return;
-  }
-
-  if (isNaN(formData.temperature) || isNaN(formData.humidity) || isNaN(formData.ph) || isNaN(formData.dataQuality)) {
-    alert('Please enter valid numeric values for temperature, humidity, pH, and data quality');
-    return;
-  }
-
-  const addMlTrainingDataBtn = document.getElementById('addMlTrainingDataBtn');
-  const isUpdateMode = addMlTrainingDataBtn.getAttribute('data-training-id');
-  
-  // Show loading state
-  if (addMlTrainingDataBtn) {
-    addMlTrainingDataBtn.disabled = true;
-    addMlTrainingDataBtn.textContent = isUpdateMode ? 'Updating...' : 'Adding...';
-  }
-
-  // Determine API endpoint and method
-  const apiEndpoint = isUpdateMode ? `/api/ml-training/update/${isUpdateMode}` : '/api/ml-training/add';
-  const method = isUpdateMode ? 'PUT' : 'POST';
-
-  // Send data to backend
-  fetch(apiEndpoint, {
-    method: method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken') || localStorage.getItem('session_token') || ''}`
-    },
-    body: JSON.stringify(formData)
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      // Success - close modal and refresh data
-      closeMlTrainingModalFunc();
-      const action = isUpdateMode ? 'updated' : 'added';
-      showSuccessMessage(`Training data ${action} successfully!`);
-      
-      // Explicit admin activity log
-      try {
-        if (window.logAdminActivity) {
-          const food = (formData.foodName || '').toString().trim();
-          const logAction = isUpdateMode ? 'UPDATE' : 'ADD';
-          window.logAdminActivity(logAction, { page: 'ml', target: food ? `Training data (${food})` : 'Training data' });
-        }
-      } catch (_) {}
-      
-      // Refresh ML data if function exists
-      if (typeof refreshMlData === 'function') {
-        refreshMlData();
-      }
-    } else {
-      throw new Error(data.message || `Failed to ${isUpdateMode ? 'update' : 'add'} training data`);
-    }
-  })
-  .catch(error => {
-    console.error(`Error ${isUpdateMode ? 'updating' : 'adding'} training data:`, error);
-    alert(`Error ${isUpdateMode ? 'updating' : 'adding'} training data: ` + error.message);
-  })
-  .finally(() => {
-    // Reset button state and modal
-    if (addMlTrainingDataBtn) {
-      addMlTrainingDataBtn.disabled = false;
-      addMlTrainingDataBtn.textContent = 'Add Training Data';
-      addMlTrainingDataBtn.removeAttribute('data-training-id');
-    }
-    
-    // Reset modal title and remove update mode class
-    const modal = document.getElementById('mlTrainingDataModal');
-    const modalHeader = modal.querySelector('.modal-header h3');
-    if (modalHeader) modalHeader.textContent = 'Add Training Data';
-    if (modal) modal.classList.remove('update-mode');
-  });
+  // Training model removed - using rule-based prediction instead
+  alert('Training model has been removed. The system now uses rule-based prediction instead of machine learning training.');
+  console.log('Training data add/update skipped - using rule-based prediction');
+  closeMlTrainingModalFunc();
 }
 
 function updateTrainingData() {
-  console.log('🔄 updateTrainingData called');
+  // Training model removed - using rule-based prediction instead
+  alert('Training model has been removed. The system now uses rule-based prediction instead of machine learning training.');
+  console.log('Training data update skipped - using rule-based prediction');
+  closeUpdateTrainingModalFunc();
+  return;
+  
+  console.log('🔄 updateTrainingData called (disabled)');
   
   // Try to get form data from the main modal first
   let formData = null;

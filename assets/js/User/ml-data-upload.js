@@ -153,56 +153,9 @@ class MLDataUpload {
   }
 
   async uploadMLTrainingData(foodId, status, notes = '') {
-    try {
-      const sessionToken = localStorage.getItem('jwt_token') || 
-                           localStorage.getItem('sessionToken') || 
-                           localStorage.getItem('session_token');
-      
-      if (!sessionToken) {
-        return { success: false, error: 'Authentication required' };
-      }
-
-      // Get current sensor data
-      const sensorData = await this.getCurrentSensorData();
-      if (!sensorData) {
-        return { success: false, error: 'No sensor data available' };
-      }
-
-      // Prepare ML training data
-      const trainingData = {
-        food_id: foodId,
-        food_status: status,
-        temperature: sensorData.temperature?.value || null,
-        humidity: sensorData.humidity?.value || null,
-        gas_level: sensorData.gas?.value || null,
-        notes: notes,
-        timestamp: new Date().toISOString()
-      };
-
-      console.log('Uploading ML training data:', trainingData);
-
-      const response = await fetch('/api/ml/training-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(trainingData)
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('ML training data uploaded successfully');
-        return { success: true, data: trainingData };
-      } else {
-        console.error('Failed to upload ML training data:', result.error);
-        return { success: false, error: result.error || 'Upload failed' };
-      }
-    } catch (error) {
-      console.error('Error uploading ML training data:', error);
-      return { success: false, error: error.message };
-    }
+    // Training model removed - using rule-based prediction instead
+    console.log('Training data upload skipped - using rule-based prediction');
+    return { success: true, message: 'Using rule-based prediction (training model removed)' };
   }
 
   async getCurrentSensorData() {
