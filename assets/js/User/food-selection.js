@@ -1379,8 +1379,25 @@ class FoodSelection {
       const aiResult = await this.callAiAnalyze(normLatest);
       if (!aiResult) return;
 
-      // Prefer estimatedShelfLifeHours if provided; otherwise map risk
-      const expiry = this.deriveExpiryFromAi(aiResult);
+      // Get the actual spoilage status from SmartSense assessment
+      // Use the normalized sensor data to assess condition
+      const sensorDataForAssessment = {
+        temperature: { value: normLatest.temperature },
+        humidity: { value: normLatest.humidity },
+        gas: { value: normLatest.gas_level }
+      };
+      const assessed = this.assessFoodCondition(sensorDataForAssessment);
+      const actualSpoilageStatus = (assessed && typeof assessed === 'object' && assessed.condition) 
+                                   ? assessed.condition 
+                                   : (this.mapRiskLevelToSpoilageStatus(aiResult.riskLevel) || 'safe');
+
+      console.log('🔍 Expiry Date Fix - Using Actual Spoilage Status:');
+      console.log('  Assessed Condition:', assessed);
+      console.log('  Actual Spoilage Status:', actualSpoilageStatus);
+      console.log('  AI Risk Level:', aiResult.riskLevel);
+
+      // Calculate expiry based on actual spoilage status, not just AI analysis
+      const expiry = this.calculateExpiryFromSpoilageStatus(actualSpoilageStatus, aiResult);
 
       // Store expiry for use in AI prediction
       this.predictedExpiry = expiry;
@@ -1556,6 +1573,67 @@ class FoodSelection {
       return null;
     }
   }
+//---calculate expiry from spoilage status (prioritizes actual status over AI)---
+  calculateExpiryFromSpoilageStatus(spoilageStatus, aiAnalysis = null) {
+    // If AI provides estimatedShelfLifeHours and status is safe, use it
+    if (aiAnalysis && spoilageStatus === 'safe') {
+      const hours = Number(aiAnalysis.estimatedShelfLifeHours);
+      if (!isNaN(hours) && hours > 0) {
+        const d = new Date(Date.now() + hours * 3600 * 1000);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    }
+    
+    // Map spoilage status directly to expiry days
+    const now = new Date();
+    let days = 1; // default
+    let useHours = false;
+    let hoursToAdd = 0;
+    
+    console.log('🔍 Expiry Calculation from Spoilage Status:');
+    console.log('  Actual Spoilage Status:', spoilageStatus);
+    
+    switch (String(spoilageStatus).toLowerCase()) {
+      case 'safe':
+        days = 3; // Safe food lasts 3 days
+        break;
+      case 'caution':
+        // Caution food expires in 3 hours
+        useHours = true;
+        hoursToAdd = 3;
+        break;
+      case 'unsafe':
+      case 'spoiled':
+        days = 0; // Unsafe/spoiled food expires TODAY (already spoiled)
+        break;
+      default:
+        days = 1;
+    }
+    
+    console.log('  Calculated days:', days);
+    console.log('  Use hours:', useHours);
+    console.log('  Hours to add:', hoursToAdd);
+    
+    let d;
+    if (useHours) {
+      // Add hours for caution status (3 hours)
+      d = new Date(now);
+      d.setHours(d.getHours() + hoursToAdd);
+    } else {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    }
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    
+    console.log('  Expiry Date:', `${yyyy}-${mm}-${dd}`);
+    
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
 //---derive expiry from AI analysis---
   deriveExpiryFromAi(analysis) {
     // If model provides estimatedShelfLifeHours, convert to date
@@ -2986,6 +3064,20 @@ class FoodSelection {
         
         // Use AI condition as primary source for consistency with modal display
         const finalCondition = aiAnalysisResult.success ? aiCondition : tableCondition;
+
+        // Recalculate expiry based on final condition (fixes issue where spoiled food shows 3 days)
+        if (finalCondition && this.predictedExpiry) {
+          const correctedExpiry = this.calculateExpiryFromSpoilageStatus(finalCondition, aiAnalysisResult.success ? aiAnalysisResult.analysis : null);
+          this.predictedExpiry = correctedExpiry;
+          console.log('🔍 Expiry Recalculated Based on Final Condition:');
+          console.log('  Final Condition:', finalCondition);
+          console.log('  Corrected Expiry:', correctedExpiry);
+          
+          // Update food items with corrected expiry
+          if (foodId) {
+            await this.updateFoodWithExpiry(this.selectedFood?.name || 'Unknown', this.selectedFood?.category || null, correctedExpiry);
+          }
+        }
 
         // Fire alert immediately for caution/unsafe conditions
         if (finalCondition === 'caution' || finalCondition === 'unsafe') {
