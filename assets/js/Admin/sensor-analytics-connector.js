@@ -2162,6 +2162,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('Training data formatting skipped - using rule-based prediction');
                         return;
                         
+                        // Disabled - ML training backend removed
+                        /*
                         const response = await fetch('/api/ml-training/format-env-factors', {
                             method: 'POST',
                             headers: {
@@ -2191,6 +2193,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Restore original value and show error
                         textarea.value = originalValue;
                         textarea.style.borderColor = '#ff9800';
+                        */
                         textarea.placeholder = 'Enter valid JSON or plain text (AI will format it)';
                         
                         if (window.showToastNotification) {

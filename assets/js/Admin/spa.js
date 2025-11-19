@@ -45,8 +45,11 @@ async function autoFormatJSONField(textarea) {
       // Call AI formatting endpoint
       // Training model removed - skip formatting
       console.log('Training data formatting skipped - using rule-based prediction');
+      // ML training backend removed - return original value without formatting
       return;
       
+      // Disabled - ML training backend removed
+      /*
       const response = await fetch('/api/ml-training/format-env-factors', {
         method: 'POST',
         headers: {
@@ -86,6 +89,7 @@ async function autoFormatJSONField(textarea) {
       setTimeout(() => {
         textarea.style.borderColor = '';
       }, 1500);
+      */
     }
   }
 }
