@@ -1130,11 +1130,16 @@ body {
 }
 
 .recommendations-details li:before {
-  content: "\2022";
-  color: #fbbf24;
-  font-weight: bold;
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #fbbf24;
+  border-radius: 50%;
   position: absolute;
   left: 0;
+  top: 6px;
+  margin-right: 8px;
 }
 
 .recommendations-details li:last-child {
