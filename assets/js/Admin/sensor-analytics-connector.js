@@ -2156,14 +2156,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     const originalValue = textarea.value;
                     textarea.placeholder = '🤖 AI is formatting your text...';
                     
+                    // ML training backend removed - return original value without formatting
+                    console.log('Training data formatting skipped - using rule-based prediction');
+                    
+                    // Restore original value since AI formatting is disabled
+                    textarea.value = originalValue;
+                    textarea.style.borderColor = '';
+                    textarea.placeholder = 'Enter valid JSON or plain text';
+                    
+                    // Disabled - ML training backend removed
+                    /*
                     try {
                         // Call AI formatting endpoint
-                        // Training model removed - skip formatting
-                        console.log('Training data formatting skipped - using rule-based prediction');
-                        return;
-                        
-                        // Disabled - ML training backend removed
-                        /*
                         const response = await fetch('/api/ml-training/format-env-factors', {
                             method: 'POST',
                             headers: {
@@ -2180,8 +2184,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             textarea.value = result.json;
                             textarea.style.borderColor = '#4CAF50';
                             
-                            // Toast notification removed as requested
-                            
                             setTimeout(() => {
                                 textarea.style.borderColor = '';
                             }, 1000);
@@ -2193,7 +2195,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Restore original value and show error
                         textarea.value = originalValue;
                         textarea.style.borderColor = '#ff9800';
-                        */
                         textarea.placeholder = 'Enter valid JSON or plain text (AI will format it)';
                         
                         if (window.showToastNotification) {
@@ -2204,6 +2205,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             textarea.style.borderColor = '';
                         }, 1500);
                     }
+                    */
                 }
             }
         };
