@@ -1130,7 +1130,7 @@ body {
 }
 
 .recommendations-details li:before {
-  content: "•";
+  content: "\2022";
   color: #fbbf24;
   font-weight: bold;
   position: absolute;
