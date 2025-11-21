@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="../assets/css/Admin-assets/admin-log.css">
   <link rel="stylesheet" href="../assets/css/Admin-assets/device-management.css?v=1.2">
   <link rel="stylesheet" href="../assets/css/Admin-assets/ml-predictions.css?v=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/jspdf-autotable@latest/dist/jspdf.plugin.autotable.js"></script>
   <script>
@@ -30,7 +31,7 @@
 <body>
 <aside class="sidebar expanded" id="sidebar">
   <div class="sidebar-header">
-    <span class="sidebar-logo" id="sidebarLogo" style="cursor:pointer;">&#128230;</span>
+    <i class="bi bi-box-seam sidebar-logo" id="sidebarLogo" style="cursor:pointer;"></i>
     <span class="sidebar-title">Admin</span>
   </div>
   <nav class="sidebar-nav">
@@ -40,25 +41,25 @@
       <ul>
         <li class="nav-item active">
           <a href="#" class="nav-link" data-page="dashboard" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#8962;</span>
+            <i class="bi bi-house-door nav-icon"></i>
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="analytics-summary" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128200;</span>
+            <i class="bi bi-graph-up nav-icon"></i>
             <span class="nav-text">Sensor Analytics</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="ml-predictions" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#129302;</span>
+            <i class="bi bi-robot nav-icon"></i>
             <span class="nav-text">AI Predictions</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="device-management" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128187;</span>
+            <i class="bi bi-laptop nav-icon"></i>
             <span class="nav-text">Device Management</span>
           </a>
         </li>
@@ -71,7 +72,7 @@
       <ul>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="report-generator" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128229;</span>
+            <i class="bi bi-file-earmark-arrow-down nav-icon"></i>
             <span class="nav-text">Report Generator</span>
           </a>
         </li>
@@ -84,19 +85,19 @@
       <ul>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="users" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128101;</span>
+            <i class="bi bi-people nav-icon"></i>
             <span class="nav-text">Users</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="user-activity-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128221;</span>
+            <i class="bi bi-clipboard-data nav-icon"></i>
             <span class="nav-text">User Activity Log</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="admin-log" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128273;</span>
+            <i class="bi bi-key nav-icon"></i>
             <span class="nav-text">Admin Logs</span>
           </a>
         </li>
@@ -109,7 +110,7 @@
       <ul>
         <li class="nav-item">
           <a href="#" class="nav-link" data-page="feedbacks" style="display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none;width:100%">
-            <span class="nav-icon">&#128172;</span>
+            <i class="bi bi-chat-dots nav-icon"></i>
             <span class="nav-text">Feedback & Support</span>
           </a>
         </li>
@@ -117,7 +118,7 @@
     </div>
   </nav>
   <div class="sidebar-account" id="sidebarAccountBtn" onclick="openAdminAccountModal()" style="cursor: pointer;">
-    <span class="account-icon">&#128100;</span>
+    <i class="bi bi-person-circle account-icon"></i>
     <span class="account-text">Account</span>
     <button class="logout-btn" id="logoutBtn" type="button" style="background:none;border:none;color:#666;cursor:pointer;margin-left:auto;font-size:12px;" onclick="event.stopPropagation();">Logout</button>
   </div>
@@ -244,7 +245,7 @@
         <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:350px;">
             <label for="mlTrainingSearch" style="display:block;color:#bfc9da;font-size:13px;font-weight:500;margin-bottom:8px;">
-              🔍 Search Training Data
+              <i class="bi bi-search"></i> Search Training Data
             </label>
             <div style="position:relative;width:100%;">
               <input type="text" id="mlTrainingSearch" class="ml-search-input" placeholder="Search by food name, category, status, or source..." autocomplete="off" style="width:100%;padding:12px 16px;background:#181f36 !important;border:1px solid #2a3b6d !important;border-radius:6px;color:#e0e6f6 !important;font-size:14px;outline:none;transition:all 0.2s;box-sizing:border-box;-webkit-text-fill-color:#e0e6f6 !important;" onfocus="this.style.borderColor='#4a9eff'; this.style.boxShadow='0 0 0 3px rgba(74, 158, 255, 0.2)'" onblur="this.style.borderColor='#2a3b6d'; this.style.boxShadow='none'" />
@@ -291,7 +292,7 @@
         <div class="modal-body update-modal-body">
           <div class="update-modal-info">
             <p class="update-modal-info-text">
-              <span class="update-modal-info-icon">ℹ️</span>
+              <i class="bi bi-info-circle update-modal-info-icon"></i>
               Update the details for the training data sample.
             </p>
           </div>
@@ -338,7 +339,7 @@
             <!-- Status & Quality Section -->
             <div class="update-modal-section">
               <h4 class="update-modal-section-title">
-                <span>📊</span> Status & Quality
+                <i class="bi bi-bar-chart"></i> Status & Quality
               </h4>
               <div class="update-modal-form-row-three">
                 <div class="update-modal-form-group">
@@ -437,10 +438,10 @@
         </div>
       </div>
       <div class="report-actions">
-        <button id="mlApplyFilters" class="filter-btn filter-btn-primary"><span>🔎</span>Filter</button>
-        <button id="mlUpdate" class="filter-btn filter-btn-primary"><span>🔄</span>Update</button>
-        <button id="mlExportCSV" class="filter-btn export-btn"><span>📥</span>Download CSV</button>
-        <button id="mlExportPDF" class="filter-btn export-btn"><span>📄</span>Download PDF</button>
+        <button id="mlApplyFilters" class="filter-btn filter-btn-primary"><i class="bi bi-search"></i>Filter</button>
+        <button id="mlUpdate" class="filter-btn filter-btn-primary"><i class="bi bi-arrow-clockwise"></i>Update</button>
+        <button id="mlExportCSV" class="filter-btn export-btn"><i class="bi bi-download"></i>Download CSV</button>
+        <button id="mlExportPDF" class="filter-btn export-btn"><i class="bi bi-file-earmark-pdf"></i>Download PDF</button>
       </div>
     </div>
     <div class="report-preview">
@@ -482,10 +483,10 @@
       </div>
     </div>
     <div class="spoilage-stats-row">
-      <div class="spoilage-stat-card"><div class="stat-icon stat-blue">&#128230;</div><div class="stat-label">Total Sensors</div><div class="stat-value" id="totalSensorsCount">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-green">&#10003;</div><div class="stat-label">Active Testers</div><div class="stat-value" id="activeTestersCount">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-red">&#10060;</div><div class="stat-label">Spoilage Alert</div><div class="stat-value" id="spoilageAlertCount">0</div></div>
-      <div class="spoilage-stat-card"><div class="stat-icon stat-gray">&#9200;</div><div class="stat-label">Inactive</div><div class="stat-value" id="inactiveCount">0</div></div>
+      <div class="spoilage-stat-card"><i class="bi bi-box-seam stat-icon stat-blue"></i><div class="stat-label">Total Sensors</div><div class="stat-value" id="totalSensorsCount">0</div></div>
+      <div class="spoilage-stat-card"><i class="bi bi-check-circle stat-icon stat-green"></i><div class="stat-label">Active Testers</div><div class="stat-value" id="activeTestersCount">0</div></div>
+      <div class="spoilage-stat-card"><i class="bi bi-x-circle stat-icon stat-red"></i><div class="stat-label">Spoilage Alert</div><div class="stat-value" id="spoilageAlertCount">0</div></div>
+      <div class="spoilage-stat-card"><i class="bi bi-clock stat-icon stat-gray"></i><div class="stat-label">Inactive</div><div class="stat-value" id="inactiveCount">0</div></div>
     </div>
     <div class="spoilage-main-cards">
       <div class="spoilage-card spoilage-bar-card">
@@ -586,9 +587,9 @@
           </div>
         </div>
         <div class="filter-actions">
-          <button class="filter-btn filter-btn-primary" type="button" id="applyFilters" title="Apply filters" aria-label="Apply filters"><span>🔎</span>Filter</button>
-          <button class="filter-btn export-btn" id="exportCSV"><span>📥</span>Download CSV</button>
-          <button class="filter-btn export-btn" id="exportPDF"><span>📄</span>Download PDF</button>
+          <button class="filter-btn filter-btn-primary" type="button" id="applyFilters" title="Apply filters" aria-label="Apply filters"><i class="bi bi-search"></i>Filter</button>
+          <button class="filter-btn export-btn" id="exportCSV"><i class="bi bi-download"></i>Download CSV</button>
+          <button class="filter-btn export-btn" id="exportPDF"><i class="bi bi-file-earmark-pdf"></i>Download PDF</button>
         </div>
       </div>
       <div class="detailed-report-table-card">
@@ -729,15 +730,15 @@
           
           <div class="report-actions">
             <button id="generateReport" class="filter-btn filter-btn-primary">
-              <span>📊</span>
+              <i class="bi bi-bar-chart"></i>
               Generate Report
             </button>
             <button id="exportReportCSV" class="filter-btn export-btn">
-              <span>📥</span>
+              <i class="bi bi-download"></i>
               Download CSV
             </button>
             <button id="exportReportPDF" class="filter-btn export-btn">
-              <span>📄</span>
+              <i class="bi bi-file-earmark-pdf"></i>
               Download PDF
             </button>
           </div>
@@ -749,7 +750,7 @@
             <div id="report-preview-content">
               <div class="empty-state">
                 <div class="empty-state-content">
-                  <div class="empty-state-icon">📊</div>
+                  <i class="bi bi-bar-chart empty-state-icon"></i>
                   <div class="empty-state-title">No Report Generated</div>
                   <div class="empty-state-desc">Select your report type and date range, then click "Generate Report" to view data.</div>
                 </div>
@@ -842,8 +843,8 @@
         </div>
         </form>
         <div class="filter-actions">
-          <button class="filter-btn filter-btn-primary" id="userFilterBtn"><span>🔎</span>Filter</button>
-          <button class="filter-btn filter-btn-primary" id="addUserBtn"><span>➕</span>Add User</button>
+          <button class="filter-btn filter-btn-primary" id="userFilterBtn"><i class="bi bi-search"></i>Filter</button>
+          <button class="filter-btn filter-btn-primary" id="addUserBtn"><i class="bi bi-plus-circle"></i>Add User</button>
         </div>
       </div>
       <div class="report-preview-area">
@@ -924,7 +925,7 @@
             <div style="position:relative;display:flex;align-items:center;">
               <input type="password" id="userPassword" autocomplete="new-password" minlength="6" placeholder="Enter new password... (leave blank to keep current)" style="flex:1;width:100%;" />
               <button type="button" id="toggleUserPassword" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;padding:0 6px;color:#bfc9da;" tabindex="-1" aria-label="Show password">
-                  <span id="toggleUserPasswordIcon">&#128065;</span>
+                  <i class="bi bi-eye" id="toggleUserPasswordIcon"></i>
               </button>
             </div>
           </div>
@@ -1013,15 +1014,15 @@
         
         <div class="report-actions">
           <button id="filterActivityLogBtn" class="filter-btn filter-btn-primary">
-            <span>🔎</span>
+            <i class="bi bi-search"></i>
             Filter
           </button>
           <button id="exportActivityLogExcel" class="filter-btn export-btn">
-            <span>📥</span>
+            <i class="bi bi-file-earmark-excel"></i>
             Download Excel
           </button>
           <button id="exportActivityLogPDF" class="filter-btn export-btn">
-            <span>📄</span>
+            <i class="bi bi-file-earmark-pdf"></i>
             Download PDF
           </button>
         </div>
@@ -1117,9 +1118,9 @@
           </div>
         </div>
         <div class="filter-actions">
-          <button class="filter-btn filter-btn-primary" id="adminLogFilterBtn"><span>🔎</span>Filter</button>
-          <button class="filter-btn export-btn" id="adminLogDownloadExcel"><span>📥</span>Download Excel</button>
-          <button class="filter-btn export-btn" id="adminLogDownloadPDF"><span>📄</span>Download PDF</button>
+          <button class="filter-btn filter-btn-primary" id="adminLogFilterBtn"><i class="bi bi-search"></i>Filter</button>
+          <button class="filter-btn export-btn" id="adminLogDownloadExcel"><i class="bi bi-file-earmark-excel"></i>Download Excel</button>
+          <button class="filter-btn export-btn" id="adminLogDownloadPDF"><i class="bi bi-file-earmark-pdf"></i>Download PDF</button>
         </div>
       </div>
       <div class="report-preview-area">
@@ -1156,32 +1157,32 @@
     </div>
     <div class="feedbacks-stats-row feedbacks-feedback-stats-row" style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px;align-items:stretch;">
       <div class="feedbacks-stat-card feedbacks-stat-blue" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#128172;</span>
+        <i class="bi bi-chat-dots stat-icon"></i>
         <div class="stat-label">Total</div>
         <div class="stat-value" id="feedbackTotalCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-yellow" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#11088;</span>
+        <i class="bi bi-star stat-icon"></i>
         <div class="stat-label">Avg Rating</div>
         <div class="stat-value stat-rating" id="feedbackAvgRating">0.0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-green" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#128515;</span>
+        <i class="bi bi-emoji-smile stat-icon"></i>
         <div class="stat-label">Positive</div>
         <div class="stat-value" id="feedbackPositiveCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-yellow" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#128994;</span>
+        <i class="bi bi-circle-fill stat-icon" style="color: #10b981;"></i>
         <div class="stat-label">5 Stars</div>
         <div class="stat-value" id="feedbackFiveStarsCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-red" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#128196;</span>
+        <i class="bi bi-file-earmark stat-icon"></i>
         <div class="stat-label">Negative</div>
         <div class="stat-value" id="feedbackNegativeCount">0</div>
       </div>
       <div class="feedbacks-stat-card feedbacks-stat-blue" style="display:flex;flex-direction:column;justify-content:center;">
-        <span class="stat-icon">&#128337;</span>
+        <i class="bi bi-stopwatch stat-icon"></i>
         <div class="stat-label">Recent (3d)</div>
         <div class="stat-value" id="feedbackRecentCount">0</div>
       </div>
@@ -1244,11 +1245,11 @@
         <!-- Single Row: All Filters -->
         <div class="filter-row" style="display:flex; gap:20px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
           <div class="filter-group" style="min-width:160px;">
-            <label for="feedback-search" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">🔍 Name Search</label>
+            <label for="feedback-search" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-search"></i> Name Search</label>
             <input type="text" id="feedback-search" class="feedbacks-search-input" placeholder="Search feedback name..." style="width:100%; padding:10px 12px; background:#1a2332; border:1px solid #2a3a4a; border-radius:6px; color:#e0e6f6; font-size:14px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'" onblur="this.style.borderColor='#2a3a4a'" />
           </div>
           <div class="filter-group" style="min-width:140px;">
-            <label for="feedbackDateRange" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Date Range</label>
+            <label for="feedbackDateRange" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> Date Range</label>
             <select id="feedbackDateRange" class="report-select">
               <option value="all">All Time</option>
               <option value="daily">Daily</option>
@@ -1259,27 +1260,27 @@
             </select>
           </div>
           <div class="filter-group" id="feedbackWeekGroup" style="display:none;min-width:200px; margin-right:8px;">
-            <label for="feedbackWeekPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Week</label>
+            <label for="feedbackWeekPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> Select Week</label>
             <input type="week" id="feedbackWeekPicker" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
           <div class="filter-group" id="feedbackMonthGroup" style="display:none;min-width:200px; margin-right:8px;">
-            <label for="feedbackMonthPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Month</label>
+            <label for="feedbackMonthPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> Select Month</label>
             <input type="month" id="feedbackMonthPicker" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
           <div class="filter-group" id="feedbackYearGroup" style="display:none;min-width:180px; margin-right:8px;">
-            <label for="feedbackYearPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Select Year</label>
+            <label for="feedbackYearPicker" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> Select Year</label>
             <input type="number" id="feedbackYearPicker" class="report-select" min="1970" max="2100" step="1" placeholder="2025" style="width:100%; padding:8px 12px;" />
           </div>
           <div class="filter-group custom-date-inputs" id="feedbackCustomDateGroup" style="display:none;min-width:180px; margin-right:8px;">
-            <label for="feedback-date-from" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 Start Date</label>
+            <label for="feedback-date-from" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> Start Date</label>
             <input type="date" id="feedback-date-from" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
           <div class="filter-group custom-date-inputs" style="display:none;min-width:180px; margin-right:8px;">
-            <label for="feedback-date-to" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📅 End Date</label>
+            <label for="feedback-date-to" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-calendar"></i> End Date</label>
             <input type="date" id="feedback-date-to" class="report-select" style="width:100%; padding:8px 12px;" />
           </div>
           <div class="filter-group" style="min-width:120px;">
-            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">⭐ Star Rating</label>
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-star"></i> Star Rating</label>
             <select class="report-select" id="feedbackStarRatingFilter">
               <option value="">All Ratings</option>
               <option value="5">5 Stars</option>
@@ -1290,7 +1291,7 @@
             </select>
           </div>
           <div class="filter-group" style="min-width:120px;">
-            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">😊 Sentiment</label>
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-emoji-smile"></i> Sentiment</label>
             <select class="report-select" id="feedbackSentimentFilter">
               <option value="">All Sentiment</option>
               <option value="Positive">Positive</option>
@@ -1299,7 +1300,7 @@
             </select>
           </div>
           <div class="filter-group" style="min-width:120px;">
-            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">🚨 Priority</label>
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-bell"></i> Priority</label>
             <select class="report-select" id="feedbackPriorityFilter">
               <option value="">All Priorities</option>
               <option value="Critical">Critical</option>
@@ -1309,7 +1310,7 @@
             </select>
           </div>
           <div class="filter-group" style="min-width:120px;">
-            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📋 Status</label>
+            <label style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-clipboard"></i> Status</label>
             <select class="report-select" id="feedbackStatusFilter">
               <option value="">All Status</option>
               <option value="Active">Active</option>
@@ -1318,7 +1319,7 @@
             </select>
           </div>
           <div class="filter-group" style="min-width:120px;">
-            <label for="feedbackRecordsPerPage" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;">📄 Records per Page</label>
+            <label for="feedbackRecordsPerPage" style="display:block; color:#bfc9da; margin-bottom:6px; font-weight:500; font-size:13px;"><i class="bi bi-file-earmark"></i> Records per Page</label>
             <select id="feedbackRecordsPerPage" class="report-select">
               <option value="10">10</option>
               <option value="25" selected>25</option>
@@ -1331,13 +1332,13 @@
         <!-- Action Buttons Row -->
         <div class="filter-actions" style="display:flex; gap:16px; align-items:flex-end; justify-content:flex-end; padding-top:8px; border-top:1px solid #2a3a4a;">
           <button class="filter-btn filter-btn-primary" id="applyFeedbackFilters" type="button">
-            <span>🔎</span> Filter
+            <i class="bi bi-search"></i> Filter
           </button>
           <button class="filter-btn export-btn" id="export-feedbacks-excel" type="button">
-            <span>📥</span> Download Excel
+            <i class="bi bi-file-earmark-excel"></i> Download Excel
           </button>
           <button class="filter-btn export-btn" id="export-feedbacks-pdf" type="button">
-            <span>📄</span> Download PDF
+            <i class="bi bi-file-earmark-pdf"></i> Download PDF
           </button>
         </div>
       </div>
@@ -1384,25 +1385,25 @@
     <!-- KPI Cards -->
     <div class="device-management-stats-row">
       <div class="device-management-stat-card">
-        <span class="stat-icon stat-blue">&#128187;</span>
+        <i class="bi bi-laptop stat-icon stat-blue"></i>
         <div class="stat-label">Total Devices</div>
         <div class="stat-value" id="totalDevicesCount">0</div>
         <div class="stat-trend" id="totalDevicesTrend">↑ 0 sensors</div>
       </div>
       <div class="device-management-stat-card">
-        <span class="stat-icon stat-green">&#128200;</span>
+        <i class="bi bi-graph-up stat-icon stat-green"></i>
         <div class="stat-label">Active Devices</div>
         <div class="stat-value" id="activeDevicesManagementCount">0</div>
         <div class="stat-trend" id="activeDevicesTrend">↑ 0% online</div>
       </div>
       <div class="device-management-stat-card">
-        <span class="stat-icon stat-orange">&#9200;</span>
+        <i class="bi bi-clock stat-icon stat-orange"></i>
         <div class="stat-label">Device Health</div>
         <div class="stat-value" id="deviceHealthPercent">0%</div>
         <div class="stat-trend" id="deviceHealthTrend">↑ All operational</div>
       </div>
       <div class="device-management-stat-card">
-        <span class="stat-icon stat-red">&#9888;</span>
+        <i class="bi bi-exclamation-triangle stat-icon stat-red"></i>
         <div class="stat-label">Alerts</div>
         <div class="stat-value" id="deviceAlertsCount">0</div>
         <div class="stat-trend" id="deviceAlertsTrend">↓ No issues</div>
@@ -1445,9 +1446,9 @@
           <div class="df-item df-actions">
             <label>&nbsp;</label>
             <div class="df-action-buttons">
-              <button type="button" class="filter-btn filter-btn-primary" id="inlineApplyFilters"><span>🔎</span>Filter</button>
-              <button type="button" class="filter-btn export-btn" id="downloadCsvBtn"><span>📥</span>Download CSV</button>
-              <button type="button" class="filter-btn export-btn" id="downloadPdfBtn"><span>📄</span>Download PDF</button>
+              <button type="button" class="filter-btn filter-btn-primary" id="inlineApplyFilters"><i class="bi bi-search"></i>Filter</button>
+              <button type="button" class="filter-btn export-btn" id="downloadCsvBtn"><i class="bi bi-download"></i>Download CSV</button>
+              <button type="button" class="filter-btn export-btn" id="downloadPdfBtn"><i class="bi bi-file-earmark-pdf"></i>Download PDF</button>
             </div>
           </div>
         </div>
@@ -1520,7 +1521,7 @@
     <div class="modal-header" style="padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 8px 8px 0 0;">
       <div style="display: flex; align-items: center; gap: 16px;">
         <div id="confirmIcon" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 123, 250, 0.15); border: 2px solid rgba(59, 123, 250, 0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px);">
-          ⚠️
+          <i class="bi bi-exclamation-triangle"></i>
         </div>
         <div>
           <h3 id="confirmTitle" style="margin: 0; color: #fff; font-size: 18px; font-weight: 700;">Confirm Action</h3>
@@ -1614,7 +1615,7 @@
     <div class="modal-header" style="padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 12px 12px 0 0;">
       <div style="display: flex; align-items: center; gap: 16px;">
         <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 123, 250, 0.15); border: 2px solid rgba(59, 123, 250, 0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px);">
-          ➕
+          <i class="bi bi-plus-circle"></i>
         </div>
         <div>
           <h3 style="margin: 0; color: #fff; font-size: 18px; font-weight: 700;">Add Device</h3>
@@ -1678,7 +1679,7 @@
   <div class="update-modal">
     <div class="update-modal-header">
       <h3 class="update-modal-title">
-        <span class="update-modal-icon">📊</span>
+        <i class="bi bi-bar-chart update-modal-icon"></i>
         Add Training Data
       </h3>
       <span class="update-modal-close" id="closeMlTrainingModal">&times;</span>
@@ -1686,7 +1687,7 @@
     <div class="update-modal-body">
       <div class="update-modal-info">
         <p class="update-modal-info-text">
-          <span class="update-modal-info-icon">ℹ️</span>
+          <i class="bi bi-info-circle update-modal-info-icon"></i>
           Enter the details for the new training data sample to improve AI predictions.
         </p>
       </div>
@@ -1733,7 +1734,7 @@
         <!-- Status & Quality Section -->
         <div class="update-modal-section">
           <h4 class="update-modal-section-title">
-            <span>📋</span> Status & Quality
+            <i class="bi bi-clipboard"></i> Status & Quality
           </h4>
           <div class="update-modal-form-row-three">
             <div class="update-modal-form-group">
@@ -1786,7 +1787,7 @@
   <div class="modal-content" style="max-width: 650px; background: #0f172a; border: 1px solid #1f2a46; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); overflow: hidden;" onclick="event.stopPropagation()">
     <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: none; padding: 24px 24px 20px 24px; background: linear-gradient(135deg, #1a2340 0%, #14224a 100%); border-radius: 12px 12px 0 0;">
       <h3 style="color: #fff; margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 20px;">💬</span>
+        <i class="bi bi-chat-dots" style="font-size: 20px;"></i>
         Respond to Feedback
       </h3>
       <span class="close" onclick="closeResponseModal()" style="color: #bfc9da; font-size: 24px; font-weight: bold; cursor: pointer; transition: all 0.2s; line-height: 1; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='#bfc9da'; this.style.background='transparent'">&times;</span>
@@ -1794,7 +1795,7 @@
     <div class="modal-body" style="color: #e0e6f6; padding: 24px; background: #0f172a;">
       <div class="feedback-details" style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #1a2332 0%, #212c4d 100%); border-radius: 8px; border: 1px solid #2a3a4a;">
         <h4 style="color: #4a9eff; margin: 0 0 12px 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 14px;">📝</span>
+          <i class="bi bi-pencil" style="font-size: 14px;"></i>
           Feedback Details
         </h4>
         <div id="modalFeedbackText" class="feedback-text" style="background: #0f1419; border: 1px solid #2a3a4a; border-radius: 6px; padding: 16px; margin-bottom: 12px; color: #e0e6f6; line-height: 1.6; min-height: 60px; white-space: pre-wrap; word-wrap: break-word;"></div>
@@ -1808,16 +1809,16 @@
       <div class="form-group" style="margin-bottom: 20px;">
         <label for="responseStatus" style="display: block; color: #bfc9da; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Status:</label>
         <select id="responseStatus" class="form-control" style="width: 100%; background: #1a2332; border: 1px solid #2a3a4a; color: #e0e6f6; padding: 12px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b7bfa'" onblur="this.style.borderColor='#2a3a4a'">
-          <option value="Active">🕐 Active</option>
-          <option value="Resolved">✅ Resolved</option>
-          <option value="Archived">📁 Archived</option>
+          <option value="Active">Active</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Archived">Archived</option>
         </select>
       </div>
       
       <div class="form-group" style="margin-bottom: 20px;">
         <label style="display: block; color: #bfc9da; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Current Response to Customer:</label>
         <div id="currentResponseText" class="current-response-display" style="background: #0f1419; border: 1px solid #2a3a4a; border-radius: 6px; padding: 16px; min-height: 80px; color: #bfc9da; font-style: italic; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; position: relative;">
-          <div style="position: absolute; top: 8px; right: 12px; font-size: 12px; color: #6b7280;">📋</div>
+          <i class="bi bi-clipboard" style="position: absolute; top: 8px; right: 12px; font-size: 12px; color: #6b7280;"></i>
           No response sent yet
         </div>
       </div>
@@ -2225,7 +2226,7 @@ function handleAdminPassFormSubmit(e) {
             </button>
             <!-- Password verification status indicator -->
             <div id="passwordStatusIndicator" style="position: absolute; right: 50px; top: 50%; transform: translateY(-50%); display: none; color: #4a9eff; font-size: 16px;">
-              <span id="passwordStatusIcon">⏳</span>
+              <i class="bi bi-hourglass-split" id="passwordStatusIcon"></i>
             </div>
           </div>
           <!-- Password verification status message -->
@@ -2249,7 +2250,7 @@ function handleAdminPassFormSubmit(e) {
 <div id="userConfirmModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
   <div class="modal-content" style="background-color: #212c4d; margin: auto; padding: 0; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
     <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #2a3b6d; display: flex; align-items: center; justify-content: space-between;">
-      <h3 style="color: #e0e6f6; margin: 0; font-size: 18px; font-weight: 600;">⚠️ Confirm Action</h3>
+      <h3 style="color: #e0e6f6; margin: 0; font-size: 18px; font-weight: 600;"><i class="bi bi-exclamation-triangle"></i> Confirm Action</h3>
       <button onclick="closeUserConfirmModal()" style="background: none; border: none; color: #bfc9da; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
     
@@ -2527,19 +2528,19 @@ function showPasswordVerificationStatus(status, message) {
   // Set status-specific styling and content
   switch (status) {
     case 'verifying':
-      icon.textContent = '⏳';
+      icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
       icon.style.color = '#4a9eff';
       text.textContent = message;
       text.style.color = '#4a9eff';
       break;
     case 'success':
-      icon.textContent = '✅';
+      icon.innerHTML = '<i class="bi bi-check-circle"></i>';
       icon.style.color = '#10b981';
       text.textContent = message;
       text.style.color = '#10b981';
       break;
     case 'error':
-      icon.textContent = '❌';
+      icon.innerHTML = '<i class="bi bi-x-circle"></i>';
       icon.style.color = '#ef4444';
       text.textContent = message;
       text.style.color = '#ef4444';
@@ -2575,10 +2576,10 @@ function showToast(message, type = 'info') {
   };
   
   const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
+    success: '<i class="bi bi-check-circle"></i>',
+    error: '<i class="bi bi-x-circle"></i>',
+    warning: '<i class="bi bi-exclamation-triangle"></i>',
+    info: '<i class="bi bi-info-circle"></i>'
   };
   
   toast.style.cssText = `
