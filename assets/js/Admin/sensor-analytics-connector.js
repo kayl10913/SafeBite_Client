@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${r.food_name || ''}<div style="color:#9fb2e6;font-size:12px;">${r.food_category||''}</div></td>
-                            <td>🌡️ ${r.temperature}°C &nbsp; 💧 ${r.humidity}% &nbsp; 🧪 ${r.gas_level} ppm</td>
+                            <td><i class="bi bi-thermometer-half" style="color: #ef4444;"></i> ${r.temperature}°C &nbsp; <i class="bi bi-droplet" style="color: #3b82f6;"></i> ${r.humidity}% &nbsp; <i class="bi bi-circle-fill" style="color: #10b981; font-size: 0.7em;"></i> ${r.gas_level} ppm</td>
                             <td>${r.spoilage_probability}%</td>
                             <td>${r.confidence_score}% <div style="color:#9fb2e6;font-size:12px;">Model ${r.model_version||''}</div></td>
                             <td><span class="ml-badge ${String(r.spoilage_status).toLowerCase()}">${String(r.spoilage_status).toUpperCase()}</span></td>
@@ -1098,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${r.food_name || ''}<div style="color:#9fb2e6;font-size:12px;">${r.food_category||''}</div></td>
-                        <td>🌡️ ${r.temperature}°C &nbsp; 💧 ${r.humidity}% &nbsp; 🧪 ${r.gas_level} ppm</td>
+                        <td><i class="bi bi-thermometer-half" style="color: #ef4444;"></i> ${r.temperature}°C &nbsp; <i class="bi bi-droplet" style="color: #3b82f6;"></i> ${r.humidity}% &nbsp; <i class="bi bi-circle-fill" style="color: #10b981; font-size: 0.7em;"></i> ${r.gas_level} ppm</td>
                         <td><span class="ml-badge ${String(r.actual_spoilage_status).toLowerCase()}">${String(r.actual_spoilage_status).toUpperCase()}</span></td>
                         <td><div class="ml-progress"><span style="width:${Math.round((r.quality_score||0)*100)}%"></span></div></td>
                         <td>${(r.data_source||'').toUpperCase()}</td>
@@ -1723,19 +1723,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         <!-- Environmental Conditions Section -->
                         <div class="update-modal-section">
                             <h4 class="update-modal-section-title">
-                                <span>🌡️</span> Environmental Conditions
+                                <i class="bi bi-thermometer-half"></i> Environmental Conditions
                             </h4>
                             <div class="update-modal-form-row-three">
                                 <div class="update-modal-form-group">
-                                    <label class="update-modal-label">🌡️ Temp (°C)</label>
+                                    <label class="update-modal-label"><i class="bi bi-thermometer-half"></i> Temp (°C)</label>
                                     <input type="number" id="tempTemperature" value="${trainingData.temperature || ''}" step="0.1" class="update-modal-input">
                                 </div>
                                 <div class="update-modal-form-group">
-                                    <label class="update-modal-label">💧 Humidity (%)</label>
+                                    <label class="update-modal-label"><i class="bi bi-droplet"></i> Humidity (%)</label>
                                     <input type="number" id="tempHumidity" value="${trainingData.humidity || ''}" step="0.1" class="update-modal-input">
                                 </div>
                                 <div class="update-modal-form-group">
-                                    <label class="update-modal-label">💨 Gas (ppm)</label>
+                                    <label class="update-modal-label"><i class="bi bi-circle-fill" style="color: #10b981; font-size: 0.8em;"></i> Gas (ppm)</label>
                                     <input type="number" id="tempPh" value="${trainingData.gas_level || ''}" step="0.1" class="update-modal-input">
                                 </div>
                             </div>
@@ -1959,19 +1959,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div style="font-weight: bold; color: #333; margin-bottom: 10px; font-size: 14px;">📊 Storage Conditions</div>
                                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                                     <div style="background: #fff3e0; padding: 10px; border-radius: 4px; border-left: 3px solid #FF9800;">
-                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">🌡️ Temperature</div>
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;"><i class="bi bi-thermometer-half"></i> Temperature</div>
                                         <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.temperature !== undefined ? sc.temperature + '°C' : 'N/A'}</div>
                                     </div>
                                     <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; border-left: 3px solid #2196F3;">
-                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">💧 Humidity</div>
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;"><i class="bi bi-droplet"></i> Humidity</div>
                                         <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.humidity !== undefined ? Math.round(sc.humidity) + '%' : 'N/A'}</div>
                                     </div>
                                     <div style="background: #f3e5f5; padding: 10px; border-radius: 4px; border-left: 3px solid #9C27B0;">
-                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">🧪 Gas Level</div>
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;"><i class="bi bi-circle-fill" style="color: #10b981;"></i> Gas Level</div>
                                         <div style="font-size: 18px; font-weight: bold; color: #333;">${sc.gas_level !== undefined ? sc.gas_level + ' ppm' : 'N/A'}</div>
                                     </div>
                                     <div style="background: #fce4ec; padding: 10px; border-radius: 4px; border-left: 3px solid #E91E63;">
-                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;">⏰ Timestamp</div>
+                                        <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px;"><i class="bi bi-clock"></i> Timestamp</div>
                                         <div style="font-size: 11px; font-weight: 600; color: #333;">${timestamp}</div>
                                     </div>
                                 </div>

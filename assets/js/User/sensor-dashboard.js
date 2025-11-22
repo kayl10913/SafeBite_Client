@@ -1515,6 +1515,15 @@ class SensorDashboard {
 
   // Setup modal event listeners (called from setupEventListeners) (EVENTS: SMARTSENSE SCANNER)
   setupModalEventListeners() {
+    // Quick Scan button event listener (GENERALIZED SCANNER)
+    const quickScanBtn = document.getElementById('quickScanBtn');
+    if (quickScanBtn) {
+      quickScanBtn.removeEventListener('click', this.handleQuickScan);
+      quickScanBtn.addEventListener('click', () => {
+        this.handleQuickScan();
+      });
+    }
+
     // Open ML Scanner Modal event listener
     const openMLScannerBtn = document.getElementById('openMLScannerBtn');
     if (openMLScannerBtn) {
@@ -2393,6 +2402,360 @@ class SensorDashboard {
       }
     };
     document.addEventListener('keydown', escHandler);
+  }
+
+  // Handle Quick Scan button (GENERALIZED SCANNER)
+  async handleQuickScan() {
+    const scanId = Math.random().toString(36).slice(2, 8);
+    console.log(`⚡ [${scanId}] Quick Scan initiated`);
+    
+    const quickScanBtn = document.getElementById('quickScanBtn');
+    if (!quickScanBtn) {
+      console.error('⚠️ Quick Scan button not found');
+      return;
+    }
+
+    // Check if already scanning
+    if (this.isScanningInProgress || window.smartSenseScanningInProgress) {
+      if (typeof showWarningToast === 'function') {
+        showWarningToast('A scan is already in progress. Please wait.');
+      }
+      return;
+    }
+
+    // Reset cancellation flag and all state for a fresh scan
+    this.scanCancelled = false;
+    this.scanAbortController = new AbortController();
+
+    // Set flag immediately to prevent race conditions
+    this.isScanningInProgress = true;
+    window.smartSenseScanningInProgress = true;
+    window.smartSenseScannerActive = true;
+
+    // Disable button and show loading state
+    quickScanBtn.disabled = true;
+    quickScanBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Scanning...';
+
+    try {
+      // Create scan session first (required for arduino-data endpoint)
+      console.log(`⚡ [${scanId}] Creating scan session for Quick Scan...`);
+      try {
+        const session = await this.createScanSession();
+        console.log(`⚡ [${scanId}] Scan session created successfully:`, session);
+      } catch (sessionError) {
+        console.warn(`⚠️ [${scanId}] Failed to create scan session (continuing anyway):`, sessionError);
+        // Continue anyway - the blocking will just prevent Arduino data
+      }
+
+      // Get baseline sensor data first (like SmartSense Scanner)
+      const baselineData = await this.getCurrentSensorData();
+      if (!baselineData) {
+        throw new Error('No sensor data available. Please ensure your sensors are connected.');
+      }
+
+      // Check if baseline data has valid sensor readings
+      const hasTemperature = baselineData.temperature?.value != null || baselineData.temperature != null;
+      const hasHumidity = baselineData.humidity?.value != null || baselineData.humidity != null;
+      const hasGas = baselineData.gas?.value != null || baselineData.gas != null || 
+                     baselineData.gas_level?.value != null || baselineData.gas_level != null;
+
+      // If no sensors have data, sensors might be offline
+      if (!hasTemperature && !hasHumidity && !hasGas) {
+        throw new Error('No sensor readings available. Please ensure your sensors are connected and active.');
+      }
+
+      // Update button to show waiting for sensor data
+      quickScanBtn.innerHTML = '<div class="circle-loading"></div> Waiting for new sensor data...';
+      console.log(`⚡ [${scanId}] Waiting for new sensor data...`);
+
+      // Add cancel button when scanning starts
+      this.addCancelButtonToWaitIndicator();
+
+      // Wait for new sensor data (like SmartSense Scanner)
+      const newSensorData = await this.waitForNewSensorData(baselineData);
+
+      // Remove cancel button after waiting completes
+      this.removeCancelButton();
+
+      // Check if scan was cancelled during wait
+      if (this.scanCancelled) {
+        console.log(`⚡ [${scanId}] Quick Scan cancelled during sensor data wait`);
+        quickScanBtn.disabled = false;
+        quickScanBtn.innerHTML = '<i class="bi bi-lightning-charge"></i> Quick Scan';
+        this.isScanningInProgress = false;
+        window.smartSenseScanningInProgress = false;
+        window.smartSenseScannerActive = false;
+        this.scanCancelled = false;
+        return;
+      }
+
+      if (!newSensorData) {
+        throw new Error('No new sensor data detected. Please try again.');
+      }
+
+      // Update button to show AI analysis
+      quickScanBtn.innerHTML = '<i class="bi bi-robot"></i> Analyzing with AI...';
+
+      // Extract sensor values from new data
+      const temperature = newSensorData.temperature?.value || newSensorData.temperature || 0;
+      const humidity = newSensorData.humidity?.value || newSensorData.humidity || 0;
+      const gasLevel = newSensorData.gas?.value || newSensorData.gas || 0;
+
+      console.log(`⚡ [${scanId}] Quick Scan - New Sensor Data:`, {
+        temperature,
+        humidity,
+        gas_level: gasLevel
+      });
+
+      // Use AI analysis endpoint for quick analysis
+      const token = localStorage.getItem('jwt_token') || localStorage.getItem('sessionToken');
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
+      // Call AI analysis endpoint with generic food type
+      const response = await fetch('/api/ai/ai-analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          foodType: 'Food Item', // Generic food type for quick scan
+          temp: temperature,
+          humidity: humidity,
+          gas: gasLevel
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Analysis failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(`⚡ [${scanId}] Quick Scan - Analysis Result:`, data);
+
+      if (data.analysis) {
+        // Show results in a modal or toast
+        const analysis = data.analysis;
+        const status = analysis.spoilage_status || 
+                      (analysis.riskLevel === 'High' ? 'unsafe' : 
+                       analysis.riskLevel === 'Medium' ? 'caution' : 'safe');
+        
+        // Show success message with status
+        const statusIcon = status === 'unsafe' ? 'bi-exclamation-triangle-fill' : status === 'caution' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+        const statusText = status === 'unsafe' ? 'UNSAFE' : status === 'caution' ? 'CAUTION' : 'SAFE';
+        
+        if (typeof showSuccessToast === 'function') {
+          showSuccessToast(`<i class="bi ${statusIcon}"></i> Quick Scan Complete: ${statusText}`, 5000);
+        }
+
+        // Show detailed results in a modal
+        this.showQuickScanResults(analysis, { temperature, humidity, gas_level: gasLevel });
+      } else {
+        throw new Error('No analysis data received');
+      }
+
+    } catch (error) {
+      console.error(`❌ [${scanId}] Quick Scan Error:`, error);
+      if (typeof showErrorToast === 'function') {
+        showErrorToast(error.message || 'Quick scan failed. Please try again.');
+      }
+    } finally {
+      // Re-enable button
+      quickScanBtn.disabled = false;
+      quickScanBtn.innerHTML = '<i class="bi bi-lightning-charge"></i> Quick Scan';
+      
+      // Reset flags
+      this.isScanningInProgress = false;
+      window.smartSenseScanningInProgress = false;
+      window.smartSenseScannerActive = false;
+      
+      // Hide waiting indicator if still visible
+      this.hideSensorWaitIndicator();
+      
+      // Complete scan session
+      try {
+        if (this.currentScanSession) {
+          await this.completeScanSession();
+          console.log(`⚡ [${scanId}] Scan session completed`);
+        }
+      } catch (sessionError) {
+        console.warn(`⚠️ [${scanId}] Error completing scan session:`, sessionError);
+      }
+    }
+  }
+
+  // Show Quick Scan Results Modal
+  showQuickScanResults(analysis, sensorData) {
+    // Create or get modal element
+    let modal = document.getElementById('quickScanResultsModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'quickScanResultsModal';
+      modal.className = 'config-modal';
+      modal.style.display = 'none';
+      document.body.appendChild(modal);
+    }
+
+    const status = analysis.spoilage_status || 
+                  (analysis.riskLevel === 'High' ? 'unsafe' : 
+                   analysis.riskLevel === 'Medium' ? 'caution' : 'safe');
+    const statusClass = status === 'unsafe' ? 'quick-scan-unsafe' : status === 'caution' ? 'quick-scan-caution' : 'quick-scan-safe';
+    const statusIcon = status === 'unsafe' ? 'bi-exclamation-triangle-fill' : status === 'caution' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+    const statusText = status === 'unsafe' ? 'UNSAFE' : status === 'caution' ? 'CAUTION' : 'SAFE';
+    const statusColor = status === 'unsafe' ? '#dc3545' : status === 'caution' ? '#ffc107' : '#28a745';
+    const statusBgColor = status === 'unsafe' ? 'rgba(220, 53, 69, 0.1)' : status === 'caution' ? 'rgba(255, 193, 7, 0.1)' : 'rgba(40, 167, 69, 0.1)';
+
+    modal.innerHTML = `
+      <div class="config-modal-backdrop"></div>
+      <div class="config-modal-content quick-scan-modal-content" style="max-width: 650px; background: #212c4d; border: 1px solid #2b3a66;">
+        <div class="config-modal-header" style="border-bottom: 1px solid #2b3a66; padding: 24px;">
+          <h3 class="config-modal-title" style="color: #ffffff; margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.25rem;">
+            <i class="bi bi-lightning-charge-fill" style="color: #2ed573; font-size: 1.5rem;"></i>
+            Quick Scan Results
+          </h3>
+          <button type="button" class="config-modal-close" onclick="this.closest('.config-modal').style.display='none'" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="config-modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+          <!-- Status Card -->
+          <div class="quick-scan-status-card ${statusClass}" style="background: ${statusBgColor}; border: 2px solid ${statusColor}; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 4rem; margin-bottom: 12px; line-height: 1; color: ${statusColor};">
+              <i class="bi ${statusIcon}"></i>
+            </div>
+            <h4 style="margin: 0 0 8px 0; color: ${statusColor}; font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">${statusText}</h4>
+            <p style="margin: 0; color: #bfc9da; font-size: 0.95rem; line-height: 1.5;">${analysis.summary || 'Analysis completed successfully'}</p>
+          </div>
+
+          <!-- Sensor Readings Card -->
+          <div class="quick-scan-sensor-card" style="background: #1a2340; border: 1px solid #2b3a66; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h5 style="color: #ffffff; margin: 0 0 16px 0; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <i class="bi bi-thermometer-half" style="color: #4a9eff;"></i>
+              Sensor Readings
+            </h5>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+              <div style="text-align: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; border: 1px solid rgba(74, 158, 255, 0.2);">
+                <i class="bi bi-thermometer-half" style="color: #4a9eff; font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                <div style="color: #9fb8ff; font-size: 0.75rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Temperature</div>
+                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 700;">${sensorData.temperature}°C</div>
+              </div>
+              <div style="text-align: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; border: 1px solid rgba(74, 158, 255, 0.2);">
+                <i class="bi bi-moisture" style="color: #4a9eff; font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                <div style="color: #9fb8ff; font-size: 0.75rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Humidity</div>
+                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 700;">${sensorData.humidity}%</div>
+              </div>
+              <div style="text-align: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; border: 1px solid rgba(74, 158, 255, 0.2);">
+                <i class="bi bi-wind" style="color: #4a9eff; font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                <div style="color: #9fb8ff; font-size: 0.75rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Gas Level</div>
+                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 700;">${sensorData.gas_level} ppm</div>
+              </div>
+            </div>
+          </div>
+
+          ${analysis.keyFactors && analysis.keyFactors.length > 0 ? `
+            <!-- Key Factors Card -->
+            <div class="quick-scan-factors-card" style="background: #1a2340; border: 1px solid #2b3a66; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <h5 style="color: #ffffff; margin: 0 0 16px 0; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-list-check" style="color: #4a9eff;"></i>
+                Key Factors
+              </h5>
+              <ul style="margin: 0; padding-left: 0; list-style: none;">
+                ${analysis.keyFactors.map((factor, idx) => `
+                  <li style="color: #bfc9da; padding: 10px 0; border-bottom: ${idx < analysis.keyFactors.length - 1 ? '1px solid #2b3a66' : 'none'}; display: flex; align-items: start; gap: 10px; line-height: 1.5;">
+                    <i class="bi bi-circle-fill" style="color: #4a9eff; font-size: 0.5rem; margin-top: 8px; flex-shrink: 0;"></i>
+                    <span>${factor}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${analysis.recommendations ? `
+            <!-- Recommendations Card -->
+            <div class="quick-scan-recommendations-card" style="background: #1a2340; border: 1px solid #2b3a66; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <h5 style="color: #ffffff; margin: 0 0 16px 0; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-lightbulb" style="color: #ffc107;"></i>
+                Recommendations
+              </h5>
+              ${Array.isArray(analysis.recommendations) ? `
+                <ul style="margin: 0; padding-left: 0; list-style: none;">
+                  ${analysis.recommendations.map((rec, idx) => `
+                    <li style="color: #bfc9da; padding: 10px 0; border-bottom: ${idx < analysis.recommendations.length - 1 ? '1px solid #2b3a66' : 'none'}; display: flex; align-items: start; gap: 10px; line-height: 1.5;">
+                      <i class="bi bi-arrow-right-circle" style="color: #ffc107; font-size: 0.9rem; margin-top: 2px; flex-shrink: 0;"></i>
+                      <span>${rec}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              ` : typeof analysis.recommendations === 'object' && analysis.recommendations.main ? `
+                <div style="color: #ffffff; font-weight: 600; margin-bottom: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 6px;">
+                  ${analysis.recommendations.main}
+                </div>
+                ${analysis.recommendations.details && analysis.recommendations.details.length > 0 ? `
+                  <ul style="margin: 0; padding-left: 0; list-style: none;">
+                    ${analysis.recommendations.details.map((rec, idx) => `
+                      <li style="color: #bfc9da; padding: 8px 0; border-bottom: ${idx < analysis.recommendations.details.length - 1 ? '1px solid #2b3a66' : 'none'}; display: flex; align-items: start; gap: 10px; line-height: 1.5;">
+                        <i class="bi bi-dot" style="color: #ffc107; font-size: 1.2rem; margin-top: -2px; flex-shrink: 0;"></i>
+                        <span>${rec}</span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                ` : ''}
+              ` : `
+                <p style="color: #bfc9da; margin: 0; line-height: 1.6;">${analysis.recommendations}</p>
+              `}
+            </div>
+          ` : ''}
+
+          ${analysis.estimatedShelfLifeHours !== undefined && analysis.estimatedShelfLifeHours !== null ? `
+            <!-- Shelf Life Card -->
+            <div class="quick-scan-shelf-life-card" style="background: linear-gradient(135deg, rgba(74, 158, 255, 0.1) 0%, rgba(74, 158, 255, 0.05) 100%); border: 1px solid rgba(74, 158, 255, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="color: #9fb8ff; font-size: 0.75rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-clock"></i>
+                    Estimated Shelf Life
+                  </div>
+                  <div style="color: #ffffff; font-size: 2rem; font-weight: 700;">
+                    ${status === 'caution' ? '3-4' : analysis.estimatedShelfLifeHours}
+                  </div>
+                  <div style="color: #9fb8ff; font-size: 0.9rem; margin-top: 4px;">hours remaining</div>
+                </div>
+                <div style="font-size: 3rem; opacity: 0.3;">
+                  <i class="bi bi-hourglass-split"></i>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        <div class="config-modal-footer" style="border-top: 1px solid #2b3a66; padding: 20px 24px; display: flex; justify-content: flex-end;">
+          <button type="button" class="config-modal-submit" onclick="this.closest('.config-modal').style.display='none'" style="background: #2ed573; color: #ffffff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;">
+            <i class="bi bi-check-lg"></i> Got it
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+    
+    // Close on background click
+    const backdrop = modal.querySelector('.config-modal-backdrop');
+    if (backdrop) {
+      backdrop.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
+    
+    // Close on ESC key
+    const closeHandler = (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        modal.style.display = 'none';
+        document.removeEventListener('keydown', closeHandler);
+      }
+    };
+    document.addEventListener('keydown', closeHandler);
   }
 
   // Handle Ready Scan button (CORE FUNCTION: SMARTSENSE SCANNER)

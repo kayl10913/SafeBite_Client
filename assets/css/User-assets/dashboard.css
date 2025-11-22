@@ -4322,6 +4322,25 @@ main {
   }
 }
 
+/* Generalized Quick Scanner Section Styles */
+.generalized-scanner-section {
+  margin-top: 20px;
+}
+
+.generalized-scanner-card {
+  background: var(--background-card);
+  border: 1px solid rgba(46, 213, 115, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.generalized-scanner-card:hover {
+  border-color: rgba(46, 213, 115, 0.6);
+  box-shadow: 0 4px 12px rgba(46, 213, 115, 0.15);
+  transform: translateY(-2px);
+}
+
 /* ML Food Scanner Button Section Styles */
 .ml-scanner-button-section {
   margin-top: 20px;
@@ -4392,6 +4411,117 @@ main {
   background: var(--light-blue);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+.scanner-open-btn.btn-success {
+  background: #2ed573;
+  color: #fff;
+}
+
+.scanner-open-btn.btn-success:hover {
+  background: #25c063;
+  box-shadow: 0 4px 12px rgba(46, 213, 115, 0.3);
+}
+
+.scanner-open-btn.btn-success:disabled {
+  background: #1a8a47;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Quick Scan Results Modal Styles */
+.quick-scan-modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.quick-scan-status-card {
+  transition: transform 0.2s ease;
+}
+
+.quick-scan-status-card:hover {
+  transform: scale(1.02);
+}
+
+.quick-scan-safe {
+  border-color: #28a745 !important;
+}
+
+.quick-scan-caution {
+  border-color: #ffc107 !important;
+}
+
+.quick-scan-unsafe {
+  border-color: #dc3545 !important;
+}
+
+.quick-scan-sensor-card,
+.quick-scan-factors-card,
+.quick-scan-recommendations-card,
+.quick-scan-shelf-life-card {
+  transition: all 0.2s ease;
+}
+
+.quick-scan-sensor-card:hover,
+.quick-scan-factors-card:hover,
+.quick-scan-recommendations-card:hover,
+.quick-scan-shelf-life-card:hover {
+  border-color: #4a9eff;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
+}
+
+.quick-scan-result {
+  color: var(--text-white);
+}
+
+.quick-scan-result h5 {
+  color: var(--text-white);
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.quick-scan-result ul {
+  color: var(--text-muted);
+}
+
+.quick-scan-result li {
+  margin-bottom: 5px;
+}
+
+/* Smooth scrollbar for modal body - prevent double scrollbar */
+.quick-scan-modal-content {
+  overflow: hidden !important;
+}
+
+.quick-scan-modal-content .config-modal-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.quick-scan-modal-content .config-modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.quick-scan-modal-content .config-modal-body::-webkit-scrollbar-track {
+  background: #1a2340;
+  border-radius: 5px;
+  margin: 4px 0;
+}
+
+.quick-scan-modal-content .config-modal-body::-webkit-scrollbar-thumb {
+  background: #4a9eff;
+  border-radius: 5px;
+  border: 2px solid #1a2340;
+}
+
+.quick-scan-modal-content .config-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #3a8eef;
+}
+
+/* Firefox scrollbar */
+.quick-scan-modal-content .config-modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: #4a9eff #1a2340;
 }
 
 /* ML Food Scanner Modal Styles */
