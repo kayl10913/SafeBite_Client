@@ -652,6 +652,18 @@ class FeedbacksManager {
             });
         }
 
+        // Feedback Type filter
+        const feedbackTypeSelect = document.getElementById('feedbackTypeFilter');
+        if (feedbackTypeSelect) {
+            feedbackTypeSelect.addEventListener('change', () => {
+                const value = feedbackTypeSelect.value;
+                this.currentFilters.feedback_type = value === '' ? null : value;
+                if (!dateRangeSelect || dateRangeSelect.value === 'all') {
+                    this.applyFilters();
+                }
+            });
+        }
+
         // Priority filter
         const prioritySelect = document.getElementById('feedbackPriorityFilter');
         if (prioritySelect) {
