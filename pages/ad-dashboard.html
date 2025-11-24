@@ -223,7 +223,7 @@
     <div class="ml-kpi-row">
       <div class="ml-kpi-card"><div class="ml-kpi-title">Total Predictions</div><div class="ml-kpi-value" id="mlKpiTotal">0</div><div class="ml-kpi-sub" id="mlKpiTotalSub">+0 today</div></div>
       <div class="ml-kpi-card"><div class="ml-kpi-title">Average Confidence</div><div class="ml-kpi-value" id="mlKpiConfidence">--%</div><div class="ml-kpi-sub" id="mlKpiConfidenceSub">+0% this week</div></div>
-      <div class="ml-kpi-card"><div class="ml-kpi-title">Training Data</div><div class="ml-kpi-value" id="mlKpiSamples">0</div><div class="ml-kpi-sub" id="mlKpiSamplesSub">+0 added</div></div>
+      <div class="ml-kpi-card"><div class="ml-kpi-title">Learning Set</div><div class="ml-kpi-value" id="mlKpiSamples">0</div><div class="ml-kpi-sub" id="mlKpiSamplesSub">+0 added</div></div>
       <div class="ml-kpi-card">
         <div class="ml-kpi-title">Ai Accuracy</div>
         <div class="ml-kpi-value" id="mlKpiAccuracy">--%</div>
@@ -234,9 +234,9 @@
     <!-- Training Data Section -->
     <div class="ml-card" style="margin-top:16px;">
       <div class="ml-card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div class="ml-card-title">Training Data (<span id="mlSamplesCount">0</span>)</div>
+        <div class="ml-card-title">Learning Set (<span id="mlSamplesCount">0</span>)</div>
         <div class="ml-actions">
-          <button class="ml-btn primary" id="mlAddTraining">+ Add Training Data</button>
+          <button class="ml-btn primary" id="mlAddTraining">+ Add Learning Set</button>
         </div>
       </div>
       
@@ -245,7 +245,7 @@
         <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:350px;">
             <label for="mlTrainingSearch" style="display:block;color:#bfc9da;font-size:13px;font-weight:500;margin-bottom:8px;">
-              <i class="bi bi-search"></i> Search Training Data
+              <i class="bi bi-search"></i> Search Learning Set
             </label>
             <div style="position:relative;width:100%;">
               <input type="text" id="mlTrainingSearch" class="ml-search-input" placeholder="Search by food name, category, status, or source..." autocomplete="off" style="width:100%;padding:12px 16px;background:#181f36 !important;border:1px solid #2a3b6d !important;border-radius:6px;color:#e0e6f6 !important;font-size:14px;outline:none;transition:all 0.2s;box-sizing:border-box;-webkit-text-fill-color:#e0e6f6 !important;" onfocus="this.style.borderColor='#4a9eff'; this.style.boxShadow='0 0 0 3px rgba(74, 158, 255, 0.2)'" onblur="this.style.borderColor='#2a3b6d'; this.style.boxShadow='none'" />
@@ -285,7 +285,7 @@
         <div class="modal-header update-modal-header">
           <h3 class="update-modal-title">
             <i class="bi bi-pencil update-modal-icon"></i>
-            Update Training Data
+            Update Learning Set
           </h3>
           <span class="close update-modal-close" id="closeUpdateTrainingModal">&times;</span>
         </div>
@@ -293,7 +293,7 @@
           <div class="update-modal-info">
             <p class="update-modal-info-text">
               <i class="bi bi-info-circle update-modal-info-icon"></i>
-              Update the details for the training data sample.
+              Update the details for the Learning Set sample.
             </p>
           </div>
           
@@ -382,7 +382,7 @@
         </div>
         <div class="update-modal-footer">
           <button type="button" class="update-modal-btn update-modal-btn-secondary" id="cancelUpdateTrainingBtn">Cancel</button>
-          <button type="button" class="update-modal-btn update-modal-btn-primary" id="updateTrainingDataBtn">Update Training Data</button>
+          <button type="button" class="update-modal-btn update-modal-btn-primary" id="updateTrainingDataBtn">Update Learning Set</button>
         </div>
       </div>
     </div>
@@ -485,7 +485,6 @@
     <div class="spoilage-stats-row">
       <div class="spoilage-stat-card"><i class="bi bi-box-seam stat-icon stat-blue"></i><div class="stat-label">Total Sensors</div><div class="stat-value" id="totalSensorsCount">0</div></div>
       <div class="spoilage-stat-card"><i class="bi bi-check-circle stat-icon stat-green"></i><div class="stat-label">Active Testers</div><div class="stat-value" id="activeTestersCount">0</div></div>
-      <div class="spoilage-stat-card"><i class="bi bi-x-circle stat-icon stat-red"></i><div class="stat-label">Spoilage Alert</div><div class="stat-value" id="spoilageAlertCount">0</div></div>
       <div class="spoilage-stat-card"><i class="bi bi-clock stat-icon stat-gray"></i><div class="stat-label">Inactive</div><div class="stat-value" id="inactiveCount">0</div></div>
     </div>
     <div class="spoilage-main-cards">
@@ -593,7 +592,7 @@
         </div>
       </div>
       <div class="detailed-report-table-card">
-        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">0</span> devices)</div>
+        <div class="detailed-report-title">Detailed Sensor Report (<span id="sensorCount">0</span> User)</div>
         <div class="report-table-container">
         <table class="detailed-report-table admin-log-table">
           <thead>
@@ -1680,7 +1679,7 @@
     <div class="update-modal-header">
       <h3 class="update-modal-title">
         <i class="bi bi-bar-chart update-modal-icon"></i>
-        Add Training Data
+        Add Learning Set
       </h3>
       <span class="update-modal-close" id="closeMlTrainingModal">&times;</span>
     </div>
@@ -1688,7 +1687,7 @@
       <div class="update-modal-info">
         <p class="update-modal-info-text">
           <i class="bi bi-info-circle update-modal-info-icon"></i>
-          Enter the details for the new training data sample to improve AI predictions.
+          Enter the details for the new Learning Set sample to improve AI predictions.
         </p>
       </div>
       
@@ -1777,7 +1776,7 @@
     </div>
     <div class="update-modal-footer">
       <button type="button" class="update-modal-btn update-modal-btn-secondary" id="cancelMlTrainingBtn">Cancel</button>
-      <button type="button" class="update-modal-btn update-modal-btn-primary" id="addMlTrainingDataBtn">Add Training Data</button>
+      <button type="button" class="update-modal-btn update-modal-btn-primary" id="addMlTrainingDataBtn">Add Learning Set</button>
     </div>
   </div>
 </div>
