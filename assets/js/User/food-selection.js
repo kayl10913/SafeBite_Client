@@ -771,7 +771,7 @@ class FoodSelection {
   // Create an alert for SmartSense Scanner using AI prediction data
   async createScannerAlert(foodName, mlPredictionData, sensorData) {
     try {
-      console.log('🚨 ML-Based Alert Creation Check:');
+      console.log('🚨 AI-Based Alert Creation Check:');
       console.log('  Food Name:', foodName);
       console.log('  AI Prediction Data:', mlPredictionData);
       
@@ -780,8 +780,8 @@ class FoodSelection {
       const spoilageProbability = mlPredictionData?.spoilage_probability || mlPredictionData?.probability || 0;
       const confidenceScore = mlPredictionData?.confidence_score || mlPredictionData?.confidence || 0;
       
-      console.log('  ML Spoilage Status:', spoilageStatus);
-      console.log('  ML Probability:', spoilageProbability);
+      console.log('  AI Spoilage Status:', spoilageStatus);
+      console.log('  AI Probability:', spoilageProbability);
       console.log('  Should Create Alert:', spoilageStatus && spoilageStatus !== 'safe');
       
       if (!spoilageStatus || spoilageStatus === 'safe') {
@@ -1308,7 +1308,7 @@ class FoodSelection {
       
       // Check if scanning was cancelled
       if (this.isScanningCancelled) {
-        console.log('Scanning was cancelled, stopping ML workflow');
+        console.log('Scanning was cancelled, stopping AI workflow');
         this.showCancelledMessage();
         return;
       }
@@ -2987,7 +2987,7 @@ class FoodSelection {
           
           // Validate the food ID
           if (!foodId || typeof foodId !== 'number' || foodId < 1) {
-            console.log('No valid food ID returned, skipping ML processing');
+            console.log('No valid food ID returned, skipping AI processing');
             return; // Exit early instead of throwing error
           }
         } catch (error) {
@@ -3101,8 +3101,8 @@ class FoodSelection {
         }
         
         // Only proceed with ML workflow if food creation was successful
-        console.log('Proceeding with ML workflow using food ID:', foodId);
-        console.log('Using final condition for ML workflow:', finalCondition);
+        console.log('Proceeding with AI workflow using food ID:', foodId);
+        console.log('Using final condition for AI workflow:', finalCondition);
         // Use AI-assessed condition for consistency with modal display
         const mlWorkflowResult = await this.performMLWorkflow(
           foodId,
@@ -3122,9 +3122,9 @@ class FoodSelection {
         if (mlWorkflowResult.success || (isTrainingDataError && mlWorkflowResult.prediction_id)) {
           // If it's just a training data error but prediction succeeded, treat as success
           if (isTrainingDataError && !mlWorkflowResult.success) {
-            console.log('ML workflow completed (training data error ignored - using rule-based logic):', mlWorkflowResult);
+            console.log('AI workflow completed (training data error ignored - using rule-based logic):', mlWorkflowResult);
           } else {
-            console.log('ML workflow successful:', mlWorkflowResult);
+            console.log('AI workflow successful:', mlWorkflowResult);
           }
           
           // Store the validated ML workflow result which contains the corrected AI analysis
@@ -3163,7 +3163,7 @@ class FoodSelection {
                   
                   // Only create alert if AI prediction indicates caution or unsafe
                   if (mlPredictionData.spoilage_status === 'caution' || mlPredictionData.spoilage_status === 'unsafe') {
-                    console.log('Creating ML-based alert for spoilage status:', mlPredictionData.spoilage_status);
+                    console.log('Creating AI-based alert for spoilage status:', mlPredictionData.spoilage_status);
                     await this.createScannerAlert(this.selectedFood.name, mlPredictionData, sensorData);
                   }
                 } else {
@@ -3179,7 +3179,7 @@ class FoodSelection {
                   };
                   
                   if (mlWorkflowResult.spoilage_status === 'caution' || mlWorkflowResult.spoilage_status === 'unsafe') {
-                    console.log('Creating ML-based alert for spoilage status:', mlWorkflowResult.spoilage_status);
+                    console.log('Creating AI-based alert for spoilage status:', mlWorkflowResult.spoilage_status);
                     await this.createScannerAlert(this.selectedFood.name, mlPredictionData, sensorData);
                   }
                 }
@@ -3194,7 +3194,7 @@ class FoodSelection {
           
           // Ensure OK button shows after ML workflow completion
           setTimeout(() => {
-            console.log('🔧 Ensuring OK button shows after ML workflow success');
+            console.log('🔧 Ensuring OK button shows after AI workflow success');
             this.hideAnalysisLoading();
           }, 2000);
           
@@ -3209,7 +3209,7 @@ class FoodSelection {
                                 mlWorkflowResult.gas_risk_level || 'unknown';
             
             console.log('🔍 Modal Display Consistency Check:');
-            console.log('  Full ML Workflow Result:', mlWorkflowResult);
+            console.log('  Full AI Workflow Result:', mlWorkflowResult);
             console.log('  Training Data Status:', mlWorkflowResult.training_data?.actual_spoilage_status);
             console.log('  Gas Risk Level:', gasRiskLevel);
             console.log('  AI Analysis Risk Level:', aiAnalysisResult.success ? aiAnalysisResult.analysis.riskLevel : 'N/A');

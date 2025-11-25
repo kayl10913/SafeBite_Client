@@ -2976,7 +2976,7 @@ class SensorDashboard {
       
       // Update button to show ML processing
       if (scanBtn) {
-        scanBtn.innerHTML = '<i class="bi bi-cpu"></i> Processing with ML...';
+        scanBtn.innerHTML = '<i class="bi bi-cpu"></i> Processing with AI...';
       }
       
       // Step 3: Perform ML workflow (like Smart Training Center) - uses environmental factors and ML data
